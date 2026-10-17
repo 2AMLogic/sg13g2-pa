@@ -49,11 +49,13 @@ That makes it a hard, honest test of the open PDK and tools:
 - **Not in scope**: the upconversion mixer, the LO, a transmit/receive
   switch, and any linearization (digital predistortion, envelope tracking).
 
-## Target specification (DRAFT — engineering to ratify, see issue #1)
+## Target specification (see [`spec/target-spec.md`](spec/target-spec.md))
 
-All rows are *targets*, not results. The band follows the sibling LNA's
-ratified band so the RF canaries share one frequency plan; the spec issue
-may change it with a decision record.
+Ratified by [decision record 0001](spec/decision-records/0001-ratify-target-spec.md)
+on approval of its PR. Rows marked DRAFT are not ratified yet. The spec file
+is authoritative; this table is a summary of it and must match it. All rows
+are *targets*, not results. The band follows the sibling LNA's ratified band
+(`sg13g2-lna` `50728637`) so the RF canaries share one frequency plan.
 
 | Parameter | Fallback | Target | Stretch |
 |---|---|---|---|
@@ -62,16 +64,24 @@ may change it with a decision record.
 | Output P1dB | > +7 dBm | > +12 dBm | > +17 dBm |
 | Power gain | > 10 dB | > 15 dB | > 20 dB |
 | Peak PAE | > 15% | > 25% | > 35% |
+| PAE at back-off (Psat − 6 dB) — DRAFT | reported, no threshold | reported, no threshold | — |
 | Input match (S11) | < −8 dB | < −10 dB | < −15 dB |
 | Ports | 50 Ω, off-chip output match | 50 Ω, on-chip output match | — |
-| Stability | unconditional across the full sweep, every corner | same | — |
+| Inductor / passive models — DRAFT | each inductor's source, Q and self-resonance stated at every use; source deferred (operator `consumes` decision) | same | — |
+| Stability, small-signal | μ > 1, 10 MHz–30 GHz, every corner (k, \|Δ\|, negative-resistance check reported) | same | — |
+| Stability, large-signal — DRAFT | no sustained non-harmonic line, threshold not set | same | — |
+| Supply — DRAFT | single rail, nominal set by the first load-line study, ±10% | same | — |
+| Device and stacking — DRAFT | single `npn13g2` first; stack or `npn13g2v` only if the target cannot close with margin | same | stack/`npn13g2v` for +20 dBm only |
 | Device stress | no device beyond its documented breakdown over the full swing, every corner | same, inside the model card's validity window | — |
+| Thermal, electromigration — DRAFT | junction temperature reported; PDK current-density limits applied after layout | same | — |
+| Harmonics (2nd, 3rd) — DRAFT | reported at Psat and Psat − 6 dB, no threshold | same | — |
+| Area — DRAFT | reported | reported | — |
 | Signoff | DRC + LVS clean | DRC + LVS clean, post-layout re-verified | — |
 
 Maturity ladder: spec ratified → device and passive characterization →
 schematic simulated across PVT → layout DRC/LVS-clean → post-layout
 re-verification → shuttle seat → measured silicon.
-**Current position: pre-spec.**
+**Current position: spec drafted; ratification pending PR approval.**
 
 ## Tool flow
 
