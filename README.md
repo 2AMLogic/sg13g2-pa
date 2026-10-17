@@ -8,6 +8,12 @@ open-source xschem + ngspice flow.
 
 **Status: just opened, specification phase.** Nothing is designed yet.
 
+**T1 status.** The tier verdict is graded by `klt signoff`, not read by hand;
+the verdict of record is
+[`manifests/sg13g2-pa.signoff.json`](manifests/sg13g2-pa.signoff.json), and
+[`manifests/README.md`](manifests/README.md) says how it is regenerated and
+checked in CI.
+
 **Built agent-native.** Every specification, decision record, testbench, and
 line of documentation here is produced by AI agents working from a ratified
 spec and an append-only evidence trail — not human-authored work that agents
