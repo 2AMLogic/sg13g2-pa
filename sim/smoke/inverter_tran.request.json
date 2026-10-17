@@ -1,0 +1,92 @@
+{
+  "netlist": "inverter.spice",
+  "models": {
+    "pdk": "ihp-sg13g2"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "tt",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerMOSlv.lib",
+            "section": "mos_tt"
+          }
+        ]
+      },
+      {
+        "name": "ff",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerMOSlv.lib",
+            "section": "mos_ff"
+          }
+        ]
+      },
+      {
+        "name": "ss",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerMOSlv.lib",
+            "section": "mos_ss"
+          }
+        ]
+      },
+      {
+        "name": "fs",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerMOSlv.lib",
+            "section": "mos_fs"
+          }
+        ]
+      },
+      {
+        "name": "sf",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerMOSlv.lib",
+            "section": "mos_sf"
+          }
+        ]
+      }
+    ],
+    "supply_v": {
+      "vdd": [
+        1.2
+      ]
+    },
+    "temperature_c": [
+      27
+    ]
+  },
+  "analysis": {
+    "kind": "tran",
+    "args": "10p 4n"
+  },
+  "measurements": [
+    {
+      "name": "tphl",
+      "spice": ".meas tran tphl TRIG v(in) VAL=0.6 RISE=1 TARG v(out) VAL=0.6 FALL=1",
+      "unit": "s"
+    },
+    {
+      "name": "tplh",
+      "spice": ".meas tran tplh TRIG v(in) VAL=0.6 FALL=1 TARG v(out) VAL=0.6 RISE=1",
+      "unit": "s"
+    }
+  ],
+  "options": {
+    "timeout_s": 120,
+    "keep_artifacts": true,
+    "osdi_preload": [
+      "$PDK_ROOT/ihp-sg13g2/libs.tech/ngspice/osdi/psp103.osdi",
+      "$PDK_ROOT/ihp-sg13g2/libs.tech/ngspice/osdi/psp103_nqs.osdi",
+      "$PDK_ROOT/ihp-sg13g2/libs.tech/ngspice/osdi/mosvar.osdi"
+    ],
+    "stage_model_inputs": true,
+    "ngspice_init": [
+      "set numdgt=8"
+    ]
+  }
+}

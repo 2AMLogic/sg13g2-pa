@@ -1,0 +1,103 @@
+{
+  "netlist": "inverter.spice",
+  "models": {
+    "pdk": "ihp-sg13g2"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "tt",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerMOSlv.lib",
+            "section": "mos_tt"
+          }
+        ]
+      },
+      {
+        "name": "ff",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerMOSlv.lib",
+            "section": "mos_ff"
+          }
+        ]
+      },
+      {
+        "name": "ss",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerMOSlv.lib",
+            "section": "mos_ss"
+          }
+        ]
+      },
+      {
+        "name": "fs",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerMOSlv.lib",
+            "section": "mos_fs"
+          }
+        ]
+      },
+      {
+        "name": "sf",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerMOSlv.lib",
+            "section": "mos_sf"
+          }
+        ]
+      }
+    ],
+    "supply_v": {
+      "vdd": [
+        1.2
+      ]
+    },
+    "temperature_c": [
+      27
+    ]
+  },
+  "analysis": {
+    "kind": "dc",
+    "args": "Vin 0 1.2 0.05"
+  },
+  "measurements": [
+    {
+      "name": "vout_vin_low",
+      "spice": ".meas dc vout_vin_low FIND v(out) AT=0.05",
+      "unit": "V",
+      "limits": {
+        "min": 1.1
+      }
+    },
+    {
+      "name": "vout_vin_high",
+      "spice": ".meas dc vout_vin_high FIND v(out) AT=1.15",
+      "unit": "V",
+      "limits": {
+        "max": 0.1
+      }
+    },
+    {
+      "name": "vm",
+      "spice": ".meas dc vm WHEN v(out)=0.6",
+      "unit": "V"
+    }
+  ],
+  "options": {
+    "timeout_s": 120,
+    "keep_artifacts": true,
+    "osdi_preload": [
+      "$PDK_ROOT/ihp-sg13g2/libs.tech/ngspice/osdi/psp103.osdi",
+      "$PDK_ROOT/ihp-sg13g2/libs.tech/ngspice/osdi/psp103_nqs.osdi",
+      "$PDK_ROOT/ihp-sg13g2/libs.tech/ngspice/osdi/mosvar.osdi"
+    ],
+    "stage_model_inputs": true,
+    "ngspice_init": [
+      "set numdgt=8"
+    ]
+  }
+}

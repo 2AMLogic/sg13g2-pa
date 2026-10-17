@@ -1,0 +1,30 @@
+{
+  "_comment": "Tool floors for sim/. 'floor' is the minimum this repo claims; 'verified_with' is what the smoke record was actually produced with. setup-env.sh does not install host tools -- a tool below its floor is reported, not fixed.",
+  "ngspice": {
+    "floor": "42",
+    "floor_for_osdi_mos": "44",
+    "needs": "KLU solver; OSDI 0.4 (ngspice >= 44) for any MOS/PSP103 deck. npn13G2 alone (native VBIC) runs on 42.",
+    "verified_with": {
+      "local_host": "ngspice-42 (npn13G2 op only)",
+      "batch_fleet_worker": "ngspice-46 (MOS decks)"
+    }
+  },
+  "openvaf": {
+    "compiler": "OpenVAF-Reloaded openvaf-r",
+    "tag": "v24.0.1mob",
+    "pinned_in": "sim/tools/build-osdi.sh (per-platform sha256)",
+    "libllvm": "libLLVM.so.21 from the apt.llvm.org libllvm21 .deb, sha256-pinned in sim/tools/build-osdi.sh (Linux x86_64 only)"
+  },
+  "python": {
+    "floor": "3.8",
+    "used_by": "sim/tools/pdk_identity.py (stdlib only, run with -I)",
+    "verified_with": "3.12"
+  },
+  "klt": {
+    "pin": "0.7.0",
+    "floor": "0.7.0",
+    "run_as": "uvx --from klayout-tools==0.7.0 klt (throwaway env; sim/smoke/run_smoke.sh)",
+    "used_by": "sim/smoke/run_smoke.sh (klt sim corner requests with options.osdi_preload, options.stage_model_inputs)",
+    "not_usable": "0.7.1.dev1755+gdce956c3c399 (the host-installed build): batch jobs failed on the worker with exit 2 and no report on 2026-10-17 for these requests; 0.7.0 ran them"
+  }
+}
