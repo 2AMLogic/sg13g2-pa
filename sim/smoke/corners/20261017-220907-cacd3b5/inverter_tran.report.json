@@ -1,0 +1,435 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "sim/smoke/inverter.spice",
+    "scope": "repo"
+  },
+  "status": "pass",
+  "corner_count": 5,
+  "passed": 5,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 5,
+    "sim__corner__passed_count": 5,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "46",
+    "ngspice_binary": "/usr/bin/ngspice",
+    "models_lib": {
+      "path": null,
+      "scope": "absent"
+    },
+    "models_lib_sha256": null,
+    "netlist_sha256": "f31383fcff622d56d3ae1fb5a5cafe46cffa7efbaeeb62a34593d8b78e15d505",
+    "netlist_closure": [
+      {
+        "path": "sim/smoke/inverter.spice",
+        "scope": "repo",
+        "sha256": "f31383fcff622d56d3ae1fb5a5cafe46cffa7efbaeeb62a34593d8b78e15d505"
+      }
+    ],
+    "osdi_preload": [
+      {
+        "name": "psp103.osdi",
+        "path": null,
+        "scope": "external",
+        "sha256": "2e4299c4683997e26469410dc1ab36b02ced924b1ac0972d6c4eae360e1fc796"
+      },
+      {
+        "name": "psp103_nqs.osdi",
+        "path": null,
+        "scope": "external",
+        "sha256": "839b164483205601c09032951f6c41d3580f15e506dc40a7202950d3afbdfc7d"
+      },
+      {
+        "name": "mosvar.osdi",
+        "path": null,
+        "scope": "external",
+        "sha256": "25e64a374ab523dbfeb7ffed75dcb8b086ee10f06120a9074bd68b92d7b0fb41"
+      }
+    ],
+    "corner_section_libs": [
+      {
+        "name": "cornerMOSlv.lib",
+        "path": null,
+        "scope": "external",
+        "sha256": "03d505847c880d233b341be115a1e5460edf4d8e9b3e8a7df791a52fa4455d67"
+      }
+    ],
+    "staged_model_inputs": [
+      {
+        "name": "cornerMOSlv.lib",
+        "field": "corners.process[0].sections[0].lib",
+        "kind": "library",
+        "sha256": "07f15f24b990ab9eff8e1000457ad180a5199b48fc17217ac3572bdcdfbf5f72",
+        "rewritten": true
+      },
+      {
+        "name": "psp103.osdi",
+        "field": "options.osdi_preload[0]",
+        "kind": "osdi",
+        "sha256": "2e4299c4683997e26469410dc1ab36b02ced924b1ac0972d6c4eae360e1fc796",
+        "rewritten": false
+      },
+      {
+        "name": "psp103_nqs.osdi",
+        "field": "options.osdi_preload[1]",
+        "kind": "osdi",
+        "sha256": "839b164483205601c09032951f6c41d3580f15e506dc40a7202950d3afbdfc7d",
+        "rewritten": false
+      },
+      {
+        "name": "mosvar.osdi",
+        "field": "options.osdi_preload[2]",
+        "kind": "osdi",
+        "sha256": "25e64a374ab523dbfeb7ffed75dcb8b086ee10f06120a9074bd68b92d7b0fb41",
+        "rewritten": false
+      },
+      {
+        "name": "sg13g2_moslv_mod.lib",
+        "field": "corners.process[0].sections[0].lib",
+        "kind": "dependency",
+        "sha256": "0aa1a5630a7c8fb8ae896c57c475954ff5885c4831311f8cd9c9e64d6cbb8332",
+        "rewritten": true
+      },
+      {
+        "name": "sg13g2_moslv_mismatch.lib",
+        "field": "corners.process[0].sections[0].lib",
+        "kind": "dependency",
+        "sha256": "2d3251e2d42eadb0f8af152a4915fdc60a68bceb95a2d17a52f90cfb34b7e63e",
+        "rewritten": false
+      },
+      {
+        "name": "sg13g2_moslv_mod_mismatch.lib",
+        "field": "corners.process[0].sections[0].lib",
+        "kind": "dependency",
+        "sha256": "28f681005831113ad5377f1b867d8869b78f329a7f52aa821ff56aa1e648b68b",
+        "rewritten": true
+      },
+      {
+        "name": "sg13g2_moslv_stat.lib",
+        "field": "corners.process[0].sections[0].lib",
+        "kind": "dependency",
+        "sha256": "7f4cf8df714e327348ba3975a2630e9d7dd7ae1a7a88817df4890e82745f0f52",
+        "rewritten": false
+      },
+      {
+        "name": "sg13g2_moslv_parm.lib",
+        "field": "corners.process[0].sections[0].lib",
+        "kind": "dependency",
+        "sha256": "cbf10b8453a18bb70b8ad0d6e40faa0937338e699b5460947a94900db6c92a6e",
+        "rewritten": false
+      }
+    ],
+    "remote": {
+      "provider": "aws-batch-fleet",
+      "job_id": "klt-sim-7b39a4f55ebc",
+      "bucket": "2am-batch-jobs-221082181346",
+      "region": "us-east-1",
+      "instance_id": "i-0f84964dcc2af832c",
+      "instance_type": "m7i.4xlarge",
+      "availability_zone": "us-east-1a",
+      "ami_id": "ami-0e0bec04ad8e81877",
+      "lifecycle": "spot",
+      "spot": true,
+      "state": "done",
+      "exit_code": "0",
+      "concurrency": "1",
+      "physical_cores": "8",
+      "elapsed_seconds": 22,
+      "runner_klt_version": "0.7.0",
+      "client_klt_version": "0.7.0",
+      "runner_compatibility": "match"
+    }
+  },
+  "coverage": {
+    "corners_simulated": 5,
+    "measurements_declared": 2,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "measurement:[0,\"tt/1.200V/27C\",\"tphl\"]/observation",
+      "measurement:[0,\"tt/1.200V/27C\",\"tplh\"]/observation",
+      "measurement:[1,\"ff/1.200V/27C\",\"tphl\"]/observation",
+      "measurement:[1,\"ff/1.200V/27C\",\"tplh\"]/observation",
+      "measurement:[2,\"ss/1.200V/27C\",\"tphl\"]/observation",
+      "measurement:[2,\"ss/1.200V/27C\",\"tplh\"]/observation",
+      "measurement:[3,\"fs/1.200V/27C\",\"tphl\"]/observation",
+      "measurement:[3,\"fs/1.200V/27C\",\"tplh\"]/observation",
+      "measurement:[4,\"sf/1.200V/27C\",\"tphl\"]/observation",
+      "measurement:[4,\"sf/1.200V/27C\",\"tplh\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"tt/1.200V/27C\",\"tphl\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/1.200V/27C\",\"tplh\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"ff/1.200V/27C\",\"tphl\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"ff/1.200V/27C\",\"tplh\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"ss/1.200V/27C\",\"tphl\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"ss/1.200V/27C\",\"tplh\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"fs/1.200V/27C\",\"tphl\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"fs/1.200V/27C\",\"tplh\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"sf/1.200V/27C\",\"tphl\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"sf/1.200V/27C\",\"tplh\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.7.0",
+    "klayout_version": "0.30.12",
+    "pdk": {
+      "name": "ihp-sg13g2",
+      "source": "PDK_ROOT environment variable",
+      "version": null,
+      "ambiguous_sources": [
+        "search root: ~/share/pdk"
+      ]
+    },
+    "deck": null,
+    "input": {
+      "content_hash": "sha256:f31383fcff622d56d3ae1fb5a5cafe46cffa7efbaeeb62a34593d8b78e15d505",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "tphl",
+      "unit": "s",
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/1.200V/27C",
+        "value": 9.45716e-11,
+        "margin": null
+      }
+    },
+    {
+      "name": "tplh",
+      "unit": "s",
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/1.200V/27C",
+        "value": 1.55576e-10,
+        "margin": null
+      }
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "tt/1.200V/27C",
+      "process": "tt",
+      "supply_v": {
+        "vdd": 1.2
+      },
+      "temperature_c": 27,
+      "status": "pass",
+      "runtime_s": 14.484,
+      "measurements": [
+        {
+          "name": "tphl",
+          "value": 9.45716e-11,
+          "unit": "s",
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "tplh",
+          "value": 1.55576e-10,
+          "unit": "s",
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/inverter_tran/tt_1p200V_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/inverter_tran/tt_1p200V_27C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "ff/1.200V/27C",
+      "process": "ff",
+      "supply_v": {
+        "vdd": 1.2
+      },
+      "temperature_c": 27,
+      "status": "pass",
+      "runtime_s": 15.888,
+      "measurements": [
+        {
+          "name": "tphl",
+          "value": 7.75203e-11,
+          "unit": "s",
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "tplh",
+          "value": 1.27026e-10,
+          "unit": "s",
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/inverter_tran/ff_1p200V_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/inverter_tran/ff_1p200V_27C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "ss/1.200V/27C",
+      "process": "ss",
+      "supply_v": {
+        "vdd": 1.2
+      },
+      "temperature_c": 27,
+      "status": "pass",
+      "runtime_s": 14.97,
+      "measurements": [
+        {
+          "name": "tphl",
+          "value": 1.20362e-10,
+          "unit": "s",
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "tplh",
+          "value": 2.02388e-10,
+          "unit": "s",
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/inverter_tran/ss_1p200V_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/inverter_tran/ss_1p200V_27C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "fs/1.200V/27C",
+      "process": "fs",
+      "supply_v": {
+        "vdd": 1.2
+      },
+      "temperature_c": 27,
+      "status": "pass",
+      "runtime_s": 15.898,
+      "measurements": [
+        {
+          "name": "tphl",
+          "value": 8.61773e-11,
+          "unit": "s",
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "tplh",
+          "value": 1.78336e-10,
+          "unit": "s",
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/inverter_tran/fs_1p200V_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/inverter_tran/fs_1p200V_27C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "sf/1.200V/27C",
+      "process": "sf",
+      "supply_v": {
+        "vdd": 1.2
+      },
+      "temperature_c": 27,
+      "status": "pass",
+      "runtime_s": 15.898,
+      "measurements": [
+        {
+          "name": "tphl",
+          "value": 1.07371e-10,
+          "unit": "s",
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "tplh",
+          "value": 1.43249e-10,
+          "unit": "s",
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/inverter_tran/sf_1p200V_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/inverter_tran/sf_1p200V_27C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}

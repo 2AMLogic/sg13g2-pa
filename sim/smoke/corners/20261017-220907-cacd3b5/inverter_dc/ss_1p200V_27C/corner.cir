@@ -1,0 +1,17 @@
+* klt sim -- generated corner deck, do not edit
+.lib /var/tmp/eda-job-klt-sim-c8602004b47e/inputs/cornerMOSlv.lib mos_ss
+.include /var/tmp/eda-job-klt-sim-c8602004b47e/inputs/netlist.cir
+.temp 27
+.meas dc vout_vin_low FIND v(out) AT=0.05
+.meas dc vout_vin_high FIND v(out) AT=1.15
+.meas dc vm WHEN v(out)=0.6
+.control
+pre_osdi /var/tmp/eda-job-klt-sim-c8602004b47e/inputs/psp103.osdi
+pre_osdi /var/tmp/eda-job-klt-sim-c8602004b47e/inputs/psp103_nqs.osdi
+pre_osdi /var/tmp/eda-job-klt-sim-c8602004b47e/inputs/mosvar.osdi
+save all
+alter vdd=1.2
+dc Vin 0 1.2 0.05
+quit
+.endc
+.end

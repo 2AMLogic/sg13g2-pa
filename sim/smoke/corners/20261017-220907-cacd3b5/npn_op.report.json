@@ -1,0 +1,200 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "sim/smoke/npn_op.spice",
+    "scope": "repo"
+  },
+  "status": "pass",
+  "corner_count": 1,
+  "passed": 1,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 1,
+    "sim__corner__passed_count": 1,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "42",
+    "ngspice_binary": "/usr/bin/ngspice",
+    "models_lib": {
+      "path": null,
+      "scope": "absent"
+    },
+    "models_lib_sha256": null,
+    "netlist_sha256": "6d774c43197ba08ed049454f84f215016abe6a7e82f0109802cd7c8107a23c04",
+    "netlist_closure": [
+      {
+        "path": "sim/smoke/npn_op.spice",
+        "scope": "repo",
+        "sha256": "6d774c43197ba08ed049454f84f215016abe6a7e82f0109802cd7c8107a23c04"
+      }
+    ],
+    "corner_section_libs": [
+      {
+        "name": "cornerHBT.lib",
+        "path": null,
+        "scope": "external",
+        "sha256": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462"
+      }
+    ]
+  },
+  "coverage": {
+    "corners_simulated": 1,
+    "measurements_declared": 4,
+    "measurements_with_limits": 1,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "limit:[0,\"hbt_typ/1.000V/27C\",\"ic\",\"max\"]",
+      "limit:[0,\"hbt_typ/1.000V/27C\",\"ic\",\"min\"]",
+      "measurement:[0,\"hbt_typ/1.000V/27C\",\"ib\"]/observation",
+      "measurement:[0,\"hbt_typ/1.000V/27C\",\"vbe\"]/observation",
+      "measurement:[0,\"hbt_typ/1.000V/27C\",\"vce\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"hbt_typ/1.000V/27C\",\"ib\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"hbt_typ/1.000V/27C\",\"vbe\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"hbt_typ/1.000V/27C\",\"vce\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.7.0",
+    "klayout_version": "0.30.12",
+    "pdk": {
+      "name": "ihp-sg13g2",
+      "source": "PDK_ROOT environment variable",
+      "version": null,
+      "ambiguous_sources": [
+        "search root: ~/share/pdk"
+      ]
+    },
+    "deck": null,
+    "input": {
+      "content_hash": "sha256:6d774c43197ba08ed049454f84f215016abe6a7e82f0109802cd7c8107a23c04",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "ic",
+      "unit": "A",
+      "limits": {
+        "min": 1e-06,
+        "max": 0.003
+      },
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/1.000V/27C",
+        "value": 0.000139917524,
+        "margin": 0.000138917524
+      }
+    },
+    {
+      "name": "ib",
+      "unit": "A",
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/1.000V/27C",
+        "value": 1.75410578e-07,
+        "margin": null
+      }
+    },
+    {
+      "name": "vbe",
+      "unit": "V",
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/1.000V/27C",
+        "value": 0.8,
+        "margin": null
+      }
+    },
+    {
+      "name": "vce",
+      "unit": "V",
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/1.000V/27C",
+        "value": 1.0,
+        "margin": null
+      }
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "hbt_typ/1.000V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vdd": 1.0
+      },
+      "temperature_c": 27,
+      "status": "pass",
+      "runtime_s": 0.01,
+      "measurements": [
+        {
+          "name": "ic",
+          "value": 0.000139917524,
+          "unit": "A",
+          "status": "pass",
+          "margin": 0.000138917524
+        },
+        {
+          "name": "ib",
+          "value": 1.75410578e-07,
+          "unit": "A",
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "vbe",
+          "value": 0.8,
+          "unit": "V",
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "vce",
+          "value": 1.0,
+          "unit": "V",
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/npn_op/hbt_typ_1p000V_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/clean4/sim/smoke/corners/20261017-220907-cacd3b5/npn_op/hbt_typ_1p000V_27C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}
