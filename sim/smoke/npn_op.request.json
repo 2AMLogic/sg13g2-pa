@@ -1,0 +1,64 @@
+{
+  "netlist": "npn_op.spice",
+  "models": {
+    "pdk": "ihp-sg13g2"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "hbt_typ",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_typ"
+          }
+        ]
+      }
+    ],
+    "supply_v": {
+      "vdd": [
+        1.0
+      ]
+    },
+    "temperature_c": [
+      27
+    ]
+  },
+  "analysis": {
+    "kind": "op",
+    "args": ""
+  },
+  "measurements": [
+    {
+      "name": "ic",
+      "expr": "-i(vdd)",
+      "unit": "A",
+      "limits": {
+        "min": 1e-06,
+        "max": 0.003
+      }
+    },
+    {
+      "name": "ib",
+      "expr": "-i(vb)",
+      "unit": "A"
+    },
+    {
+      "name": "vbe",
+      "expr": "v(b)",
+      "unit": "V"
+    },
+    {
+      "name": "vce",
+      "expr": "v(c)",
+      "unit": "V"
+    }
+  ],
+  "options": {
+    "timeout_s": 60,
+    "keep_artifacts": true,
+    "ngspice_init": [
+      "set numdgt=8"
+    ]
+  }
+}

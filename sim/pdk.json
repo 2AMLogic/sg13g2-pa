@@ -1,0 +1,24 @@
+{
+  "_comment": "Pinned SG13G2 PDK revision every sim/*/records/*.md in this repo traces to. Read by sim/tools/pdk_identity.py (release_tag, variant) as the fail-closed identity check; the rest is a greppable fact sheet. Shape adapted from sg13g2-lna/sim/pdk.json (same PDK, same release); see spec/decision-records/0001-adopt-lna-sim-env.md.",
+  "source": "IHP-GmbH/IHP-Open-PDK",
+  "fetch_method": "scripts/setup-env.sh -> klayout-tools scripts/fetch-ihp-sg13g2.sh (2AMLogic/klayout-tools, commit pinned in scripts/setup-env.sh)",
+  "release_tag": "v0.3.0",
+  "release_url": "https://github.com/IHP-GmbH/IHP-Open-PDK/archive/refs/tags/v0.3.0.tar.gz",
+  "release_sha256": "f6afb7a8d2adf3e40acd3fd2c7892fc93510e6f760565409a8df2b5b242254fc",
+  "variant": "ihp-sg13g2",
+  "pdk_root_layout": "PDK_ROOT/ihp-sg13g2 (open_pdks-shaped); default PDK_ROOT = ~/.cache/sg13g2-pa/pdk-root -> klayout-tools-<commit12>/pdks/ihp-open-pdk",
+  "fetched_version_marker": "PDK_ROOT/.fetched-version (written by the fetch script beside the ihp-sg13g2/ dir); pdk_identity.py also accepts PDK_ROOT/ihp-sg13g2/.fetched-version",
+  "fetched_version_value": "0.3.0",
+  "models_used": {
+    "npn13G2": "native ngspice VBIC (level=9) card in sg13g2_hbt_mod.lib, loaded through cornerHBT.lib sections (hbt_typ etc.); no OSDI. Smoke exercises hbt_typ only; the HBT corner box is the spec's (#2).",
+    "sg13_lv_nmos": "PSP103.6 Verilog-A via OSDI, cornerMOSlv.lib sections mos_tt / mos_ff / mos_ss / mos_fs / mos_sf",
+    "sg13_lv_pmos": "same library and OSDI object as sg13_lv_nmos"
+  },
+  "osdi_toolchain": {
+    "script": "sim/tools/build-osdi.sh",
+    "compiler_repo": "OpenVAF/OpenVAF-Reloaded",
+    "compiler_tag": "v24.0.1mob",
+    "models_built": ["psp103.osdi", "psp103_nqs.osdi", "r3_cmc.osdi", "mosvar.osdi"],
+    "output_dir": "PDK_ROOT/ihp-sg13g2/libs.tech/ngspice/osdi/ (PDK-install territory, not committed)"
+  }
+}

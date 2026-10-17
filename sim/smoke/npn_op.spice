@@ -1,0 +1,7 @@
+* Toolchain smoke: one npn13G2 DC operating point (native VBIC, no OSDI).
+* Typical HBT corner only. Inside the PDK's model-validity window
+* (ic < 3 mA*Nx, vbe 0.65-0.96 V, vce 0.4-2.0 V, Nx=1): Vbe=0.80 V, Vce=1.0 V.
+* NOT a design result. Circuit body only (klt sim owns .control/.end).
+Vdd c 0 dc 1.0
+Vb b 0 dc 0.80
+Xq1 c b 0 0 npn13G2

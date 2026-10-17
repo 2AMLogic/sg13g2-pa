@@ -1,0 +1,19 @@
+* klt sim -- generated corner deck, do not edit
+.lib /home/ubuntu/.cache/sg13g2-pa/pdk-root/ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib hbt_typ
+.include /tmp/clean4/sim/smoke/npn_op.spice
+.temp 27
+.control
+save all
+alter vdd=1.0
+op 
+let ic = -i(vdd)
+print ic
+let ib = -i(vb)
+print ib
+let vbe = v(b)
+print vbe
+let vce = v(c)
+print vce
+quit
+.endc
+.end
