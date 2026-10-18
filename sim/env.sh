@@ -54,11 +54,8 @@ REPO_ROOT="$(cd "${SIM_DIR}/.." && pwd)"
 
 # --- Shared runner surface -----------------------------------------------
 SIM_SCRIPT_NAME=""         # set by sim_require_pdk; prefixes every message
-SIM_LOG_FAIL_PATTERNS=""   # extra egrep alternation for sim_check_log
 SIM_LOG_REQUIRE_COMPLETE=1 # 0 = do not require a BENCH_COMPLETE line (klt-generated logs have none)
 SIM_PDK_PROVENANCE_JSON="" # set by sim_require_pdk: verified PDK identity + model hashes
-SIM_PDK_RELEASE=""         # set by sim_require_pdk: verified installed release (raw)
-SIM_PDK_ID_ROUTE=""        # set by sim_require_pdk: tarball-marker | source-checkout
 
 sim_require_pdk() {
   # sim_require_pdk <script-name> [--osdi]
@@ -142,23 +139,6 @@ sim_require_pdk() {
     exit 3
   fi
   SIM_PDK_PROVENANCE_JSON="${__srp_json}"
-  # shellcheck disable=SC2034  # consumed by the sourcing runner's record prose
-  SIM_PDK_RELEASE="$(printf '%s' "${__srp_json}" | python3 -I -c 'import json,sys; print(json.load(sys.stdin)["installed_release_raw"])')"
-  # shellcheck disable=SC2034  # consumed by the sourcing runner's record prose
-  SIM_PDK_ID_ROUTE="$(printf '%s' "${__srp_json}" | python3 -I -c 'import json,sys; print(json.load(sys.stdin)["identity_route"])')"
-}
-
-sim_render() {
-  # sim_render <template> <outfile> <extra sed-args...>
-  #
-  # Renders one deck: the caller's own substitutions are applied first, then
-  # the PDK paths every deck needs.
-  local tmpl="$1" out="$2"; shift 2
-  sed "$@" \
-    -e "s|@@MODELS_LIB@@|${MODELS_LIB}|g" \
-    -e "s|@@MOS_LIB@@|${MOS_LIB:-}|g" \
-    -e "s|@@OSDI_DIR@@|${OSDI_DIR:-}|g" \
-    "${tmpl}" > "${out}"
 }
 
 sim_check_log() {
@@ -166,13 +146,11 @@ sim_check_log() {
   #
   # The per-point pass/fail gate: a non-zero ngspice exit, a missing
   # "BENCH_COMPLETE" marker (unless SIM_LOG_REQUIRE_COMPLETE=0), or any model/convergence error pattern fails
-  # the point (returns 1 and names it on stderr). SIM_LOG_FAIL_PATTERNS adds
-  # bench-specific egrep alternatives.
+  # the point (returns 1 and names it on stderr).
   local point_id="$1" log="$2" rc="$3"
   local base='Unable to find definition of model|couldn.t be loaded|Unknown model type|no such file|singular matrix|Timestep too small|convergence problem|doAnalyses: .*(failed|error)|Error:'
   if [[ "${rc}" -ne 0 ]] \
     || grep -qiE "${base}" "${log}" \
-    || { [[ -n "${SIM_LOG_FAIL_PATTERNS}" ]] && grep -qiE "${SIM_LOG_FAIL_PATTERNS}" "${log}"; } \
     || { [[ "${SIM_LOG_REQUIRE_COMPLETE}" == 1 ]] && ! grep -q "^BENCH_COMPLETE" "${log}"; }; then
     echo "${SIM_SCRIPT_NAME}: FAILED ${point_id} (rc=${rc}) -- see ${log}" >&2
     return 1
