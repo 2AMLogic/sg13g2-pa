@@ -1,0 +1,1 @@
+{"layout": {"file": "sg13g2_inv_1.gds", "deck": "sg13g2", "top": "sg13g2_inv_1"}, "reference": {"netlist": "sg13g2_inv_1.sim.spice", "top": "sg13g2_inv_1", "form": "subckt-call", "deck": "sg13g2"}}
