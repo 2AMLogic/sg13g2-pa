@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "engine": "klayout",
+  "layout": "sg13g2_inv_1.gds",
+  "reference": "sg13g2_inv_1.sim.spice",
+  "top": "sg13g2_inv_1",
+  "reference_top": "SG13G2_INV_1",
+  "reference_conversion": {
+    "form": "subckt-call",
+    "deck": "sg13g2",
+    "device_map": null
+  },
+  "parameter_tolerance": null,
+  "options": {
+    "combine_devices": false,
+    "combine_devices_per_circuit": null,
+    "combine_devices_max_attempts": 5,
+    "flatten_layout": false,
+    "flatten_reference": false,
+    "netgen_setup": null,
+    "parameter_tolerance": null,
+    "compare_parameters": null,
+    "power_connectivity": null,
+    "anchor_top_level_pins": null,
+    "supply_nets": [
+      "GND",
+      "VCC",
+      "VDD",
+      "VGND",
+      "VPWR",
+      "VSS"
+    ]
+  },
+  "hints_applied": null,
+  "status": "match",
+  "power_connectivity": {
+    "status": "unchecked",
+    "reason": "reference.form is 'subckt-call', whose reference netlist carries its own power/ground pins and nets -- they take part in the ordinary compare, so this check (which exists to cover the signal-only 'gate-level-verilog' form) does not apply",
+    "power_pins": [],
+    "power_pins_derivation": null,
+    "instance_count": 0,
+    "expected_nets": null,
+    "unchecked_expected_pins": [],
+    "findings": [],
+    "finding_count": 0
+  },
+  "body_verification": {
+    "status": "verified",
+    "reason": null,
+    "device_classes": [],
+    "device_count": 0,
+    "findings": [],
+    "finding_count": 0
+  },
+  "device_parameter_coverage": [],
+  "mismatch_count": 0,
+  "error_count": 0,
+  "category_counts": {},
+  "category_error_counts": {},
+  "counts": {
+    "nets": {
+      "layout": 4,
+      "reference": 4,
+      "matched": 4
+    },
+    "devices": {
+      "layout": 2,
+      "reference": 2,
+      "matched": 2
+    },
+    "pins": {
+      "layout": 4,
+      "reference": 4,
+      "matched": 4
+    }
+  },
+  "device_classes": [
+    "nfet",
+    "pfet",
+    "cap_cmim",
+    "rfcmim",
+    "cap_cmomi",
+    "cap_cmomf",
+    "resistor",
+    "dantenna",
+    "dpantenna"
+  ],
+  "environment": {
+    "engine": "klayout",
+    "engine_version": "0.30.12",
+    "netgen_binary": null,
+    "layout_sha256": "02c9a6c1e57a6fafee8179a1d8e2fb4d5713b7179fdc6688d4de8ff6b8fbf2d8",
+    "reference_sha256": "bf81cb47a151cfce696649a5b3e57c620f25d3c00f6030b3a858881f6bbf4191",
+    "extracted_netlist": null
+  },
+  "provenance": {
+    "klt_version": "0.7.0",
+    "klayout_version": "0.30.12",
+    "pdk": null,
+    "deck": {
+      "name": "sg13g2",
+      "content_hash": "sha256:bf483105cb17948270f0cad45d9418787654bfc0a5ffd04a2e2413d8c7d3b6e7",
+      "released": true
+    },
+    "input": {
+      "content_hash": "sha256:02c9a6c1e57a6fafee8179a1d8e2fb4d5713b7179fdc6688d4de8ff6b8fbf2d8",
+      "role": "layout"
+    },
+    "klayout_version_mismatch": false
+  },
+  "mismatches": [],
+  "net_correspondence": [
+    {
+      "layout": "A",
+      "reference": "A",
+      "pin": true
+    },
+    {
+      "layout": "VDD",
+      "reference": "VDD",
+      "pin": true
+    },
+    {
+      "layout": "VSS",
+      "reference": "VSS",
+      "pin": true
+    },
+    {
+      "layout": "Y",
+      "reference": "Y",
+      "pin": true
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+* Derived from sg13g2_inv_1.cdl (IHP-Open-PDK v0.3.0): sg13g2_inv_1 subckt only, M-cards rewritten as X subcircuit calls (the simulation form).
+.SUBCKT sg13g2_inv_1 A VDD VSS Y
+XMX1 Y A VSS VSS sg13_lv_nmos m=1 w=740.00n l=130.00n ng=1
+XMX0 Y A VDD VDD sg13_lv_pmos m=1 w=1.12u l=130.00n ng=1
+.ENDS
