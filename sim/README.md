@@ -62,7 +62,7 @@ not rerun locally. `sim/env.sh` deliberately carries no job pool.
 ## Layout
 
 - `pdk.json`, `toolchain.json` - pins and tool floors.
-- `env.sh` - resolver and shared runner surface (`sim_require_pdk`, `sim_render`, `sim_check_log`).
+- `env.sh` - resolver and shared runner surface (`sim_require_pdk`, `sim_check_log`).
 - `tools/` - `build-osdi.sh`, `pdk_identity.py`.
 - `smoke/` - toolchain smoke test (decks, `klt sim` requests, `run_smoke.sh`,
   `corners/<id>/` artifacts, `records/<id>.md`). Not a design result.

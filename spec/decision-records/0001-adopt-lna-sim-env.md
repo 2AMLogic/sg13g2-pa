@@ -42,7 +42,10 @@ Changes made (the diff against the source is the full account):
   default `~/.cache/sg13g2-pa` (was the shared `~/.cache/sg13g2-bandgap`).
 - `sim/env.sh`: dropped `sim_jobs` / `sim_pool_*` (a hand-rolled `ngspice -b`
   job pool; grids here go through `klt sim`), `sim_record_paths` and the
-  committed-DUT splice (`@@LNA_SUBCKT@@`); every failure now carries a named
+  committed-DUT splice (`@@LNA_SUBCKT@@`), and later also `sim_render` (the
+  `@@MODELS_LIB@@` / `@@MOS_LIB@@` / `@@OSDI_DIR@@` sed renderer; decks go
+  through `klt sim` requests), `SIM_LOG_FAIL_PATTERNS` and the unread
+  `SIM_PDK_RELEASE` / `SIM_PDK_ID_ROUTE` (issue #11); every failure now carries a named
   error; added `SG13G2_TOOLS_CACHE/pdk-root` to the resolution order and
   `SIM_LOG_REQUIRE_COMPLETE`; `--osdi` now checks `cornerMOSlv.lib` (core MOS)
   and `r3_cmc.osdi`.
