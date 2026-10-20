@@ -3,6 +3,11 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-10-20
+
+- **PR #6**: ci: add T1 block manifest, vendored checklist and signoff record check
+- **Issue #3** (closed): Add the T1 signoff scaffolding: block manifest, vendored checklist and CI (item 10)
+
 ### 2026-10-18
 
 - **PR #14**: feat(layout): pin klt 0.7.0 and add DRC/LVS smoke on sg13g2_inv_1

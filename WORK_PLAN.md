@@ -8,7 +8,7 @@ Only the region between the markers is machine-generated.
 
 Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
 
-- **#6**: ci: add T1 block manifest, vendored checklist and signoff record check
+_None._
 
 ## Very Important
 
@@ -32,7 +32,7 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-- **#3**: Add the T1 signoff scaffolding: block manifest, vendored checklist and CI (item 10)
+_None._
 
 ## PRs Awaiting Review
 
@@ -44,13 +44,13 @@ _None._
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-- **#6**: ci: add T1 block manifest, vendored checklist and signoff record check
+_None._
 
 ## Proposed
 
 Issues carrying `loom:curated`.
 
-- **#3**: Add the T1 signoff scaffolding: block manifest, vendored checklist and CI (item 10) *(curated)*
+_None._
 
 ## Proposed (Architect / Hermit)
 
@@ -64,14 +64,14 @@ _None._
 
 | Bucket | Count |
 |------|-------|
-| Operator merge-risk holds | 1 |
+| Operator merge-risk holds | 0 |
 | Very important | 0 |
 | Important | 0 |
 | Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 1 |
+| In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 1 |
-| Curated | 1 |
+| Approved PRs awaiting merge | 0 |
+| Curated | 0 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
