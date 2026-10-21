@@ -3,6 +3,10 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-10-21
+
+- **PR #17**: Bump Repo Skills 0.24.3 -> 0.24.7
+
 ### 2026-10-20
 
 - **PR #6**: ci: add T1 block manifest, vendored checklist and signoff record check
