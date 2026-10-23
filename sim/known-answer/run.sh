@@ -42,7 +42,8 @@ KLT_VERSION="$("${KLT_CMD[@]}" --version 2>&1 | tail -1)"
 
 REPO_GIT_SHA="$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 DIRTY=0
-[[ -z "$(git -C "${REPO_ROOT}" status --porcelain -- sim 2>/dev/null)" ]] || DIRTY=1
+# Earlier records/corners of this directory are evidence, not inputs: ignore them.
+[[ -z "$(git -C "${REPO_ROOT}" status --porcelain -- sim ':!sim/known-answer/records' ':!sim/known-answer/corners' 2>/dev/null)" ]] || DIRTY=1
 RECORD_ID="$(date -u +%Y%m%d-%H%M%S)-${REPO_GIT_SHA}${suffix}"
 RECORDS_DIR="${SCRIPT_DIR}/records"
 KEEP="${SCRIPT_DIR}/corners/${RECORD_ID}"
