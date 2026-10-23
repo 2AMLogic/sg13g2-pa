@@ -1,0 +1,7 @@
+* Known-answer NEGATIVE CONTROL: deck 1 with a 75 ohm load instead of 50.
+* Load power drops by 0.18 dB (a 51 ohm load would move it only 0.0004 dB,
+* inside the tolerance, so it would not be a control). run.sh --wrong-load
+* compares this against the 50 ohm analytic value and must fail.
+Vs src 0 dc 0 sin(0 1 1g)
+Rs src out 50
+Rl out 0 75
