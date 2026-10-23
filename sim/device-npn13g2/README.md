@@ -13,7 +13,7 @@ ratifies nothing and edits no spec row.
 scripts/setup-env.sh                      # once
 sim/device-npn13g2/run_device.sh          # ~2 min on the batch fleet
 python3 -I sim/device-npn13g2/loadline.py --self-test
-python3 -I sim/device-npn13g2/loadline.py --out sim/device-npn13g2/loadline.json
+python3 -I sim/device-npn13g2/loadline.py --out /tmp/loadline.json   # scratch path; evidence lives in records/
 ```
 
 `run_device.sh` first runs the `loadline.py` known-answer self-test and checks the
