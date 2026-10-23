@@ -1,0 +1,82 @@
+* klt sim -- generated corner deck, do not edit
+.lib /opt/pdk/ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib hbt_wcs
+.include /var/tmp/eda-job-klt-sim-25cdd35f1b6e/inputs/netlist.cir
+.temp 125
+.meas ac icac_n1_v70_f20e9 FIND vm(ico_n1_v70) AT=20e9
+.meas ac ibac_n1_v70_f20e9 FIND vm(ibo_n1_v70) AT=20e9
+.meas ac icac_n1_v70_f50e9 FIND vm(ico_n1_v70) AT=50e9
+.meas ac ibac_n1_v70_f50e9 FIND vm(ibo_n1_v70) AT=50e9
+.meas ac icac_n1_v74_f20e9 FIND vm(ico_n1_v74) AT=20e9
+.meas ac ibac_n1_v74_f20e9 FIND vm(ibo_n1_v74) AT=20e9
+.meas ac icac_n1_v74_f50e9 FIND vm(ico_n1_v74) AT=50e9
+.meas ac ibac_n1_v74_f50e9 FIND vm(ibo_n1_v74) AT=50e9
+.meas ac icac_n1_v78_f20e9 FIND vm(ico_n1_v78) AT=20e9
+.meas ac ibac_n1_v78_f20e9 FIND vm(ibo_n1_v78) AT=20e9
+.meas ac icac_n1_v78_f50e9 FIND vm(ico_n1_v78) AT=50e9
+.meas ac ibac_n1_v78_f50e9 FIND vm(ibo_n1_v78) AT=50e9
+.meas ac icac_n1_v82_f20e9 FIND vm(ico_n1_v82) AT=20e9
+.meas ac ibac_n1_v82_f20e9 FIND vm(ibo_n1_v82) AT=20e9
+.meas ac icac_n1_v82_f50e9 FIND vm(ico_n1_v82) AT=50e9
+.meas ac ibac_n1_v82_f50e9 FIND vm(ibo_n1_v82) AT=50e9
+.meas ac icac_n1_v86_f20e9 FIND vm(ico_n1_v86) AT=20e9
+.meas ac ibac_n1_v86_f20e9 FIND vm(ibo_n1_v86) AT=20e9
+.meas ac icac_n1_v86_f50e9 FIND vm(ico_n1_v86) AT=50e9
+.meas ac ibac_n1_v86_f50e9 FIND vm(ibo_n1_v86) AT=50e9
+.meas ac icac_n1_v90_f20e9 FIND vm(ico_n1_v90) AT=20e9
+.meas ac ibac_n1_v90_f20e9 FIND vm(ibo_n1_v90) AT=20e9
+.meas ac icac_n1_v90_f50e9 FIND vm(ico_n1_v90) AT=50e9
+.meas ac ibac_n1_v90_f50e9 FIND vm(ibo_n1_v90) AT=50e9
+.meas ac icac_n4_v70_f20e9 FIND vm(ico_n4_v70) AT=20e9
+.meas ac ibac_n4_v70_f20e9 FIND vm(ibo_n4_v70) AT=20e9
+.meas ac icac_n4_v70_f50e9 FIND vm(ico_n4_v70) AT=50e9
+.meas ac ibac_n4_v70_f50e9 FIND vm(ibo_n4_v70) AT=50e9
+.meas ac icac_n4_v74_f20e9 FIND vm(ico_n4_v74) AT=20e9
+.meas ac ibac_n4_v74_f20e9 FIND vm(ibo_n4_v74) AT=20e9
+.meas ac icac_n4_v74_f50e9 FIND vm(ico_n4_v74) AT=50e9
+.meas ac ibac_n4_v74_f50e9 FIND vm(ibo_n4_v74) AT=50e9
+.meas ac icac_n4_v78_f20e9 FIND vm(ico_n4_v78) AT=20e9
+.meas ac ibac_n4_v78_f20e9 FIND vm(ibo_n4_v78) AT=20e9
+.meas ac icac_n4_v78_f50e9 FIND vm(ico_n4_v78) AT=50e9
+.meas ac ibac_n4_v78_f50e9 FIND vm(ibo_n4_v78) AT=50e9
+.meas ac icac_n4_v82_f20e9 FIND vm(ico_n4_v82) AT=20e9
+.meas ac ibac_n4_v82_f20e9 FIND vm(ibo_n4_v82) AT=20e9
+.meas ac icac_n4_v82_f50e9 FIND vm(ico_n4_v82) AT=50e9
+.meas ac ibac_n4_v82_f50e9 FIND vm(ibo_n4_v82) AT=50e9
+.meas ac icac_n4_v86_f20e9 FIND vm(ico_n4_v86) AT=20e9
+.meas ac ibac_n4_v86_f20e9 FIND vm(ibo_n4_v86) AT=20e9
+.meas ac icac_n4_v86_f50e9 FIND vm(ico_n4_v86) AT=50e9
+.meas ac ibac_n4_v86_f50e9 FIND vm(ibo_n4_v86) AT=50e9
+.meas ac icac_n4_v90_f20e9 FIND vm(ico_n4_v90) AT=20e9
+.meas ac ibac_n4_v90_f20e9 FIND vm(ibo_n4_v90) AT=20e9
+.meas ac icac_n4_v90_f50e9 FIND vm(ico_n4_v90) AT=50e9
+.meas ac ibac_n4_v90_f50e9 FIND vm(ibo_n4_v90) AT=50e9
+.meas ac icac_n10_v70_f20e9 FIND vm(ico_n10_v70) AT=20e9
+.meas ac ibac_n10_v70_f20e9 FIND vm(ibo_n10_v70) AT=20e9
+.meas ac icac_n10_v70_f50e9 FIND vm(ico_n10_v70) AT=50e9
+.meas ac ibac_n10_v70_f50e9 FIND vm(ibo_n10_v70) AT=50e9
+.meas ac icac_n10_v74_f20e9 FIND vm(ico_n10_v74) AT=20e9
+.meas ac ibac_n10_v74_f20e9 FIND vm(ibo_n10_v74) AT=20e9
+.meas ac icac_n10_v74_f50e9 FIND vm(ico_n10_v74) AT=50e9
+.meas ac ibac_n10_v74_f50e9 FIND vm(ibo_n10_v74) AT=50e9
+.meas ac icac_n10_v78_f20e9 FIND vm(ico_n10_v78) AT=20e9
+.meas ac ibac_n10_v78_f20e9 FIND vm(ibo_n10_v78) AT=20e9
+.meas ac icac_n10_v78_f50e9 FIND vm(ico_n10_v78) AT=50e9
+.meas ac ibac_n10_v78_f50e9 FIND vm(ibo_n10_v78) AT=50e9
+.meas ac icac_n10_v82_f20e9 FIND vm(ico_n10_v82) AT=20e9
+.meas ac ibac_n10_v82_f20e9 FIND vm(ibo_n10_v82) AT=20e9
+.meas ac icac_n10_v82_f50e9 FIND vm(ico_n10_v82) AT=50e9
+.meas ac ibac_n10_v82_f50e9 FIND vm(ibo_n10_v82) AT=50e9
+.meas ac icac_n10_v86_f20e9 FIND vm(ico_n10_v86) AT=20e9
+.meas ac ibac_n10_v86_f20e9 FIND vm(ibo_n10_v86) AT=20e9
+.meas ac icac_n10_v86_f50e9 FIND vm(ico_n10_v86) AT=50e9
+.meas ac ibac_n10_v86_f50e9 FIND vm(ibo_n10_v86) AT=50e9
+.meas ac icac_n10_v90_f20e9 FIND vm(ico_n10_v90) AT=20e9
+.meas ac ibac_n10_v90_f20e9 FIND vm(ibo_n10_v90) AT=20e9
+.meas ac icac_n10_v90_f50e9 FIND vm(ico_n10_v90) AT=50e9
+.meas ac ibac_n10_v90_f50e9 FIND vm(ibo_n10_v90) AT=50e9
+.control
+save all
+ac dec 20 10e9 100e9
+quit
+.endc
+.end

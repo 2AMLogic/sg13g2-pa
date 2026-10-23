@@ -1,0 +1,3564 @@
+{
+  "kind": "analytic ideal-resistive load-line; NOT a simulation",
+  "limits": {
+    "bvceo_min_v": 1.4,
+    "bvcbo_min_v": 3.8,
+    "vce_window_v": [
+      0.4,
+      2.0
+    ],
+    "vbe_window_v": [
+      0.65,
+      0.96
+    ],
+    "ic_window_a_per_nx": 0.003,
+    "tj_max_c": 125.0,
+    "note": "BVCEO/BVCBO are DC process-control minima (spec/target-spec.md); a dynamic excursion above them is judged a violation, per the spec. Window = card header of sg13g2_hbt_mod.lib v0.3.0 (npn13G2)."
+  },
+  "assumptions": {
+    "load": "ideal resistive, optimum for the swing; no output network (D-1 deferred), ideal passives",
+    "drive": "ideal sinusoid, class-A, swing limited by headroom (Vcc - Vknee) and by the window ic limit (peak ic = 3 mA*Nx)",
+    "harmonic_terminations": "none modelled; fundamental only",
+    "efficiency": "not computed (no PAE claim)",
+    "vknee_v": 0.4,
+    "vbe_at_peak_v": 0.65,
+    "tolerance": 0.1,
+    "swing_modes": {
+      "saturated": "swing tracks headroom at every tolerance cell",
+      "fixed-nominal": "swing set at the nominal supply; low-supply cell may bottom"
+    },
+    "target_dbm": 15.0,
+    "nx_dev": 10
+  },
+  "dc_data": "records/20261023-171155-870a4b7.dc.json",
+  "controls": {
+    "negative": {
+      "what": "Vcc 1.4 V, saturated swing: Vce_pk must exceed BVCEO(min)",
+      "vce_pk_v": 2.4,
+      "verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "flagged": true
+    },
+    "positive": {
+      "what": "Vcc 0.5 V, saturated swing: must be within BVCEO/BVCBO (min)",
+      "vce_pk_v": 0.6,
+      "verdict": "within BVCEO/BVCBO (min)",
+      "passes": true
+    }
+  },
+  "cells": [
+    {
+      "supply_nominal_v": 0.5,
+      "tolerance": "-10%",
+      "vcc_v": 0.45,
+      "swing_mode": "saturated",
+      "vswing_v": 0.04999999999999999,
+      "vce_pk_v": 0.5,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": -0.15000000000000002,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.5,
+          "limit_min_v": 1.4,
+          "margin_v": 0.8999999999999999,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": -0.15000000000000002,
+          "limit_min_v": 3.8,
+          "margin_v": 3.9499999999999997,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 134.11070073594033,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 3.749999999999999e-05,
+        "pout_per_nx_dbm": -14.259687322722812,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 844,
+        "devices_at_nx_dev": 85,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03164999999999999,
+        "pout_at_nx_total_dbm": 15.003737143533737,
+        "load_ohm_ideal": 0.03949447077409162,
+        "ic_peak_total_a": 2.532
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.0063750000000000005,
+        "delta_t_k": 9.110700735940313,
+        "tj_c": {
+          "-40": {
+            "tj_c": -30.889299264059687,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 36.11070073594031,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 134.11070073594033,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.4,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8133367691816438,
+        "max_v": 0.8909245154485271,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.5,
+      "tolerance": "nominal",
+      "vcc_v": 0.5,
+      "swing_mode": "saturated",
+      "vswing_v": 0.09999999999999998,
+      "vce_pk_v": 0.6,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": -0.050000000000000044,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.6,
+          "limit_min_v": 1.4,
+          "margin_v": 0.7999999999999999,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": -0.050000000000000044,
+          "limit_min_v": 3.8,
+          "margin_v": 3.8499999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 134.64662430864269,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 7.499999999999998e-05,
+        "pout_per_nx_dbm": -11.249387366083,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 422,
+        "devices_at_nx_dev": 43,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03164999999999999,
+        "pout_at_nx_total_dbm": 15.003737143533737,
+        "load_ohm_ideal": 0.15797788309636648,
+        "ic_peak_total_a": 1.266
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.00675,
+        "delta_t_k": 9.646624308642684,
+        "tj_c": {
+          "-40": {
+            "tj_c": -30.353375691357314,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 36.646624308642686,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 134.64662430864269,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.4,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8133367691816438,
+        "max_v": 0.8909245154485271,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.5,
+      "tolerance": "+10%",
+      "vcc_v": 0.55,
+      "swing_mode": "saturated",
+      "vswing_v": 0.15000000000000002,
+      "vce_pk_v": 0.7000000000000001,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.050000000000000044,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.7000000000000001,
+          "limit_min_v": 1.4,
+          "margin_v": 0.6999999999999998,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.050000000000000044,
+          "limit_min_v": 3.8,
+          "margin_v": 3.75,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 135.18254788134504,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00011250000000000002,
+        "pout_per_nx_dbm": -9.488474775526187,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 282,
+        "devices_at_nx_dev": 29,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03172500000000001,
+        "pout_at_nx_total_dbm": 15.014016307667424,
+        "load_ohm_ideal": 0.35460992907801425,
+        "ic_peak_total_a": 0.846
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.007125,
+        "delta_t_k": 10.182547881345055,
+        "tj_c": {
+          "-40": {
+            "tj_c": -29.817452118654945,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 37.18254788134506,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 135.18254788134504,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.6,
+      "tolerance": "-10%",
+      "vcc_v": 0.54,
+      "swing_mode": "saturated",
+      "vswing_v": 0.14,
+      "vce_pk_v": 0.68,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.030000000000000027,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.68,
+          "limit_min_v": 1.4,
+          "margin_v": 0.7199999999999999,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.030000000000000027,
+          "limit_min_v": 3.8,
+          "margin_v": 3.7699999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 135.07536316680458,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00010500000000000002,
+        "pout_per_nx_dbm": -9.788107009300619,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 302,
+        "devices_at_nx_dev": 31,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03171,
+        "pout_at_nx_total_dbm": 15.011962420270887,
+        "load_ohm_ideal": 0.3090507726269316,
+        "ic_peak_total_a": 0.906
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.007050000000000001,
+        "delta_t_k": 10.075363166804582,
+        "tj_c": {
+          "-40": {
+            "tj_c": -29.924636833195418,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 37.07536316680458,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 135.07536316680458,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.6,
+      "tolerance": "nominal",
+      "vcc_v": 0.6,
+      "swing_mode": "saturated",
+      "vswing_v": 0.19999999999999996,
+      "vce_pk_v": 0.7999999999999999,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.1499999999999999,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.7999999999999999,
+          "limit_min_v": 1.4,
+          "margin_v": 0.6,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.1499999999999999,
+          "limit_min_v": 3.8,
+          "margin_v": 3.65,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 135.71847145404743,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00014999999999999996,
+        "pout_per_nx_dbm": -8.239087409443188,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 211,
+        "devices_at_nx_dev": 22,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03164999999999999,
+        "pout_at_nx_total_dbm": 15.003737143533737,
+        "load_ohm_ideal": 0.6319115323854659,
+        "ic_peak_total_a": 0.633
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.0075,
+        "delta_t_k": 10.718471454047426,
+        "tj_c": {
+          "-40": {
+            "tj_c": -29.281528545952575,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 37.718471454047425,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 135.71847145404743,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.6,
+      "tolerance": "+10%",
+      "vcc_v": 0.66,
+      "swing_mode": "saturated",
+      "vswing_v": 0.26,
+      "vce_pk_v": 0.92,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.27,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.92,
+          "limit_min_v": 1.4,
+          "margin_v": 0.47999999999999987,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.27,
+          "limit_min_v": 3.8,
+          "margin_v": 3.53,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 136.36157974129026,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00019500000000000002,
+        "pout_per_nx_dbm": -7.099653886374819,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 163,
+        "devices_at_nx_dev": 17,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031785,
+        "pout_at_nx_total_dbm": 15.022222157664757,
+        "load_ohm_ideal": 1.063394683026585,
+        "ic_peak_total_a": 0.489
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.007949999999999999,
+        "delta_t_k": 11.361579741290269,
+        "tj_c": {
+          "-40": {
+            "tj_c": -28.63842025870973,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 38.36157974129027,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 136.36157974129026,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.7,
+      "tolerance": "-10%",
+      "vcc_v": 0.63,
+      "swing_mode": "saturated",
+      "vswing_v": 0.22999999999999998,
+      "vce_pk_v": 0.86,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.20999999999999996,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.86,
+          "limit_min_v": 1.4,
+          "margin_v": 0.5399999999999999,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.20999999999999996,
+          "limit_min_v": 3.8,
+          "margin_v": 3.59,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 136.04002559766886,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.0001725,
+        "pout_per_nx_dbm": -7.63210900590707,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 184,
+        "devices_at_nx_dev": 19,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03174,
+        "pout_at_nx_total_dbm": 15.016069224188293,
+        "load_ohm_ideal": 0.8333333333333331,
+        "ic_peak_total_a": 0.552
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.007725,
+        "delta_t_k": 11.04002559766885,
+        "tj_c": {
+          "-40": {
+            "tj_c": -28.95997440233115,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 38.04002559766885,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 136.04002559766886,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.7,
+      "tolerance": "nominal",
+      "vcc_v": 0.7,
+      "swing_mode": "saturated",
+      "vswing_v": 0.29999999999999993,
+      "vce_pk_v": 0.9999999999999999,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.34999999999999987,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.9999999999999999,
+          "limit_min_v": 1.4,
+          "margin_v": 0.4,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.34999999999999987,
+          "limit_min_v": 3.8,
+          "margin_v": 3.45,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 136.79031859945218,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00022499999999999997,
+        "pout_per_nx_dbm": -6.478174818886377,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 141,
+        "devices_at_nx_dev": 15,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031724999999999996,
+        "pout_at_nx_total_dbm": 15.014016307667424,
+        "load_ohm_ideal": 1.4184397163120566,
+        "ic_peak_total_a": 0.423
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.008249999999999999,
+        "delta_t_k": 11.790318599452167,
+        "tj_c": {
+          "-40": {
+            "tj_c": -28.209681400547833,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 38.79031859945216,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 136.79031859945218,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.7,
+      "tolerance": "+10%",
+      "vcc_v": 0.77,
+      "swing_mode": "saturated",
+      "vswing_v": 0.37,
+      "vce_pk_v": 1.1400000000000001,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.4900000000000001,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.1400000000000001,
+          "limit_min_v": 1.4,
+          "margin_v": 0.2599999999999998,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.4900000000000001,
+          "limit_min_v": 3.8,
+          "margin_v": 3.3099999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 137.5406116012355,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.0002775,
+        "pout_per_nx_dbm": -5.567370125413049,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 114,
+        "devices_at_nx_dev": 12,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031635,
+        "pout_at_nx_total_dbm": 15.001678387951676,
+        "load_ohm_ideal": 2.1637426900584793,
+        "ic_peak_total_a": 0.342
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.008775,
+        "delta_t_k": 12.540611601235488,
+        "tj_c": {
+          "-40": {
+            "tj_c": -27.45938839876451,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 39.54061160123549,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 137.5406116012355,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.8,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8067559429582525,
+        "max_v": 0.8847319117073783,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.8,
+      "tolerance": "-10%",
+      "vcc_v": 0.7200000000000001,
+      "swing_mode": "saturated",
+      "vswing_v": 0.32000000000000006,
+      "vce_pk_v": 1.04,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.39,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.04,
+          "limit_min_v": 1.4,
+          "margin_v": 0.3599999999999999,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.39,
+          "limit_min_v": 3.8,
+          "margin_v": 3.4099999999999997,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 137.0046880285331,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00024000000000000006,
+        "pout_per_nx_dbm": -6.197887582883938,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 132,
+        "devices_at_nx_dev": 14,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03168000000000001,
+        "pout_at_nx_total_dbm": 15.00785172917456,
+        "load_ohm_ideal": 1.6161616161616164,
+        "ic_peak_total_a": 0.396
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.008400000000000001,
+        "delta_t_k": 12.004688028533119,
+        "tj_c": {
+          "-40": {
+            "tj_c": -27.995311971466883,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 39.00468802853312,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 137.0046880285331,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.8,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8067559429582525,
+        "max_v": 0.8847319117073783,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.8,
+      "tolerance": "nominal",
+      "vcc_v": 0.8,
+      "swing_mode": "saturated",
+      "vswing_v": 0.4,
+      "vce_pk_v": 1.2000000000000002,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.5500000000000002,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.2000000000000002,
+          "limit_min_v": 1.4,
+          "margin_v": 0.19999999999999973,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.5500000000000002,
+          "limit_min_v": 3.8,
+          "margin_v": 3.2499999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 137.86216574485692,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00030000000000000003,
+        "pout_per_nx_dbm": -5.228787452803375,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 106,
+        "devices_at_nx_dev": 11,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.0318,
+        "pout_at_nx_total_dbm": 15.024271199844328,
+        "load_ohm_ideal": 2.5157232704402515,
+        "ic_peak_total_a": 0.318
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.009000000000000001,
+        "delta_t_k": 12.862165744856913,
+        "tj_c": {
+          "-40": {
+            "tj_c": -27.137834255143087,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 39.86216574485691,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 137.86216574485692,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.8,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8067559429582525,
+        "max_v": 0.8847319117073783,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.8,
+      "tolerance": "+10%",
+      "vcc_v": 0.8800000000000001,
+      "swing_mode": "saturated",
+      "vswing_v": 0.4800000000000001,
+      "vce_pk_v": 1.3600000000000003,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.7100000000000003,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.3600000000000003,
+          "limit_min_v": 1.4,
+          "margin_v": 0.03999999999999959,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.7100000000000003,
+          "limit_min_v": 3.8,
+          "margin_v": 3.0899999999999994,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 138.7196434611807,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.0003600000000000001,
+        "pout_per_nx_dbm": -4.436974992327126,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 88,
+        "devices_at_nx_dev": 9,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03168000000000001,
+        "pout_at_nx_total_dbm": 15.00785172917456,
+        "load_ohm_ideal": 3.6363636363636367,
+        "ic_peak_total_a": 0.264
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.009600000000000001,
+        "delta_t_k": 13.719643461180707,
+        "tj_c": {
+          "-40": {
+            "tj_c": -26.28035653881929,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 40.71964346118071,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 138.7196434611807,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.8,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8067559429582525,
+        "max_v": 0.8847319117073783,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.0,
+      "tolerance": "-10%",
+      "vcc_v": 0.9,
+      "swing_mode": "saturated",
+      "vswing_v": 0.5,
+      "vce_pk_v": 1.4,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.7499999999999999,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.4,
+          "limit_min_v": 1.4,
+          "margin_v": 0.0,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.7499999999999999,
+          "limit_min_v": 3.8,
+          "margin_v": 3.05,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 138.93401289026167,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.000375,
+        "pout_per_nx_dbm": -4.259687322722812,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 85,
+        "devices_at_nx_dev": 9,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031875,
+        "pout_at_nx_total_dbm": 15.034501934420117,
+        "load_ohm_ideal": 3.9215686274509802,
+        "ic_peak_total_a": 0.255
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.009750000000000002,
+        "delta_t_k": 13.934012890261656,
+        "tj_c": {
+          "-40": {
+            "tj_c": -26.065987109738344,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 40.934012890261656,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 138.93401289026167,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.8,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8067559429582525,
+        "max_v": 0.8847319117073783,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.0,
+      "tolerance": "nominal",
+      "vcc_v": 1.0,
+      "swing_mode": "saturated",
+      "vswing_v": 0.6,
+      "vce_pk_v": 1.6,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.9500000000000001,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.6,
+          "limit_min_v": 1.4,
+          "margin_v": -0.20000000000000018,
+          "violation": true,
+          "fraction_of_cycle_above": 0.26772047280123007
+        },
+        "vcbo": {
+          "peak_v": 0.9500000000000001,
+          "limit_min_v": 3.8,
+          "margin_v": 2.8499999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 140.0058600356664,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.00045,
+        "pout_per_nx_dbm": -3.467874862246564,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 71,
+        "devices_at_nx_dev": 8,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03195,
+        "pout_at_nx_total_dbm": 15.044708624944189,
+        "load_ohm_ideal": 5.633802816901408,
+        "ic_peak_total_a": 0.213
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.010499999999999999,
+        "delta_t_k": 15.005860035666394,
+        "tj_c": {
+          "-40": {
+            "tj_c": -24.994139964333606,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 42.005860035666394,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 140.0058600356664,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.0,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.8034262309630494,
+        "max_v": 0.8980787197561227,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.0,
+      "tolerance": "+10%",
+      "vcc_v": 1.1,
+      "swing_mode": "saturated",
+      "vswing_v": 0.7000000000000001,
+      "vce_pk_v": 1.8000000000000003,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 1.1500000000000004,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.8000000000000003,
+          "limit_min_v": 1.4,
+          "margin_v": -0.40000000000000036,
+          "violation": true,
+          "fraction_of_cycle_above": 0.3590170359713762
+        },
+        "vcbo": {
+          "peak_v": 1.1500000000000004,
+          "limit_min_v": 3.8,
+          "margin_v": 2.6499999999999995,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 141.07770718107113,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.0005250000000000001,
+        "pout_per_nx_dbm": -2.7984069659404307,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 61,
+        "devices_at_nx_dev": 7,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.032025000000000005,
+        "pout_at_nx_total_dbm": 15.05489138416724,
+        "load_ohm_ideal": 7.650273224043716,
+        "ic_peak_total_a": 0.183
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.01125,
+        "delta_t_k": 16.077707181071137,
+        "tj_c": {
+          "-40": {
+            "tj_c": -23.922292818928863,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 43.07770718107113,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 141.07770718107113,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.2,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.8000051774830258,
+        "max_v": 0.8952501426484654,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.2,
+      "tolerance": "-10%",
+      "vcc_v": 1.08,
+      "swing_mode": "saturated",
+      "vswing_v": 0.68,
+      "vce_pk_v": 1.7600000000000002,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 1.1100000000000003,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.7600000000000002,
+          "limit_min_v": 1.4,
+          "margin_v": -0.3600000000000003,
+          "violation": true,
+          "fraction_of_cycle_above": 0.34404173924526144
+        },
+        "vcbo": {
+          "peak_v": 1.1100000000000003,
+          "limit_min_v": 3.8,
+          "margin_v": 2.6899999999999995,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 140.8633377519902,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.00051,
+        "pout_per_nx_dbm": -2.9242982390206365,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 63,
+        "devices_at_nx_dev": 7,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.032130000000000006,
+        "pout_at_nx_total_dbm": 15.069107255515181,
+        "load_ohm_ideal": 7.195767195767196,
+        "ic_peak_total_a": 0.189
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.011100000000000002,
+        "delta_t_k": 15.863337751990194,
+        "tj_c": {
+          "-40": {
+            "tj_c": -24.136662248009806,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 42.863337751990194,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 140.8633377519902,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.0,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.8034262309630494,
+        "max_v": 0.8980787197561227,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.2,
+      "tolerance": "nominal",
+      "vcc_v": 1.2,
+      "swing_mode": "saturated",
+      "vswing_v": 0.7999999999999999,
+      "vce_pk_v": 2.0,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 1.35,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 2.0,
+          "limit_min_v": 1.4,
+          "margin_v": -0.6000000000000001,
+          "violation": true,
+          "fraction_of_cycle_above": 0.41956937674483374
+        },
+        "vcbo": {
+          "peak_v": 1.35,
+          "limit_min_v": 3.8,
+          "margin_v": 2.4499999999999997,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 142.14955432647588,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.0006,
+        "pout_per_nx_dbm": -2.2184874961635637,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 53,
+        "devices_at_nx_dev": 6,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031799999999999995,
+        "pout_at_nx_total_dbm": 15.024271199844325,
+        "load_ohm_ideal": 10.062893081761006,
+        "ic_peak_total_a": 0.159
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.012,
+        "delta_t_k": 17.149554326475883,
+        "tj_c": {
+          "-40": {
+            "tj_c": -22.850445673524117,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 44.14955432647588,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 142.14955432647588,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.2,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.8000051774830258,
+        "max_v": 0.8952501426484654,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.2,
+      "tolerance": "+10%",
+      "vcc_v": 1.32,
+      "swing_mode": "saturated",
+      "vswing_v": 0.92,
+      "vce_pk_v": 2.24,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 1.5900000000000003,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 2.24,
+          "limit_min_v": 1.4,
+          "margin_v": -0.8400000000000003,
+          "violation": true,
+          "fraction_of_cycle_above": 0.4722858779135775
+        },
+        "vcbo": {
+          "peak_v": 1.5900000000000003,
+          "limit_min_v": 3.8,
+          "margin_v": 2.2099999999999995,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "above",
+          "limit_v": 2.0,
+          "peak_v": 2.24,
+          "fraction_of_cycle": 0.23523669695670651
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 143.4357709009616,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.0006900000000000001,
+        "pout_per_nx_dbm": -1.6115090926274465,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 46,
+        "devices_at_nx_dev": 5,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031740000000000004,
+        "pout_at_nx_total_dbm": 15.016069224188296,
+        "load_ohm_ideal": 13.333333333333332,
+        "ic_peak_total_a": 0.138
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.012899999999999998,
+        "delta_t_k": 18.435770900961572,
+        "tj_c": {
+          "-40": {
+            "tj_c": -21.564229099038428,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 45.43577090096157,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 143.4357709009616,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.4,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.7964846308794207,
+        "max_v": 0.8923357078243802,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.4,
+      "tolerance": "-10%",
+      "vcc_v": 1.26,
+      "swing_mode": "saturated",
+      "vswing_v": 0.86,
+      "vce_pk_v": 2.12,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 1.4700000000000002,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 2.12,
+          "limit_min_v": 1.4,
+          "margin_v": -0.7200000000000002,
+          "violation": true,
+          "fraction_of_cycle_above": 0.44795046900858426
+        },
+        "vcbo": {
+          "peak_v": 1.4700000000000002,
+          "limit_min_v": 3.8,
+          "margin_v": 2.3299999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "above",
+          "limit_v": 2.0,
+          "peak_v": 2.12,
+          "fraction_of_cycle": 0.17017307614231203
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 142.79266261371873,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.000645,
+        "pout_per_nx_dbm": -1.9044028536473228,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 50,
+        "devices_at_nx_dev": 5,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03225,
+        "pout_at_nx_total_dbm": 15.085297189712865,
+        "load_ohm_ideal": 11.466666666666667,
+        "ic_peak_total_a": 0.15
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.012450000000000001,
+        "delta_t_k": 17.79266261371873,
+        "tj_c": {
+          "-40": {
+            "tj_c": -22.20733738628127,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 44.79266261371873,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 142.79266261371873,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.2,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.8000051774830258,
+        "max_v": 0.8952501426484654,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.4,
+      "tolerance": "nominal",
+      "vcc_v": 1.4,
+      "swing_mode": "saturated",
+      "vswing_v": 0.9999999999999999,
+      "vce_pk_v": 2.4,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 1.75,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 2.4,
+          "limit_min_v": 1.4,
+          "margin_v": -1.0,
+          "violation": true,
+          "fraction_of_cycle_above": 0.5
+        },
+        "vcbo": {
+          "peak_v": 1.75,
+          "limit_min_v": 3.8,
+          "margin_v": 2.05,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "above",
+          "limit_v": 2.0,
+          "peak_v": 2.4,
+          "fraction_of_cycle": 0.29516723530086647
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 144.29324861728537,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.0007499999999999999,
+        "pout_per_nx_dbm": -1.2493873660830002,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 43,
+        "devices_at_nx_dev": 5,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.032249999999999994,
+        "pout_at_nx_total_dbm": 15.085297189712865,
+        "load_ohm_ideal": 15.503875968992245,
+        "ic_peak_total_a": 0.129
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.013499999999999998,
+        "delta_t_k": 19.293248617285364,
+        "tj_c": {
+          "-40": {
+            "tj_c": -20.706751382714636,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 46.293248617285364,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 144.29324861728537,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.4,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.7964846308794207,
+        "max_v": 0.8923357078243802,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.4,
+      "tolerance": "+10%",
+      "vcc_v": 1.54,
+      "swing_mode": "saturated",
+      "vswing_v": 1.1400000000000001,
+      "vce_pk_v": 2.68,
+      "vce_min_v": 0.3999999999999999,
+      "vcb_pk_v": 2.0300000000000002,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 2.68,
+          "limit_min_v": 1.4,
+          "margin_v": -1.2800000000000002,
+          "violation": true,
+          "fraction_of_cycle_above": 0.5391896187895501
+        },
+        "vcbo": {
+          "peak_v": 2.0300000000000002,
+          "limit_min_v": 3.8,
+          "margin_v": 1.7699999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "above",
+          "limit_v": 2.0,
+          "peak_v": 2.68,
+          "fraction_of_cycle": 0.36779048432961403
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 145.793834620852,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.0008550000000000001,
+        "pout_per_nx_dbm": -0.6803388527182731,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 37,
+        "devices_at_nx_dev": 4,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031635,
+        "pout_at_nx_total_dbm": 15.001678387951676,
+        "load_ohm_ideal": 20.540540540540544,
+        "ic_peak_total_a": 0.111
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.014549999999999999,
+        "delta_t_k": 20.793834620852003,
+        "tj_c": {
+          "-40": {
+            "tj_c": -19.206165379147997,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 47.793834620852,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 145.793834620852,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.6,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.7928188166758668,
+        "max_v": 0.8892876181199969,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.5,
+      "tolerance": "-10%",
+      "vcc_v": 0.45,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.09999999999999998,
+      "vce_pk_v": 0.55,
+      "vce_min_v": 0.35000000000000003,
+      "vcb_pk_v": -0.09999999999999998,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.55,
+          "limit_min_v": 1.4,
+          "margin_v": 0.8499999999999999,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": -0.09999999999999998,
+          "limit_min_v": 3.8,
+          "margin_v": 3.9,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "below",
+          "limit_v": 0.4,
+          "min_v": 0.35000000000000003,
+          "fraction_of_cycle": 0.3333333333333333
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 133.57477716323794,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "OUTSIDE MODEL WINDOW",
+      "pout": {
+        "pout_per_nx_w": 7.499999999999998e-05,
+        "pout_per_nx_dbm": -11.249387366083,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 422,
+        "devices_at_nx_dev": 43,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03164999999999999,
+        "pout_at_nx_total_dbm": 15.003737143533737,
+        "load_ohm_ideal": 0.15797788309636648,
+        "ic_peak_total_a": 1.266
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.006000000000000001,
+        "delta_t_k": 8.574777163237941,
+        "tj_c": {
+          "-40": {
+            "tj_c": -31.42522283676206,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 35.57477716323794,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 133.57477716323794,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.4,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8133367691816438,
+        "max_v": 0.8909245154485271,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.5,
+      "tolerance": "nominal",
+      "vcc_v": 0.5,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.09999999999999998,
+      "vce_pk_v": 0.6,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": -0.050000000000000044,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.6,
+          "limit_min_v": 1.4,
+          "margin_v": 0.7999999999999999,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": -0.050000000000000044,
+          "limit_min_v": 3.8,
+          "margin_v": 3.8499999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 134.64662430864269,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 7.499999999999998e-05,
+        "pout_per_nx_dbm": -11.249387366083,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 422,
+        "devices_at_nx_dev": 43,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03164999999999999,
+        "pout_at_nx_total_dbm": 15.003737143533737,
+        "load_ohm_ideal": 0.15797788309636648,
+        "ic_peak_total_a": 1.266
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.00675,
+        "delta_t_k": 9.646624308642684,
+        "tj_c": {
+          "-40": {
+            "tj_c": -30.353375691357314,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 36.646624308642686,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 134.64662430864269,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.4,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8133367691816438,
+        "max_v": 0.8909245154485271,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.5,
+      "tolerance": "+10%",
+      "vcc_v": 0.55,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.09999999999999998,
+      "vce_pk_v": 0.65,
+      "vce_min_v": 0.45000000000000007,
+      "vcb_pk_v": 0.0,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.65,
+          "limit_min_v": 1.4,
+          "margin_v": 0.7499999999999999,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.0,
+          "limit_min_v": 3.8,
+          "margin_v": 3.8,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 135.71847145404743,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 7.499999999999998e-05,
+        "pout_per_nx_dbm": -11.249387366083,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 422,
+        "devices_at_nx_dev": 43,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03164999999999999,
+        "pout_at_nx_total_dbm": 15.003737143533737,
+        "load_ohm_ideal": 0.15797788309636648,
+        "ic_peak_total_a": 1.266
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.007500000000000001,
+        "delta_t_k": 10.718471454047426,
+        "tj_c": {
+          "-40": {
+            "tj_c": -29.281528545952575,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 37.718471454047425,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 135.71847145404743,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.6,
+      "tolerance": "-10%",
+      "vcc_v": 0.54,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.19999999999999996,
+      "vce_pk_v": 0.74,
+      "vce_min_v": 0.3400000000000001,
+      "vcb_pk_v": 0.08999999999999997,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.74,
+          "limit_min_v": 1.4,
+          "margin_v": 0.6599999999999999,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.08999999999999997,
+          "limit_min_v": 3.8,
+          "margin_v": 3.71,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "below",
+          "limit_v": 0.4,
+          "min_v": 0.3400000000000001,
+          "fraction_of_cycle": 0.2531833111066349
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 134.43225487956173,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "OUTSIDE MODEL WINDOW",
+      "pout": {
+        "pout_per_nx_w": 0.00014999999999999996,
+        "pout_per_nx_dbm": -8.239087409443188,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 211,
+        "devices_at_nx_dev": 22,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03164999999999999,
+        "pout_at_nx_total_dbm": 15.003737143533737,
+        "load_ohm_ideal": 0.6319115323854659,
+        "ic_peak_total_a": 0.633
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.006600000000000002,
+        "delta_t_k": 9.432254879561738,
+        "tj_c": {
+          "-40": {
+            "tj_c": -30.56774512043826,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 36.43225487956174,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 134.43225487956173,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.6,
+      "tolerance": "nominal",
+      "vcc_v": 0.6,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.19999999999999996,
+      "vce_pk_v": 0.7999999999999999,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.1499999999999999,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.7999999999999999,
+          "limit_min_v": 1.4,
+          "margin_v": 0.6,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.1499999999999999,
+          "limit_min_v": 3.8,
+          "margin_v": 3.65,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 135.71847145404743,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00014999999999999996,
+        "pout_per_nx_dbm": -8.239087409443188,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 211,
+        "devices_at_nx_dev": 22,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03164999999999999,
+        "pout_at_nx_total_dbm": 15.003737143533737,
+        "load_ohm_ideal": 0.6319115323854659,
+        "ic_peak_total_a": 0.633
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.0075,
+        "delta_t_k": 10.718471454047426,
+        "tj_c": {
+          "-40": {
+            "tj_c": -29.281528545952575,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 37.718471454047425,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 135.71847145404743,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.6,
+      "tolerance": "+10%",
+      "vcc_v": 0.66,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.19999999999999996,
+      "vce_pk_v": 0.86,
+      "vce_min_v": 0.4600000000000001,
+      "vcb_pk_v": 0.20999999999999996,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.86,
+          "limit_min_v": 1.4,
+          "margin_v": 0.5399999999999999,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.20999999999999996,
+          "limit_min_v": 3.8,
+          "margin_v": 3.59,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 137.0046880285331,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00014999999999999996,
+        "pout_per_nx_dbm": -8.239087409443188,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 211,
+        "devices_at_nx_dev": 22,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03164999999999999,
+        "pout_at_nx_total_dbm": 15.003737143533737,
+        "load_ohm_ideal": 0.6319115323854659,
+        "ic_peak_total_a": 0.633
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.0084,
+        "delta_t_k": 12.004688028533117,
+        "tj_c": {
+          "-40": {
+            "tj_c": -27.995311971466883,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 39.00468802853312,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 137.0046880285331,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.7,
+      "tolerance": "-10%",
+      "vcc_v": 0.63,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.29999999999999993,
+      "vce_pk_v": 0.9299999999999999,
+      "vce_min_v": 0.33000000000000007,
+      "vcb_pk_v": 0.2799999999999999,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.9299999999999999,
+          "limit_min_v": 1.4,
+          "margin_v": 0.47,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.2799999999999999,
+          "limit_min_v": 3.8,
+          "margin_v": 3.52,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "below",
+          "limit_v": 0.4,
+          "min_v": 0.33000000000000007,
+          "fraction_of_cycle": 0.22191391772119373
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 135.28973259588554,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "OUTSIDE MODEL WINDOW",
+      "pout": {
+        "pout_per_nx_w": 0.00022499999999999997,
+        "pout_per_nx_dbm": -6.478174818886377,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 141,
+        "devices_at_nx_dev": 15,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031724999999999996,
+        "pout_at_nx_total_dbm": 15.014016307667424,
+        "load_ohm_ideal": 1.4184397163120566,
+        "ic_peak_total_a": 0.423
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.0072,
+        "delta_t_k": 10.289732595885528,
+        "tj_c": {
+          "-40": {
+            "tj_c": -29.71026740411447,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 37.289732595885525,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 135.28973259588554,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.7,
+      "tolerance": "nominal",
+      "vcc_v": 0.7,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.29999999999999993,
+      "vce_pk_v": 0.9999999999999999,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.34999999999999987,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 0.9999999999999999,
+          "limit_min_v": 1.4,
+          "margin_v": 0.4,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.34999999999999987,
+          "limit_min_v": 3.8,
+          "margin_v": 3.45,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 136.79031859945218,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00022499999999999997,
+        "pout_per_nx_dbm": -6.478174818886377,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 141,
+        "devices_at_nx_dev": 15,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031724999999999996,
+        "pout_at_nx_total_dbm": 15.014016307667424,
+        "load_ohm_ideal": 1.4184397163120566,
+        "ic_peak_total_a": 0.423
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.008249999999999999,
+        "delta_t_k": 11.790318599452167,
+        "tj_c": {
+          "-40": {
+            "tj_c": -28.209681400547833,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 38.79031859945216,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 136.79031859945218,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.6,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8100025378352604,
+        "max_v": 0.8878623385244132,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.7,
+      "tolerance": "+10%",
+      "vcc_v": 0.77,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.29999999999999993,
+      "vce_pk_v": 1.0699999999999998,
+      "vce_min_v": 0.4700000000000001,
+      "vcb_pk_v": 0.4199999999999998,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.0699999999999998,
+          "limit_min_v": 1.4,
+          "margin_v": 0.33000000000000007,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.4199999999999998,
+          "limit_min_v": 3.8,
+          "margin_v": 3.38,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 138.29090460301882,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00022499999999999997,
+        "pout_per_nx_dbm": -6.478174818886377,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 141,
+        "devices_at_nx_dev": 15,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031724999999999996,
+        "pout_at_nx_total_dbm": 15.014016307667424,
+        "load_ohm_ideal": 1.4184397163120566,
+        "ic_peak_total_a": 0.423
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.0093,
+        "delta_t_k": 13.290904603018808,
+        "tj_c": {
+          "-40": {
+            "tj_c": -26.70909539698119,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 40.29090460301881,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 138.29090460301882,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.8,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8067559429582525,
+        "max_v": 0.8847319117073783,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.8,
+      "tolerance": "-10%",
+      "vcc_v": 0.7200000000000001,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.4,
+      "vce_pk_v": 1.12,
+      "vce_min_v": 0.32000000000000006,
+      "vcb_pk_v": 0.4700000000000001,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.12,
+          "limit_min_v": 1.4,
+          "margin_v": 0.2799999999999998,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.4700000000000001,
+          "limit_min_v": 3.8,
+          "margin_v": 3.3299999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "below",
+          "limit_v": 0.4,
+          "min_v": 0.32000000000000006,
+          "fraction_of_cycle": 0.20483276469913336
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 136.14721031220932,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "OUTSIDE MODEL WINDOW",
+      "pout": {
+        "pout_per_nx_w": 0.00030000000000000003,
+        "pout_per_nx_dbm": -5.228787452803375,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 106,
+        "devices_at_nx_dev": 11,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.0318,
+        "pout_at_nx_total_dbm": 15.024271199844328,
+        "load_ohm_ideal": 2.5157232704402515,
+        "ic_peak_total_a": 0.318
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.007800000000000002,
+        "delta_t_k": 11.147210312209326,
+        "tj_c": {
+          "-40": {
+            "tj_c": -28.852789687790676,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 38.147210312209324,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 136.14721031220932,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.8,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8067559429582525,
+        "max_v": 0.8847319117073783,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.8,
+      "tolerance": "nominal",
+      "vcc_v": 0.8,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.4,
+      "vce_pk_v": 1.2000000000000002,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.5500000000000002,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.2000000000000002,
+          "limit_min_v": 1.4,
+          "margin_v": 0.19999999999999973,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.5500000000000002,
+          "limit_min_v": 3.8,
+          "margin_v": 3.2499999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 137.86216574485692,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00030000000000000003,
+        "pout_per_nx_dbm": -5.228787452803375,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 106,
+        "devices_at_nx_dev": 11,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.0318,
+        "pout_at_nx_total_dbm": 15.024271199844328,
+        "load_ohm_ideal": 2.5157232704402515,
+        "ic_peak_total_a": 0.318
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.009000000000000001,
+        "delta_t_k": 12.862165744856913,
+        "tj_c": {
+          "-40": {
+            "tj_c": -27.137834255143087,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 39.86216574485691,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 137.86216574485692,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.8,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8067559429582525,
+        "max_v": 0.8847319117073783,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 0.8,
+      "tolerance": "+10%",
+      "vcc_v": 0.8800000000000001,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.4,
+      "vce_pk_v": 1.2800000000000002,
+      "vce_min_v": 0.4800000000000001,
+      "vcb_pk_v": 0.6300000000000002,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.2800000000000002,
+          "limit_min_v": 1.4,
+          "margin_v": 0.11999999999999966,
+          "violation": false,
+          "fraction_of_cycle_above": 0.0
+        },
+        "vcbo": {
+          "peak_v": 0.6300000000000002,
+          "limit_min_v": 3.8,
+          "margin_v": 3.1699999999999995,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "within BVCEO/BVCBO (min)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 139.5771211775045,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "within BV(min) and window (electrical); Tj labelled per ambient",
+      "pout": {
+        "pout_per_nx_w": 0.00030000000000000003,
+        "pout_per_nx_dbm": -5.228787452803375,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 106,
+        "devices_at_nx_dev": 11,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.0318,
+        "pout_at_nx_total_dbm": 15.024271199844328,
+        "load_ohm_ideal": 2.5157232704402515,
+        "ic_peak_total_a": 0.318
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.0102,
+        "delta_t_k": 14.5771211775045,
+        "tj_c": {
+          "-40": {
+            "tj_c": -25.4228788224955,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 41.5771211775045,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 139.5771211775045,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.8,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8067559429582525,
+        "max_v": 0.8847319117073783,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.0,
+      "tolerance": "-10%",
+      "vcc_v": 0.9,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.6,
+      "vce_pk_v": 1.5,
+      "vce_min_v": 0.30000000000000004,
+      "vcb_pk_v": 0.85,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.5,
+          "limit_min_v": 1.4,
+          "margin_v": -0.10000000000000009,
+          "violation": true,
+          "fraction_of_cycle_above": 0.18642949867733738
+        },
+        "vcbo": {
+          "peak_v": 0.85,
+          "limit_min_v": 3.8,
+          "margin_v": 2.9499999999999997,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "below",
+          "limit_v": 0.4,
+          "min_v": 0.30000000000000004,
+          "fraction_of_cycle": 0.18642949867733727
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 137.86216574485692,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.00045,
+        "pout_per_nx_dbm": -3.467874862246564,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 71,
+        "devices_at_nx_dev": 8,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03195,
+        "pout_at_nx_total_dbm": 15.044708624944189,
+        "load_ohm_ideal": 5.633802816901408,
+        "ic_peak_total_a": 0.213
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.009000000000000001,
+        "delta_t_k": 12.862165744856913,
+        "tj_c": {
+          "-40": {
+            "tj_c": -27.137834255143087,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 39.86216574485691,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 137.86216574485692,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 0.8,
+        "corners_bracketed": 4,
+        "corners_total": 9,
+        "min_v": 0.8067559429582525,
+        "max_v": 0.8847319117073783,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.0,
+      "tolerance": "nominal",
+      "vcc_v": 1.0,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.6,
+      "vce_pk_v": 1.6,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 0.9500000000000001,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.6,
+          "limit_min_v": 1.4,
+          "margin_v": -0.20000000000000018,
+          "violation": true,
+          "fraction_of_cycle_above": 0.26772047280123007
+        },
+        "vcbo": {
+          "peak_v": 0.9500000000000001,
+          "limit_min_v": 3.8,
+          "margin_v": 2.8499999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 140.0058600356664,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.00045,
+        "pout_per_nx_dbm": -3.467874862246564,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 71,
+        "devices_at_nx_dev": 8,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03195,
+        "pout_at_nx_total_dbm": 15.044708624944189,
+        "load_ohm_ideal": 5.633802816901408,
+        "ic_peak_total_a": 0.213
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.010499999999999999,
+        "delta_t_k": 15.005860035666394,
+        "tj_c": {
+          "-40": {
+            "tj_c": -24.994139964333606,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 42.005860035666394,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 140.0058600356664,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.0,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.8034262309630494,
+        "max_v": 0.8980787197561227,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.0,
+      "tolerance": "+10%",
+      "vcc_v": 1.1,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.6,
+      "vce_pk_v": 1.7000000000000002,
+      "vce_min_v": 0.5000000000000001,
+      "vcb_pk_v": 1.0500000000000003,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.7000000000000002,
+          "limit_min_v": 1.4,
+          "margin_v": -0.30000000000000027,
+          "violation": true,
+          "fraction_of_cycle_above": 0.3333333333333334
+        },
+        "vcbo": {
+          "peak_v": 1.0500000000000003,
+          "limit_min_v": 3.8,
+          "margin_v": 2.7499999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 142.14955432647588,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.00045,
+        "pout_per_nx_dbm": -3.467874862246564,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 71,
+        "devices_at_nx_dev": 8,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.03195,
+        "pout_at_nx_total_dbm": 15.044708624944189,
+        "load_ohm_ideal": 5.633802816901408,
+        "ic_peak_total_a": 0.213
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.012,
+        "delta_t_k": 17.149554326475883,
+        "tj_c": {
+          "-40": {
+            "tj_c": -22.850445673524117,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 44.14955432647588,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 142.14955432647588,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.2,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.8000051774830258,
+        "max_v": 0.8952501426484654,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.2,
+      "tolerance": "-10%",
+      "vcc_v": 1.08,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.7999999999999999,
+      "vce_pk_v": 1.88,
+      "vce_min_v": 0.28000000000000014,
+      "vcb_pk_v": 1.23,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 1.88,
+          "limit_min_v": 1.4,
+          "margin_v": -0.48,
+          "violation": true,
+          "fraction_of_cycle_above": 0.3690101195655454
+        },
+        "vcbo": {
+          "peak_v": 1.23,
+          "limit_min_v": 3.8,
+          "margin_v": 2.57,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "below",
+          "limit_v": 0.4,
+          "min_v": 0.28000000000000014,
+          "fraction_of_cycle": 0.17660183676139785
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 139.5771211775045,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.0006,
+        "pout_per_nx_dbm": -2.2184874961635637,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 53,
+        "devices_at_nx_dev": 6,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031799999999999995,
+        "pout_at_nx_total_dbm": 15.024271199844325,
+        "load_ohm_ideal": 10.062893081761006,
+        "ic_peak_total_a": 0.159
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.010200000000000004,
+        "delta_t_k": 14.577121177504505,
+        "tj_c": {
+          "-40": {
+            "tj_c": -25.422878822495495,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 41.57712117750451,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 139.5771211775045,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.0,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.8034262309630494,
+        "max_v": 0.8980787197561227,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.2,
+      "tolerance": "nominal",
+      "vcc_v": 1.2,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.7999999999999999,
+      "vce_pk_v": 2.0,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 1.35,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 2.0,
+          "limit_min_v": 1.4,
+          "margin_v": -0.6000000000000001,
+          "violation": true,
+          "fraction_of_cycle_above": 0.41956937674483374
+        },
+        "vcbo": {
+          "peak_v": 1.35,
+          "limit_min_v": 3.8,
+          "margin_v": 2.4499999999999997,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 142.14955432647588,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.0006,
+        "pout_per_nx_dbm": -2.2184874961635637,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 53,
+        "devices_at_nx_dev": 6,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031799999999999995,
+        "pout_at_nx_total_dbm": 15.024271199844325,
+        "load_ohm_ideal": 10.062893081761006,
+        "ic_peak_total_a": 0.159
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.012,
+        "delta_t_k": 17.149554326475883,
+        "tj_c": {
+          "-40": {
+            "tj_c": -22.850445673524117,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 44.14955432647588,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 142.14955432647588,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.2,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.8000051774830258,
+        "max_v": 0.8952501426484654,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.2,
+      "tolerance": "+10%",
+      "vcc_v": 1.32,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.7999999999999999,
+      "vce_pk_v": 2.12,
+      "vce_min_v": 0.5200000000000001,
+      "vcb_pk_v": 1.4700000000000002,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 2.12,
+          "limit_min_v": 1.4,
+          "margin_v": -0.7200000000000002,
+          "violation": true,
+          "fraction_of_cycle_above": 0.4681157195707401
+        },
+        "vcbo": {
+          "peak_v": 1.4700000000000002,
+          "limit_min_v": 3.8,
+          "margin_v": 2.3299999999999996,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "above",
+          "limit_v": 2.0,
+          "peak_v": 2.12,
+          "fraction_of_cycle": 0.1766018367613979
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 144.72198747544726,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.0006,
+        "pout_per_nx_dbm": -2.2184874961635637,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 53,
+        "devices_at_nx_dev": 6,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.031799999999999995,
+        "pout_at_nx_total_dbm": 15.024271199844325,
+        "load_ohm_ideal": 10.062893081761006,
+        "ic_peak_total_a": 0.159
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.0138,
+        "delta_t_k": 19.721987475447264,
+        "tj_c": {
+          "-40": {
+            "tj_c": -20.278012524552736,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 46.721987475447264,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 144.72198747544726,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.4,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.7964846308794207,
+        "max_v": 0.8923357078243802,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.4,
+      "tolerance": "-10%",
+      "vcc_v": 1.26,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.9999999999999999,
+      "vce_pk_v": 2.26,
+      "vce_min_v": 0.2600000000000001,
+      "vcb_pk_v": 1.6099999999999999,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 2.26,
+          "limit_min_v": 1.4,
+          "margin_v": -0.8599999999999999,
+          "violation": true,
+          "fraction_of_cycle_above": 0.4552897430704916
+        },
+        "vcbo": {
+          "peak_v": 1.6099999999999999,
+          "limit_min_v": 3.8,
+          "margin_v": 2.19,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "above",
+          "limit_v": 2.0,
+          "peak_v": 2.26,
+          "fraction_of_cycle": 0.2348254690531803
+        },
+        {
+          "quantity": "vce",
+          "side": "below",
+          "limit_v": 0.4,
+          "min_v": 0.2600000000000001,
+          "fraction_of_cycle": 0.1704634283831989
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 141.2920766101521,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.0007499999999999999,
+        "pout_per_nx_dbm": -1.2493873660830002,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 43,
+        "devices_at_nx_dev": 5,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.032249999999999994,
+        "pout_at_nx_total_dbm": 15.085297189712865,
+        "load_ohm_ideal": 15.503875968992245,
+        "ic_peak_total_a": 0.129
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.0114,
+        "delta_t_k": 16.292076610152087,
+        "tj_c": {
+          "-40": {
+            "tj_c": -23.707923389847913,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 43.29207661015209,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 141.2920766101521,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.2,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.8000051774830258,
+        "max_v": 0.8952501426484654,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.4,
+      "tolerance": "nominal",
+      "vcc_v": 1.4,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.9999999999999999,
+      "vce_pk_v": 2.4,
+      "vce_min_v": 0.4,
+      "vcb_pk_v": 1.75,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 2.4,
+          "limit_min_v": 1.4,
+          "margin_v": -1.0,
+          "violation": true,
+          "fraction_of_cycle_above": 0.5
+        },
+        "vcbo": {
+          "peak_v": 1.75,
+          "limit_min_v": 3.8,
+          "margin_v": 2.05,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "above",
+          "limit_v": 2.0,
+          "peak_v": 2.4,
+          "fraction_of_cycle": 0.29516723530086647
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 144.29324861728537,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.0007499999999999999,
+        "pout_per_nx_dbm": -1.2493873660830002,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 43,
+        "devices_at_nx_dev": 5,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.032249999999999994,
+        "pout_at_nx_total_dbm": 15.085297189712865,
+        "load_ohm_ideal": 15.503875968992245,
+        "ic_peak_total_a": 0.129
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.013499999999999998,
+        "delta_t_k": 19.293248617285364,
+        "tj_c": {
+          "-40": {
+            "tj_c": -20.706751382714636,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 46.293248617285364,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 144.29324861728537,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.4,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.7964846308794207,
+        "max_v": 0.8923357078243802,
+        "in_window": true
+      }
+    },
+    {
+      "supply_nominal_v": 1.4,
+      "tolerance": "+10%",
+      "vcc_v": 1.54,
+      "swing_mode": "fixed-nominal",
+      "vswing_v": 0.9999999999999999,
+      "vce_pk_v": 2.54,
+      "vce_min_v": 0.5400000000000001,
+      "vcb_pk_v": 1.8900000000000001,
+      "breakdown": {
+        "vceo": {
+          "peak_v": 2.54,
+          "limit_min_v": 1.4,
+          "margin_v": -1.1400000000000001,
+          "violation": true,
+          "fraction_of_cycle_above": 0.5447102569295085
+        },
+        "vcbo": {
+          "peak_v": 1.8900000000000001,
+          "limit_min_v": 3.8,
+          "margin_v": 1.9099999999999997,
+          "violation": false,
+          "vbe_at_peak_assumed_v": 0.65
+        }
+      },
+      "breakdown_verdict": "BREAKDOWN VIOLATION (VCEO)",
+      "window_labels": [
+        {
+          "quantity": "vce",
+          "side": "above",
+          "limit_v": 2.0,
+          "peak_v": 2.54,
+          "fraction_of_cycle": 0.34784940276303383
+        },
+        {
+          "quantity": "tj",
+          "ambient_c": 125.0,
+          "limit_c": 125.0,
+          "peak_c": 147.29442062441865,
+          "fraction_of_cycle": null
+        }
+      ],
+      "status": "BREAKDOWN VIOLATION",
+      "pout": {
+        "pout_per_nx_w": 0.0007499999999999999,
+        "pout_per_nx_dbm": -1.2493873660830002,
+        "iq_per_nx_a": 0.0015,
+        "ic_peak_per_nx_a": 0.003
+      },
+      "nx_needed": {
+        "target_dbm": 15.0,
+        "nx_total": 43,
+        "devices_at_nx_dev": 5,
+        "nx_dev": 10,
+        "pout_at_nx_total_w": 0.032249999999999994,
+        "pout_at_nx_total_dbm": 15.085297189712865,
+        "load_ohm_ideal": 15.503875968992245,
+        "ic_peak_total_a": 0.129
+      },
+      "thermal": {
+        "nx_dev": 10,
+        "rth_k_per_w": 1429.1295272063235,
+        "p_diss_per_device_w": 0.0156,
+        "delta_t_k": 22.294420624418645,
+        "tj_c": {
+          "-40": {
+            "tj_c": -17.705579375581355,
+            "outside_window": false
+          },
+          "+27": {
+            "tj_c": 49.29442062441865,
+            "outside_window": false
+          },
+          "+125": {
+            "tj_c": 147.29442062441865,
+            "outside_window": true
+          }
+        }
+      },
+      "vbe_at_quiescent": {
+        "vce_column_v": 1.6,
+        "corners_bracketed": 5,
+        "corners_total": 9,
+        "min_v": 0.7928188166758668,
+        "max_v": 0.8892876181199969,
+        "in_window": true
+      }
+    }
+  ],
+  "recommendation": {
+    "status": "RECOMMENDATION ONLY - not ratified (spec rows stay DRAFT)",
+    "supply_nominal_v": 0.8,
+    "nx_total": 106,
+    "devices_at_nx_dev": 11,
+    "basis": "largest candidate whose -/nominal/+ tolerance cells all stay within BVCEO/BVCBO (min) and the Vce window under a saturated swing, ideal resistive load, ideal passives"
+  }
+}
