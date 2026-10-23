@@ -3,7 +3,7 @@
 
 Usage:
   python3 -I loadline.py --self-test
-  python3 -I loadline.py --out loadline.json [--dc-json records/<id>.dc.json]
+  python3 -I loadline.py --out /tmp/loadline.json [--dc-json records/<id>.dc.json]
                          [--supplies 0.5,0.6,...] [--vknee 0.4] [--tol 0.10]
 
 NOT a simulation. Every number here is hand-checkable arithmetic on an ideal
