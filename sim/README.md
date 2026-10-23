@@ -66,6 +66,8 @@ not rerun locally. `sim/env.sh` deliberately carries no job pool.
 - `tools/` - `build-osdi.sh`, `pdk_identity.py`.
 - `smoke/` - toolchain smoke test (decks, `klt sim` requests, `run_smoke.sh`,
   `corners/<id>/` artifacts, `records/<id>.md`). Not a design result.
+- `device-npn13g2/` - `npn13G2` Ic-Vce / fT benches and the analytic load-line study
+  (`run_device.sh`, `loadline.py`); simulated device evidence, recommends only.
 
 Provenance of `env.sh`, `tools/build-osdi.sh` and `tools/pdk_identity.py`:
 `spec/decision-records/0001-adopt-lna-sim-env.md`.

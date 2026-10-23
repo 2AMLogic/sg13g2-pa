@@ -1,0 +1,133 @@
+* npn13G2 small-signal current gain h21 at Vce = 1.0 V, Nx 1/4/10 x Vbe 0.70..0.90 V.
+* Base driven by a 1 V ac voltage source, collector ac-shorted (dc source only), so
+* Ib_ac = i(Vb_*) and Ic_ac = i(Vs_*); CCVS H sources (1 ohm) expose them as voltages
+* for .meas. h21 = |Ic_ac|/|Ib_ac|; fT ~ |h21|*f0 (see README). Bias Ic comes from the
+* dc family (same Nx, Vbe, corner, temperature, Vce).
+* Circuit body only (klt sim owns .control/.end).
+Vc c 0 dc 1.0
+Vb_n1_v70 b_n1_v70 0 dc 0.70 ac 1
+Vs_n1_v70 c c_n1_v70 0
+Xq_n1_v70 c_n1_v70 b_n1_v70 0 0 npn13G2 Nx=1
+Hic_n1_v70 ico_n1_v70 0 Vs_n1_v70 1
+Hib_n1_v70 ibo_n1_v70 0 Vb_n1_v70 1
+Rico_n1_v70 ico_n1_v70 0 1G
+Ribo_n1_v70 ibo_n1_v70 0 1G
+Vb_n1_v74 b_n1_v74 0 dc 0.74 ac 1
+Vs_n1_v74 c c_n1_v74 0
+Xq_n1_v74 c_n1_v74 b_n1_v74 0 0 npn13G2 Nx=1
+Hic_n1_v74 ico_n1_v74 0 Vs_n1_v74 1
+Hib_n1_v74 ibo_n1_v74 0 Vb_n1_v74 1
+Rico_n1_v74 ico_n1_v74 0 1G
+Ribo_n1_v74 ibo_n1_v74 0 1G
+Vb_n1_v78 b_n1_v78 0 dc 0.78 ac 1
+Vs_n1_v78 c c_n1_v78 0
+Xq_n1_v78 c_n1_v78 b_n1_v78 0 0 npn13G2 Nx=1
+Hic_n1_v78 ico_n1_v78 0 Vs_n1_v78 1
+Hib_n1_v78 ibo_n1_v78 0 Vb_n1_v78 1
+Rico_n1_v78 ico_n1_v78 0 1G
+Ribo_n1_v78 ibo_n1_v78 0 1G
+Vb_n1_v82 b_n1_v82 0 dc 0.82 ac 1
+Vs_n1_v82 c c_n1_v82 0
+Xq_n1_v82 c_n1_v82 b_n1_v82 0 0 npn13G2 Nx=1
+Hic_n1_v82 ico_n1_v82 0 Vs_n1_v82 1
+Hib_n1_v82 ibo_n1_v82 0 Vb_n1_v82 1
+Rico_n1_v82 ico_n1_v82 0 1G
+Ribo_n1_v82 ibo_n1_v82 0 1G
+Vb_n1_v86 b_n1_v86 0 dc 0.86 ac 1
+Vs_n1_v86 c c_n1_v86 0
+Xq_n1_v86 c_n1_v86 b_n1_v86 0 0 npn13G2 Nx=1
+Hic_n1_v86 ico_n1_v86 0 Vs_n1_v86 1
+Hib_n1_v86 ibo_n1_v86 0 Vb_n1_v86 1
+Rico_n1_v86 ico_n1_v86 0 1G
+Ribo_n1_v86 ibo_n1_v86 0 1G
+Vb_n1_v90 b_n1_v90 0 dc 0.90 ac 1
+Vs_n1_v90 c c_n1_v90 0
+Xq_n1_v90 c_n1_v90 b_n1_v90 0 0 npn13G2 Nx=1
+Hic_n1_v90 ico_n1_v90 0 Vs_n1_v90 1
+Hib_n1_v90 ibo_n1_v90 0 Vb_n1_v90 1
+Rico_n1_v90 ico_n1_v90 0 1G
+Ribo_n1_v90 ibo_n1_v90 0 1G
+Vb_n4_v70 b_n4_v70 0 dc 0.70 ac 1
+Vs_n4_v70 c c_n4_v70 0
+Xq_n4_v70 c_n4_v70 b_n4_v70 0 0 npn13G2 Nx=4
+Hic_n4_v70 ico_n4_v70 0 Vs_n4_v70 1
+Hib_n4_v70 ibo_n4_v70 0 Vb_n4_v70 1
+Rico_n4_v70 ico_n4_v70 0 1G
+Ribo_n4_v70 ibo_n4_v70 0 1G
+Vb_n4_v74 b_n4_v74 0 dc 0.74 ac 1
+Vs_n4_v74 c c_n4_v74 0
+Xq_n4_v74 c_n4_v74 b_n4_v74 0 0 npn13G2 Nx=4
+Hic_n4_v74 ico_n4_v74 0 Vs_n4_v74 1
+Hib_n4_v74 ibo_n4_v74 0 Vb_n4_v74 1
+Rico_n4_v74 ico_n4_v74 0 1G
+Ribo_n4_v74 ibo_n4_v74 0 1G
+Vb_n4_v78 b_n4_v78 0 dc 0.78 ac 1
+Vs_n4_v78 c c_n4_v78 0
+Xq_n4_v78 c_n4_v78 b_n4_v78 0 0 npn13G2 Nx=4
+Hic_n4_v78 ico_n4_v78 0 Vs_n4_v78 1
+Hib_n4_v78 ibo_n4_v78 0 Vb_n4_v78 1
+Rico_n4_v78 ico_n4_v78 0 1G
+Ribo_n4_v78 ibo_n4_v78 0 1G
+Vb_n4_v82 b_n4_v82 0 dc 0.82 ac 1
+Vs_n4_v82 c c_n4_v82 0
+Xq_n4_v82 c_n4_v82 b_n4_v82 0 0 npn13G2 Nx=4
+Hic_n4_v82 ico_n4_v82 0 Vs_n4_v82 1
+Hib_n4_v82 ibo_n4_v82 0 Vb_n4_v82 1
+Rico_n4_v82 ico_n4_v82 0 1G
+Ribo_n4_v82 ibo_n4_v82 0 1G
+Vb_n4_v86 b_n4_v86 0 dc 0.86 ac 1
+Vs_n4_v86 c c_n4_v86 0
+Xq_n4_v86 c_n4_v86 b_n4_v86 0 0 npn13G2 Nx=4
+Hic_n4_v86 ico_n4_v86 0 Vs_n4_v86 1
+Hib_n4_v86 ibo_n4_v86 0 Vb_n4_v86 1
+Rico_n4_v86 ico_n4_v86 0 1G
+Ribo_n4_v86 ibo_n4_v86 0 1G
+Vb_n4_v90 b_n4_v90 0 dc 0.90 ac 1
+Vs_n4_v90 c c_n4_v90 0
+Xq_n4_v90 c_n4_v90 b_n4_v90 0 0 npn13G2 Nx=4
+Hic_n4_v90 ico_n4_v90 0 Vs_n4_v90 1
+Hib_n4_v90 ibo_n4_v90 0 Vb_n4_v90 1
+Rico_n4_v90 ico_n4_v90 0 1G
+Ribo_n4_v90 ibo_n4_v90 0 1G
+Vb_n10_v70 b_n10_v70 0 dc 0.70 ac 1
+Vs_n10_v70 c c_n10_v70 0
+Xq_n10_v70 c_n10_v70 b_n10_v70 0 0 npn13G2 Nx=10
+Hic_n10_v70 ico_n10_v70 0 Vs_n10_v70 1
+Hib_n10_v70 ibo_n10_v70 0 Vb_n10_v70 1
+Rico_n10_v70 ico_n10_v70 0 1G
+Ribo_n10_v70 ibo_n10_v70 0 1G
+Vb_n10_v74 b_n10_v74 0 dc 0.74 ac 1
+Vs_n10_v74 c c_n10_v74 0
+Xq_n10_v74 c_n10_v74 b_n10_v74 0 0 npn13G2 Nx=10
+Hic_n10_v74 ico_n10_v74 0 Vs_n10_v74 1
+Hib_n10_v74 ibo_n10_v74 0 Vb_n10_v74 1
+Rico_n10_v74 ico_n10_v74 0 1G
+Ribo_n10_v74 ibo_n10_v74 0 1G
+Vb_n10_v78 b_n10_v78 0 dc 0.78 ac 1
+Vs_n10_v78 c c_n10_v78 0
+Xq_n10_v78 c_n10_v78 b_n10_v78 0 0 npn13G2 Nx=10
+Hic_n10_v78 ico_n10_v78 0 Vs_n10_v78 1
+Hib_n10_v78 ibo_n10_v78 0 Vb_n10_v78 1
+Rico_n10_v78 ico_n10_v78 0 1G
+Ribo_n10_v78 ibo_n10_v78 0 1G
+Vb_n10_v82 b_n10_v82 0 dc 0.82 ac 1
+Vs_n10_v82 c c_n10_v82 0
+Xq_n10_v82 c_n10_v82 b_n10_v82 0 0 npn13G2 Nx=10
+Hic_n10_v82 ico_n10_v82 0 Vs_n10_v82 1
+Hib_n10_v82 ibo_n10_v82 0 Vb_n10_v82 1
+Rico_n10_v82 ico_n10_v82 0 1G
+Ribo_n10_v82 ibo_n10_v82 0 1G
+Vb_n10_v86 b_n10_v86 0 dc 0.86 ac 1
+Vs_n10_v86 c c_n10_v86 0
+Xq_n10_v86 c_n10_v86 b_n10_v86 0 0 npn13G2 Nx=10
+Hic_n10_v86 ico_n10_v86 0 Vs_n10_v86 1
+Hib_n10_v86 ibo_n10_v86 0 Vb_n10_v86 1
+Rico_n10_v86 ico_n10_v86 0 1G
+Ribo_n10_v86 ibo_n10_v86 0 1G
+Vb_n10_v90 b_n10_v90 0 dc 0.90 ac 1
+Vs_n10_v90 c c_n10_v90 0
+Xq_n10_v90 c_n10_v90 b_n10_v90 0 0 npn13G2 Nx=10
+Hic_n10_v90 ico_n10_v90 0 Vs_n10_v90 1
+Hib_n10_v90 ibo_n10_v90 0 Vb_n10_v90 1
+Rico_n10_v90 ico_n10_v90 0 1G
+Ribo_n10_v90 ibo_n10_v90 0 1G
