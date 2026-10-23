@@ -1,0 +1,5 @@
+* Known-answer deck 2: ideal 3.3 V DC source into 100 ohm.
+* P_DC = V^2/R = 108.9 mW. No RF anywhere, so P_out(f0) = P_in(f0) = 0 and
+* PAE = 0. The 1 GHz window is the nominal f0 the extractor integrates over.
+Vdd c 0 dc 3.3
+Rl c 0 100

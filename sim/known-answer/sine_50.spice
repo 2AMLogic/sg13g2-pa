@@ -1,0 +1,6 @@
+* Known-answer deck 1: ideal 1 V, 1 GHz sine behind 50 ohm into 50 ohm.
+* Analytic load power (1/2)(V0/2)^2/50 = 2.500 mW = +3.979 dBm.
+* Ideal elements only. Circuit body only (klt sim owns .control/.end).
+Vs src 0 dc 0 sin(0 1 1g)
+Rs src out 50
+Rl out 0 50

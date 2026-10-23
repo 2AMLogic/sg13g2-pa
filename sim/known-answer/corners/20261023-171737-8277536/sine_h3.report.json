@@ -1,0 +1,95 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "sim/known-answer/sine_h3.spice",
+    "scope": "repo"
+  },
+  "status": "not_checked",
+  "corner_count": 1,
+  "passed": 1,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 1,
+    "sim__corner__passed_count": 1,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "46",
+    "ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "models_lib": {
+      "path": null,
+      "scope": "absent"
+    },
+    "models_lib_sha256": null,
+    "netlist_sha256": "ed6b96bfbc6a0a986d5fdcf4ef96e249257b7a40220b3d426adba08a2f6b8e96",
+    "netlist_closure": [
+      {
+        "path": "sim/known-answer/sine_h3.spice",
+        "scope": "repo",
+        "sha256": "ed6b96bfbc6a0a986d5fdcf4ef96e249257b7a40220b3d426adba08a2f6b8e96"
+      }
+    ],
+    "timeout_preflight_warning": "options.timeout_s (300s) looks implausible for a tran analysis with ~6e+04 timepoints (2.5p step, 150n window) -- even 50 timepoints/s (a generous floor, not a real engine-rate estimate) would need 1.2e+03s per corner. This is only a coarse, advisory pre-grid heuristic -- it does not block the sweep, and a plausible-looking budget can still turn out to be too short in practice."
+  },
+  "coverage": {
+    "corners_simulated": 1,
+    "measurements_declared": 0,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [],
+    "skipped": [
+      {
+        "id": "corner:[0,\"default/novdd/27C\"]",
+        "reason": "no_requested_measurements"
+      }
+    ],
+    "inapplicable": [],
+    "unknown": [],
+    "nothing_checked": true,
+    "nothing_checked_reasons": [
+      "no_requested_measurements"
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.7.0",
+    "klayout_version": "0.30.12",
+    "pdk": null,
+    "deck": null,
+    "input": {
+      "content_hash": "sha256:ed6b96bfbc6a0a986d5fdcf4ef96e249257b7a40220b3d426adba08a2f6b8e96",
+      "role": "netlist"
+    }
+  },
+  "measurements": [],
+  "corners": [
+    {
+      "corner_id": "default/novdd/27C",
+      "process": null,
+      "supply_v": {},
+      "temperature_c": 27,
+      "status": "pass",
+      "runtime_s": 0.617,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/known-answer.gh9adA/sine_h3/default_novdd_27C/ngspice.log",
+        "raw": "/tmp/known-answer.gh9adA/sine_h3/default_novdd_27C/waveform.raw",
+        "waveform": "/tmp/known-answer.gh9adA/sine_h3/default_novdd_27C/waveform.raw.json",
+        "deck": "/tmp/known-answer.gh9adA/sine_h3/default_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "netlist": "sine_75.spice",
+  "corners": {
+    "temperature_c": [27]
+  },
+  "analysis": {
+    "kind": "tran",
+    "args": "2.5p 150n"
+  },
+  "options": {
+    "timeout_s": 300,
+    "keep_artifacts": true,
+    "waveforms": true
+  }
+}
