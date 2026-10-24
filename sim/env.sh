@@ -157,3 +157,48 @@ sim_check_log() {
   fi
   return 0
 }
+
+sim_resolve_klt() {
+  # sim_resolve_klt
+  #
+  # Resolves the klt command: the version pinned in sim/toolchain.json through
+  # uvx, or KLT="path/to/klt" to override. Sets, in the caller: KLT_PIN,
+  # KLT_CMD (array) and KLT_VERSION.
+  KLT_PIN="0.7.0"
+  # shellcheck disable=SC2206,SC2034  # intentional word-splitting; consumed by the runner
+  KLT_CMD=(${KLT:-uvx --from "klayout-tools==${KLT_PIN}" klt})
+  # shellcheck disable=SC2034
+  KLT_VERSION="$("${KLT_CMD[@]}" --version 2>&1 | tail -1)"
+}
+
+sim_run_one() {
+  # sim_run_one <name> [extra klt args]
+  #
+  # Runs `klt sim` on <name>.request.json (in the caller's SCRIPT_DIR) into
+  # ${OUT}/<name>, with the report and stderr beside it. A batch submit refused
+  # for fleet capacity is resubmitted to the batch fleet (bounded: 4 attempts,
+  # 60 s apart) -- a resubmit, not a job pool. Any other failure, and a capacity
+  # refusal that outlasts the attempts, is reported and sets the caller's
+  # `failed=1`; nothing is ever retried locally.
+  #
+  # Needs, from the caller: SCRIPT_DIR, OUT, KLT_CMD (sim_resolve_klt), SIM_SCRIPT_NAME.
+  local name="$1" attempt rc
+  shift
+  for attempt in 1 2 3 4; do
+    echo "${SIM_SCRIPT_NAME}: klt sim ${name} $* (attempt ${attempt})"
+    rc=0
+    ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --format json -o "${OUT}/${name}" "$@" \
+        "${name}.request.json" > "${OUT}/${name}.report.json" 2> "${OUT}/${name}.stderr" ) || rc=$?
+    (( rc == 0 )) && return 0
+    if grep -q 'BATCH_MAX_CONCURRENT_INSTANCES\|batch_no_capacity\|batch_concurrency_cap' \
+         "${OUT}/${name}.report.json" "${OUT}/${name}.stderr" 2>/dev/null && (( attempt < 4 )); then
+      echo "${SIM_SCRIPT_NAME}: ${name}: fleet at capacity; resubmitting to batch in 60 s" >&2
+      sleep 60
+      continue
+    fi
+    break
+  done
+  echo "${SIM_SCRIPT_NAME}: ${name}: klt sim exited ${rc} (see ${OUT}/${name}.stderr); no local fallback is attempted." >&2
+  # shellcheck disable=SC2034  # read by the sourcing runner
+  failed=1
+}

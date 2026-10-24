@@ -57,7 +57,9 @@ on the fleet.
 A multi-corner or Monte Carlo run is a `klt sim` request (`corners` /
 `monte_carlo`), never a hand-launched `ngspice -b` loop. With
 `KLT_SIM_BACKEND=batch` it goes to the batch fleet; a failed submit is reported,
-not rerun locally. `sim/env.sh` deliberately carries no job pool.
+not rerun locally. `sim/env.sh` deliberately carries no job pool: `sim_run_one`'s bounded
+retry is a resubmit of one request to batch when the fleet is at capacity, not
+a pool of concurrent jobs, and it never falls back to a local run.
 
 ## Large-signal extraction (`lib/rf_extract.py`)
 
@@ -125,7 +127,7 @@ edit or delete one, rerun instead.
 ## Layout
 
 - `pdk.json`, `toolchain.json` - pins and tool floors.
-- `env.sh` - resolver and shared runner surface (`sim_require_pdk`, `sim_check_log`).
+- `env.sh` - resolver and shared runner surface (`sim_require_pdk`, `sim_resolve_klt`, `sim_run_one`, `sim_check_log`).
 - `tools/` - `build-osdi.sh`, `pdk_identity.py`.
 - `lib/` - `rf_extract.py` and its tests.
 - `known-answer/` - ideal decks, `run.sh`, `check_known_answer.py`,

@@ -25,10 +25,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../env.sh"
 sim_require_pdk run_smoke.sh --osdi
 
-KLT_PIN="0.7.0"
-# shellcheck disable=SC2206  # intentional word-splitting of the command
-KLT_CMD=(${KLT:-uvx --from "klayout-tools==${KLT_PIN}" klt})
-KLT_VERSION="$("${KLT_CMD[@]}" --version 2>&1 | tail -1)"
+sim_resolve_klt
 
 REPO_GIT_SHA="$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 DIRTY=0
@@ -45,33 +42,9 @@ PROV="${RECORDS_DIR}/${RECORD_ID}.pdk-provenance.json"
 printf '%s\n' "${SIM_PDK_PROVENANCE_JSON}" > "${PROV}"
 
 failed=0
-run_one() { # run_one <name> [extra klt args]
-  # A batch submit refused for fleet capacity is resubmitted to the batch
-  # fleet (bounded: 4 attempts, 60 s apart). Any other failure -- and a
-  # capacity refusal that outlasts the attempts -- is reported as failed;
-  # nothing is ever retried locally.
-  local name="$1" attempt rc
-  shift
-  for attempt in 1 2 3 4; do
-    echo "run_smoke.sh: klt sim ${name} $* (attempt ${attempt})"
-    rc=0
-    ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --format json -o "${OUT}/${name}" "$@" \
-        "${name}.request.json" > "${OUT}/${name}.report.json" 2> "${OUT}/${name}.stderr" ) || rc=$?
-    (( rc == 0 )) && return 0
-    if grep -q 'BATCH_MAX_CONCURRENT_INSTANCES\|batch_no_capacity\|batch_concurrency_cap' \
-         "${OUT}/${name}.report.json" "${OUT}/${name}.stderr" 2>/dev/null && (( attempt < 4 )); then
-      echo "run_smoke.sh: ${name}: fleet at capacity; resubmitting to batch in 60 s" >&2
-      sleep 60
-      continue
-    fi
-    break
-  done
-  echo "run_smoke.sh: ${name}: klt sim exited ${rc} (see ${OUT}/${name}.stderr); no local fallback is attempted." >&2
-  failed=1
-}
-run_one inverter_dc
-run_one inverter_tran
-run_one npn_op --backend local
+sim_run_one inverter_dc
+sim_run_one inverter_tran
+sim_run_one npn_op --backend local
 
 # Per-corner log gate: no missing-model / non-convergence error.
 SIM_LOG_REQUIRE_COMPLETE=0
