@@ -3,6 +3,11 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-10-24
+
+- **PR #30**: refactor(sim): share batch retry and klt resolution in sim/env.sh
+- **Issue #29** (closed): Dedupe run_one batch-capacity retry loop across sim drivers into env.sh
+
 ### 2026-10-23
 
 - **PR #27**: refactor(sim): share npn13G2 window constants and rth between summarize and loadline
