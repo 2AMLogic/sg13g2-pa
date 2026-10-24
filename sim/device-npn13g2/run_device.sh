@@ -22,10 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../env.sh"
 sim_require_pdk run_device.sh
 
-KLT_PIN="0.7.0"
-# shellcheck disable=SC2206  # intentional word-splitting of the command
-KLT_CMD=(${KLT:-uvx --from "klayout-tools==${KLT_PIN}" klt})
-KLT_VERSION="$("${KLT_CMD[@]}" --version 2>&1 | tail -1)"
+sim_resolve_klt
 
 # Known-answer gate before any DUT number is used, and the committed decks must
 # match their generator.
@@ -47,29 +44,8 @@ PROV="${RECORDS_DIR}/${RECORD_ID}.pdk-provenance.json"
 printf '%s\n' "${SIM_PDK_PROVENANCE_JSON}" > "${PROV}"
 
 failed=0
-run_one() { # run_one <name>
-  # Batch-capacity refusals are resubmitted to the batch fleet (4 attempts, 60 s
-  # apart). Any other failure is reported; nothing is ever retried locally.
-  local name="$1" attempt rc
-  for attempt in 1 2 3 4; do
-    echo "run_device.sh: klt sim ${name} (attempt ${attempt})"
-    rc=0
-    ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --format json -o "${OUT}/${name}" \
-        "${name}.request.json" > "${OUT}/${name}.report.json" 2> "${OUT}/${name}.stderr" ) || rc=$?
-    (( rc == 0 )) && return 0
-    if grep -q 'BATCH_MAX_CONCURRENT_INSTANCES\|batch_no_capacity\|batch_concurrency_cap' \
-         "${OUT}/${name}.report.json" "${OUT}/${name}.stderr" 2>/dev/null && (( attempt < 4 )); then
-      echo "run_device.sh: ${name}: fleet at capacity; resubmitting to batch in 60 s" >&2
-      sleep 60
-      continue
-    fi
-    break
-  done
-  echo "run_device.sh: ${name}: klt sim exited ${rc} (see ${OUT}/${name}.stderr); no local fallback is attempted." >&2
-  failed=1
-}
-run_one dc_family
-run_one ft
+sim_run_one dc_family
+sim_run_one ft
 
 SIM_LOG_REQUIRE_COMPLETE=0
 for log in "${OUT}"/*/*/ngspice.log; do
