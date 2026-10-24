@@ -164,7 +164,8 @@ sim_resolve_klt() {
   # Resolves the klt command: the version pinned in sim/toolchain.json through
   # uvx, or KLT="path/to/klt" to override. Sets, in the caller: KLT_PIN,
   # KLT_CMD (array) and KLT_VERSION.
-  KLT_PIN="0.7.0"
+  KLT_PIN="$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))["klt"]["pin"])' \
+      "${SIM_DIR}/toolchain.json")" || { echo "sim_resolve_klt: cannot read klt.pin from ${SIM_DIR}/toolchain.json" >&2; return 1; }
   # shellcheck disable=SC2206,SC2034  # intentional word-splitting; consumed by the runner
   KLT_CMD=(${KLT:-uvx --from "klayout-tools==${KLT_PIN}" klt})
   # shellcheck disable=SC2034

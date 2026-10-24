@@ -11,8 +11,8 @@
 # sim/known-answer/records/<timestamp>-<sha>[-wrong-load].md and the klt
 # reports/logs under sim/known-answer/corners/<same id>/.
 #
-# `klt` is the pinned release (sim/toolchain.json) through uvx; override with
-# KLT="path/to/klt" (word-split).
+# `klt` is the release pinned in sim/toolchain.json, through uvx (sim_resolve_klt
+# in sim/env.sh); override with KLT="path/to/klt" (word-split).
 # Exit codes: 0 every value inside tolerance; 1 a value outside tolerance or a
 # run/extraction failed (--wrong-load is EXPECTED to exit 1); 3 preflight
 # failed; 4 record id collision.
@@ -35,10 +35,9 @@ for tool in ngspice python3; do
 done
 python3 -I -c 'import numpy' 2>/dev/null || { echo "run.sh: PREFLIGHT: python3 numpy missing." >&2; exit 3; }
 
-KLT_PIN="0.7.0"
-# shellcheck disable=SC2206  # intentional word-splitting of the command
-KLT_CMD=(${KLT:-uvx --from "klayout-tools==${KLT_PIN}" klt})
-KLT_VERSION="$("${KLT_CMD[@]}" --version 2>&1 | tail -1)"
+# shellcheck source=../env.sh
+source "${SCRIPT_DIR}/../env.sh"
+sim_resolve_klt
 
 REPO_GIT_SHA="$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 DIRTY=0
