@@ -3,6 +3,17 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-10-23
+
+- **PR #27**: refactor(sim): share npn13G2 window constants and rth between summarize and loadline
+- **PR #25**: chore(sim): remove duplicate tracked loadline.json
+- **PR #23**: feat(sim): transient large-signal extraction library with known-answer check
+- **PR #22**: sim: npn13G2 single-device load-line study with analytic breakdown/window verdicts
+- **Issue #26** (closed): Dedupe npn13G2 window constants and rth in device sim scripts
+- **Issue #24** (closed): Remove duplicate tracked sim/device-npn13g2/loadline.json (identical to its append-only record)
+- **Issue #21** (closed): sim: npn13G2 single-device load-line study (DC I-V, fT vs Ic, ideal-load swing vs BVCEO) as evidence for the DRAFT supply / flavour rows
+- **Issue #20** (closed): sim: large-signal transient extraction library (Pout, PDC, PAE, harmonics, P1dB) with the spec's known-answer check
+
 ### 2026-10-21
 
 - **PR #17**: Bump Repo Skills 0.24.3 -> 0.24.7
