@@ -5,7 +5,9 @@ triage role. Newest first.
 
 ### 2026-10-24
 
+- **PR #33**: refactor(sim): share klt resolution in known-answer driver, read pin from toolchain.json
 - **PR #30**: refactor(sim): share batch retry and klt resolution in sim/env.sh
+- **Issue #32** (closed): Dedupe klt pin and resolution: known-answer/run.sh and env.sh
 - **Issue #29** (closed): Dedupe run_one batch-capacity retry loop across sim drivers into env.sh
 
 ### 2026-10-23
