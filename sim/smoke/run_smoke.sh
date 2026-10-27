@@ -27,31 +27,14 @@ sim_require_pdk run_smoke.sh --osdi
 
 sim_resolve_klt
 
-REPO_GIT_SHA="$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || echo unknown)"
-DIRTY=0
-[[ -z "$(git -C "${REPO_ROOT}" status --porcelain -- sim scripts 2>/dev/null)" ]] || DIRTY=1
-RECORD_ID="$(date -u +%Y%m%d-%H%M%S)-${REPO_GIT_SHA}"
-OUT="${SCRIPT_DIR}/corners/${RECORD_ID}"
-RECORDS_DIR="${SCRIPT_DIR}/records"
-if [[ -e "${OUT}" ]] || compgen -G "${RECORDS_DIR}/${RECORD_ID}*" >/dev/null; then
-  echo "run_smoke.sh: record id ${RECORD_ID} already has artifacts; refusing to reuse it. Wait a second and rerun." >&2
-  exit 4
-fi
-mkdir -p "${OUT}" "${RECORDS_DIR}"
-PROV="${RECORDS_DIR}/${RECORD_ID}.pdk-provenance.json"
-printf '%s\n' "${SIM_PDK_PROVENANCE_JSON}" > "${PROV}"
+sim_begin_record
 
 failed=0
 sim_run_one inverter_dc
 sim_run_one inverter_tran
 sim_run_one npn_op --backend local
 
-# Per-corner log gate: no missing-model / non-convergence error.
-SIM_LOG_REQUIRE_COMPLETE=0
-for log in "${OUT}"/*/*/ngspice.log; do
-  [[ -f "${log}" ]] || continue
-  sim_check_log "${log#"${OUT}/"}" "${log}" 0 || failed=1
-done
+sim_gate_logs
 
 REC="${RECORDS_DIR}/${RECORD_ID}.md"
 if python3 -I "${SCRIPT_DIR}/summarize.py" "${RECORD_ID}" "${REPO_GIT_SHA}" "${DIRTY}" \

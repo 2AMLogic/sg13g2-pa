@@ -158,6 +158,81 @@ sim_check_log() {
   return 0
 }
 
+sim_begin_record() {
+  # sim_begin_record [--suffix S] [--pathspec P]...
+  #
+  # The append-only record prelude every bench driver shares. Sets, in the
+  # caller: REPO_GIT_SHA, DIRTY (1 if `git status --porcelain` over the
+  # pathspecs is non-empty; default pathspecs: sim scripts), RECORD_ID
+  # (UTC timestamp-sha[S]), OUT (${SCRIPT_DIR}/corners/<id>), RECORDS_DIR
+  # (${SCRIPT_DIR}/records) and PROV. Creates OUT and RECORDS_DIR, and writes
+  # PROV (${RECORDS_DIR}/<id>.pdk-provenance.json) when sim_require_pdk has run.
+  # An id that already has artifacts exits 4 and nothing is overwritten.
+  #
+  # Needs, from the caller: SCRIPT_DIR and SIM_SCRIPT_NAME (sim_require_pdk, or
+  # set it yourself).
+  local suffix="" pathspec=()
+  while (( $# > 0 )); do
+    case "$1" in
+      --suffix) (( $# >= 2 )) || { echo "sim_begin_record: --suffix needs a value" >&2; exit 2; }
+                suffix="$2"; shift ;;
+      --pathspec) pathspec+=("${2:?sim_begin_record: --pathspec needs a value}"); shift ;;
+      *) echo "sim_begin_record: unknown option '$1'" >&2; exit 2 ;;
+    esac
+    shift
+  done
+  (( ${#pathspec[@]} )) || pathspec=(sim scripts)
+
+  REPO_GIT_SHA="$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+  DIRTY=0
+  # shellcheck disable=SC2034  # DIRTY is consumed by the sourcing runner's record
+  [[ -z "$(git -C "${REPO_ROOT}" status --porcelain -- "${pathspec[@]}" 2>/dev/null)" ]] || DIRTY=1
+  RECORD_ID="$(date -u +%Y%m%d-%H%M%S)-${REPO_GIT_SHA}${suffix}"
+  OUT="${SCRIPT_DIR}/corners/${RECORD_ID}"
+  RECORDS_DIR="${SCRIPT_DIR}/records"
+  if [[ -e "${OUT}" ]] || compgen -G "${RECORDS_DIR}/${RECORD_ID}*" >/dev/null; then
+    echo "${SIM_SCRIPT_NAME}: record id ${RECORD_ID} already has artifacts; refusing to reuse it. Wait a second and rerun." >&2
+    exit 4
+  fi
+  mkdir -p "${OUT}" "${RECORDS_DIR}"
+  PROV="${RECORDS_DIR}/${RECORD_ID}.pdk-provenance.json"
+  if [[ -n "${SIM_PDK_PROVENANCE_JSON}" ]]; then
+    printf '%s\n' "${SIM_PDK_PROVENANCE_JSON}" > "${PROV}"
+  fi
+}
+
+sim_gate_logs() {
+  # sim_gate_logs [--tolerate-recovered-gmin]
+  #
+  # Per-corner log gate over ${OUT}/*/*/ngspice.log (klt-generated logs carry
+  # no BENCH_COMPLETE line): no missing-model / non-convergence error. Sets the
+  # caller's `failed=1` for any log that fails.
+  #
+  # --tolerate-recovered-gmin: a "singular matrix" warning that ngspice's
+  # dynamic gmin stepping recovered from (klt grades the corner `pass` with a
+  # warning diagnostic) is left to the record's solver-diagnostics section
+  # instead of failing the gate; every other error pattern still fails it.
+  #
+  # Needs, from the caller: OUT, SIM_SCRIPT_NAME.
+  local tolerate=0 log filtered
+  case "${1:-}" in
+    "") ;;
+    --tolerate-recovered-gmin) tolerate=1 ;;
+    *) echo "sim_gate_logs: unknown option '$1'" >&2; exit 2 ;;
+  esac
+  SIM_LOG_REQUIRE_COMPLETE=0
+  for log in "${OUT}"/*/*/ngspice.log; do
+    [[ -f "${log}" ]] || continue
+    filtered="${log}"
+    if (( tolerate )) && grep -q 'Dynamic gmin stepping completed' "${log}"; then
+      filtered="$(mktemp)"
+      grep -v '^Warning: singular matrix' "${log}" > "${filtered}" || true
+    fi
+    sim_check_log "${log#"${OUT}/"}" "${filtered}" 0 || failed=1
+    [[ "${filtered}" == "${log}" ]] || rm -f "${filtered}"
+  done
+}
+
 sim_resolve_klt() {
   # sim_resolve_klt
   #
