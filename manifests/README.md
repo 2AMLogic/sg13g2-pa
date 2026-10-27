@@ -24,7 +24,7 @@ output, the machine-readable form of the T1 checklist in
 ## Regenerate
 
 ```console
-uvx --from "klayout-tools==0.7.0" klt signoff \
+uvx --from "klayout-tools==0.8.0" klt signoff \
     --manifest manifests/sg13g2-pa.json \
     --tiers-doc manifests/design-evidence-tiers.md \
     --format json > manifests/sg13g2-pa.signoff.json

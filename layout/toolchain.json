@@ -1,10 +1,10 @@
 {
-  "_comment": "Tool pin for layout/ (DRC, LVS). 'pin' is the exact klayout-tools release; layout/smoke/README.md records what it was run against. Same pin as sim/toolchain.json (klt.pin) and the 0.7.0 that the signoff workflow in PR #6 installs; re-check PR #6 if either changes. klt is run through a throwaway uvx environment, never a host install.",
+  "_comment": "Tool pin for layout/ (DRC, LVS). 'pin' is the exact klayout-tools release; layout/smoke/README.md records what it was run against. Same pin as sim/toolchain.json (klt.pin) and the 0.8.0 that the signoff workflow in PR #6 installs; re-check PR #6 if either changes. klt is run through a throwaway uvx environment, never a host install.",
   "klt": {
-    "pin": "0.7.0",
-    "run_as": "uvx --from klayout-tools==0.7.0 klt",
+    "pin": "0.8.0",
+    "run_as": "uvx --from klayout-tools==0.8.0 klt",
     "klt_required_commands": ["drc", "lvs"],
     "used_by": "layout/smoke/README.md",
-    "matches": ["sim/toolchain.json klt.pin", "PR #6 signoff workflow (klayout-tools==0.7.0)"]
+    "matches": ["sim/toolchain.json klt.pin", "PR #6 signoff workflow (klayout-tools==0.8.0)"]
   }
 }

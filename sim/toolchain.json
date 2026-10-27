@@ -21,9 +21,9 @@
     "verified_with": "3.12"
   },
   "klt": {
-    "pin": "0.7.0",
+    "pin": "0.8.0",
     "floor": "0.7.0",
-    "run_as": "uvx --from klayout-tools==0.7.0 klt (throwaway env; sim/smoke/run_smoke.sh)",
+    "run_as": "uvx --from klayout-tools==0.8.0 klt (throwaway env; sim/smoke/run_smoke.sh)",
     "used_by": "sim/smoke/run_smoke.sh (klt sim corner requests with options.osdi_preload, options.stage_model_inputs)",
     "not_usable": "0.7.1.dev1755+gdce956c3c399 (the host-installed build): batch jobs failed on the worker with exit 2 and no report on 2026-10-17 for these requests; 0.7.0 ran them"
   }
