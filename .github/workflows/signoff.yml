@@ -4,6 +4,9 @@ name: klt signoff
 # (manifests/sg13g2-pa.json) and byte-compare it against the committed
 # verdict of record (manifests/sg13g2-pa.signoff.json). A manifest, vendored
 # checklist or klt-pin change without a regenerated record fails here.
+# Also runs the unit tests and re-attests T1 item 10 (attest/item10.json ->
+# evidence/item10.json): the envelope hashes README.md and the other hygiene
+# files byte-for-byte, so editing them without regenerating it fails here.
 # See manifests/README.md.
 
 on:
@@ -26,8 +29,14 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install pinned klt
-        run: pip install klayout-tools==0.7.0
+      - name: Install pinned klt and the unit-test dependencies
+        run: pip install klayout-tools==0.8.0 numpy pytest
+
+      - name: Unit tests (sim/lib, no simulator needed)
+        run: python3 -m pytest -q sim/lib
+
+      - name: Re-attest T1 item 10 against the committed envelope
+        run: klt signoff --attest 10 --inventory attest/item10.json --check evidence/item10.json
 
       - name: Re-run klt signoff and compare against the committed record
         run: |
