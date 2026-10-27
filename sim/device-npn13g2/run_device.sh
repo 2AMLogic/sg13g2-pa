@@ -29,40 +29,13 @@ sim_resolve_klt
 python3 -I "${SCRIPT_DIR}/loadline.py" --self-test
 python3 -I "${SCRIPT_DIR}/gen_bench.py" --check
 
-REPO_GIT_SHA="$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || echo unknown)"
-DIRTY=0
-[[ -z "$(git -C "${REPO_ROOT}" status --porcelain -- sim scripts 2>/dev/null)" ]] || DIRTY=1
-RECORD_ID="$(date -u +%Y%m%d-%H%M%S)-${REPO_GIT_SHA}"
-OUT="${SCRIPT_DIR}/corners/${RECORD_ID}"
-RECORDS_DIR="${SCRIPT_DIR}/records"
-if [[ -e "${OUT}" ]] || compgen -G "${RECORDS_DIR}/${RECORD_ID}*" >/dev/null; then
-  echo "run_device.sh: record id ${RECORD_ID} already has artifacts; refusing to reuse it. Wait a second and rerun." >&2
-  exit 4
-fi
-mkdir -p "${OUT}" "${RECORDS_DIR}"
-PROV="${RECORDS_DIR}/${RECORD_ID}.pdk-provenance.json"
-printf '%s\n' "${SIM_PDK_PROVENANCE_JSON}" > "${PROV}"
+sim_begin_record
 
 failed=0
 sim_run_one dc_family
 sim_run_one ft
 
-SIM_LOG_REQUIRE_COMPLETE=0
-for log in "${OUT}"/*/*/ngspice.log; do
-  [[ -f "${log}" ]] || continue
-  # A "singular matrix" warning that ngspice's dynamic gmin stepping recovered from
-  # (klt grades the corner `pass` with a warning diagnostic) is listed in the
-  # record's solver-diagnostics section rather than failing the gate; every other
-  # error pattern still fails it.
-  filtered="$(mktemp)"
-  if grep -q 'Dynamic gmin stepping completed' "${log}"; then
-    grep -v '^Warning: singular matrix' "${log}" > "${filtered}" || true
-  else
-    cp "${log}" "${filtered}"
-  fi
-  sim_check_log "${log#"${OUT}/"}" "${filtered}" 0 || failed=1
-  rm -f "${filtered}"
-done
+sim_gate_logs --tolerate-recovered-gmin
 
 REC="${RECORDS_DIR}/${RECORD_ID}.md"
 DCJSON="${RECORDS_DIR}/${RECORD_ID}.dc.json"

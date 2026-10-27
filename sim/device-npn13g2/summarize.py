@@ -8,7 +8,6 @@ Reads <out-dir>/{dc_family,ft}.report.json. Prints the record on stdout, writes
 <dc-json-out> (Ic cells for loadline.py). Exit 1 if a report is missing or any
 corner is not `pass`. Stdlib only; run with -I.
 """
-import hashlib
 import json
 import os
 import re
@@ -26,11 +25,8 @@ _spec.loader.exec_module(ll)
 IC_WIN_PER_NX = ll.IC_WIN_PER_NX
 TJ_MAX = ll.TJ_MAX
 rth = ll.rth
-
-
-def sha(path):
-    with open(path, "rb") as fh:
-        return hashlib.sha256(fh.read()).hexdigest()
+sys.path.insert(0, os.path.join(HERE, "..", "lib"))
+from provenance import commit_line, sha  # noqa: E402
 
 
 def load(out_dir, name):
@@ -52,7 +48,7 @@ def main(argv):
          "recommends, it does not ratify. Every table names its corner and temperature.", "",
          "## Provenance", "",
          f"- UTC timestamp / record id: `{rid}`",
-         f"- Commit: `{git_sha}`" + (" (**working tree dirty** when run)" if dirty == "1" else ""),
+         commit_line(git_sha, dirty),
          f"- PDK: IHP-Open-PDK pinned `{prov['pinned_release_tag']}`, installed `{prov['installed_release_raw']}` "
          f"(identity route `{prov['identity_route']}`), verified against `sim/pdk.json`",
          f"- `klt`: `{klt_ver}`",
