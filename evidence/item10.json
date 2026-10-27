@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "kind": "generic",
+  "status": "pass",
+  "t1_item": 10,
+  "summary": "T1 item 10 (Repo hygiene): 7/7 attestation checks passed (klt signoff --attest)",
+  "source": "attest/item10.json",
+  "attestation": {
+    "producer": "klt signoff --attest",
+    "inventory_schema_version": 1,
+    "hash_algorithm": "sha256-raw-bytes",
+    "check_count": 7,
+    "passed_count": 7,
+    "checks": [
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": ".github/workflows/signoff.yml",
+        "passed": true,
+        "content_hash": "sha256:540c31ae10012b15a7d92326641b1b6cd30457858740cc2bb8c10eb47236ef12"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "LICENSE",
+        "passed": true,
+        "content_hash": "sha256:cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "README.md",
+        "passed": true,
+        "content_hash": "sha256:3a4c4042004143a45ce3aa5071cb9c156033f169a5082a81b7baafb7398786c6"
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "unit-tests",
+        "argv": [
+          "python3",
+          "-m",
+          "pytest",
+          "-q",
+          "sim/lib"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "json-sim-pdk",
+        "argv": [
+          "python3",
+          "-I",
+          "-m",
+          "json.tool",
+          "sim/pdk.json",
+          "/dev/null"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "json-sim-toolchain",
+        "argv": [
+          "python3",
+          "-I",
+          "-m",
+          "json.tool",
+          "sim/toolchain.json",
+          "/dev/null"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "json-layout-toolchain",
+        "argv": [
+          "python3",
+          "-I",
+          "-m",
+          "json.tool",
+          "layout/toolchain.json",
+          "/dev/null"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      }
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.8.0",
+    "klayout_version": null,
+    "pdk": null,
+    "deck": null,
+    "input": {
+      "path": {
+        "path": "attest/item10.json",
+        "scope": "repo"
+      },
+      "content_hash": "sha256:062ac88f56b2034ae828ad28ae7e423f97402a6de5da1d8bb76dc1d2ba72cfcc"
+    }
+  }
+}
