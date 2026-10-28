@@ -32,7 +32,7 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-_None._
+- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist
 
 ## PRs Awaiting Review
 
@@ -50,7 +50,7 @@ _None._
 
 Issues carrying `loom:curated`.
 
-_None._
+- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -68,10 +68,10 @@ _None._
 | Very important | 0 |
 | Important | 0 |
 | Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 0 |
+| In Progress (`loom:building`) | 1 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
-| Curated | 0 |
+| Curated | 1 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
