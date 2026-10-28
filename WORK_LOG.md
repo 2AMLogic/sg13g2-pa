@@ -3,6 +3,13 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-10-27
+
+- **PR #46**: refactor(sim): share record prelude, log gate and provenance helpers across bench drivers
+- **PR #43**: ci: attest T1 item 10 repo hygiene with klt 0.8.0 and document reproduction
+- **Issue #44** (closed): Hoist duplicated record-id prelude from three sim drivers into sim/env.sh
+- **Issue #41** (closed): T1 item 10 (Repo hygiene): README reproduction section and klt signoff --attest 10
+
 ### 2026-10-24
 
 - **PR #33**: refactor(sim): share klt resolution in known-answer driver, read pin from toolchain.json
