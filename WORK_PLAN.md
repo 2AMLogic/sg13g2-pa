@@ -44,7 +44,7 @@ _None._
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-_None._
+- **#45**: docs: propose single-stage npn13g2 topology and bump klt pin to 0.8.0
 
 ## Proposed
 
@@ -70,7 +70,7 @@ _None._
 | Ready (`loom:issue`) | 0 |
 | In Progress (`loom:building`) | 1 |
 | PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 0 |
+| Approved PRs awaiting merge | 1 |
 | Curated | 1 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
