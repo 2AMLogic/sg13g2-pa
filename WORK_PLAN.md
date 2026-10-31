@@ -50,6 +50,7 @@ PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
 Issues carrying `loom:curated`.
 
+- **#5**: Track the gap to T1 (klayout-tools design-evidence-tiers.md) *(curated)*
 - **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist *(curated)*
 
 ## Proposed (Architect / Hermit)
@@ -71,7 +72,7 @@ _None._
 | In Progress (`loom:building`) | 1 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 1 |
-| Curated | 1 |
+| Curated | 2 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
