@@ -3,6 +3,10 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-01
+
+- **PR #50**: Bump Repo Skills 0.24.7 -> 0.25.1
+
 ### 2026-10-27
 
 - **PR #46**: refactor(sim): share record prelude, log gate and provenance helpers across bench drivers
