@@ -20,19 +20,19 @@ _None._
 
 `loom:important`; taken before unlabelled work.
 
-_None._
+- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist
 
 ## Ready
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-_None._
+- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist
 
 ## In Progress
 
 Issues currently being built (`loom:building`).
 
-- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist
+_None._
 
 ## PRs Awaiting Review
 
@@ -67,9 +67,9 @@ _None._
 |------|-------|
 | Operator merge-risk holds | 0 |
 | Very important | 0 |
-| Important | 0 |
-| Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 1 |
+| Important | 1 |
+| Ready (`loom:issue`) | 1 |
+| In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 1 |
 | Curated | 2 |
