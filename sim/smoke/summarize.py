@@ -8,15 +8,12 @@ Reads <out-dir>/<report-name>.report.json for each name, plus the
 PDK provenance JSON sim_require_pdk produced. Prints the record on stdout.
 Exit 1 if any report is missing or any corner is not `pass`.
 """
-import hashlib
 import json
 import os
 import sys
 
-
-def sha(path):
-    with open(path, "rb") as fh:
-        return hashlib.sha256(fh.read()).hexdigest()
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
+from provenance import commit_line, sha  # noqa: E402
 
 
 def main(argv):
@@ -37,7 +34,7 @@ def main(argv):
         "## Provenance",
         "",
         f"- UTC timestamp / record id: `{rid}`",
-        f"- Commit: `{git_sha}`" + (" (**working tree dirty** when run)" if dirty == "1" else ""),
+        commit_line(git_sha, dirty),
         f"- PDK: IHP-Open-PDK, pinned `{prov['pinned_release_tag']}`; installed release "
         f"`{prov['installed_release_raw']}` (identity route `{prov['identity_route']}`, "
         f"`.fetched-version` value `{prov['installed_release_raw']}`); verified against `sim/pdk.json`",

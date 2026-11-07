@@ -19,7 +19,6 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 mode=normal
 cases=(sine_50 dc_load sine_h3)
@@ -39,18 +38,12 @@ python3 -I -c 'import numpy' 2>/dev/null || { echo "run.sh: PREFLIGHT: python3 n
 source "${SCRIPT_DIR}/../env.sh"
 sim_resolve_klt
 
-REPO_GIT_SHA="$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || echo unknown)"
-DIRTY=0
+# shellcheck disable=SC2034  # read by sim_begin_record
+SIM_SCRIPT_NAME=run.sh
 # Earlier records/corners of this directory are evidence, not inputs: ignore them.
-[[ -z "$(git -C "${REPO_ROOT}" status --porcelain -- sim ':!sim/known-answer/records' ':!sim/known-answer/corners' 2>/dev/null)" ]] || DIRTY=1
-RECORD_ID="$(date -u +%Y%m%d-%H%M%S)-${REPO_GIT_SHA}${suffix}"
-RECORDS_DIR="${SCRIPT_DIR}/records"
-KEEP="${SCRIPT_DIR}/corners/${RECORD_ID}"
-if [[ -e "${KEEP}" ]] || compgen -G "${RECORDS_DIR}/${RECORD_ID}*" >/dev/null; then
-  echo "run.sh: record id ${RECORD_ID} already has artifacts; refusing to reuse it. Wait a second and rerun." >&2
-  exit 4
-fi
-mkdir -p "${RECORDS_DIR}" "${KEEP}"
+sim_begin_record --suffix "${suffix}" --pathspec sim \
+  --pathspec ':!sim/known-answer/records' --pathspec ':!sim/known-answer/corners'
+KEEP="${OUT}"
 
 # The waveforms are large and regenerable; they live in a scratch dir. The
 # reports and ngspice logs are kept under corners/<id>/.

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "kind": "t1-attestation-inventory",
+  "t1_item": 10,
+  "description": "Repo hygiene: README, LICENSE and CI workflow present; checks that run on a stock runner without the PDK.",
+  "hygiene": [
+    "README.md",
+    "LICENSE",
+    ".github/workflows/signoff.yml"
+  ],
+  "checks": [
+    {"name": "unit-tests", "argv": ["python3", "-m", "pytest", "-q", "sim/lib"]},
+    {"name": "json-sim-pdk", "argv": ["python3", "-I", "-m", "json.tool", "sim/pdk.json", "/dev/null"]},
+    {"name": "json-sim-toolchain", "argv": ["python3", "-I", "-m", "json.tool", "sim/toolchain.json", "/dev/null"]},
+    {"name": "json-layout-toolchain", "argv": ["python3", "-I", "-m", "json.tool", "layout/toolchain.json", "/dev/null"]}
+  ]
+}

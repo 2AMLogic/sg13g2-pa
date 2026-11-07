@@ -8,25 +8,25 @@ Only the region between the markers is machine-generated.
 
 Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
 
-_None._
+- **#53**: Bump Repo Skills 0.25.1 -> 0.25.10
 
 ## Very Important
 
 `loom:very-important` (one counts per workspace); every stage takes these first.
 
-_None._
+- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist
 
 ## Important
 
 `loom:important`; taken before unlabelled work.
 
-_None._
+- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist
 
 ## Ready
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-_None._
+- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist
 
 ## In Progress
 
@@ -44,13 +44,15 @@ _None._
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-_None._
+- **#45**: docs: propose single-stage npn13g2 topology and bump klt pin to 0.8.0
+- **#53**: Bump Repo Skills 0.25.1 -> 0.25.10
 
 ## Proposed
 
 Issues carrying `loom:curated`.
 
-_None._
+- **#5**: Track the gap to T1 (klayout-tools design-evidence-tiers.md) *(curated)*
+- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -64,14 +66,14 @@ _None._
 
 | Bucket | Count |
 |------|-------|
-| Operator merge-risk holds | 0 |
-| Very important | 0 |
-| Important | 0 |
-| Ready (`loom:issue`) | 0 |
+| Operator merge-risk holds | 1 |
+| Very important | 1 |
+| Important | 1 |
+| Ready (`loom:issue`) | 1 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 0 |
-| Curated | 0 |
+| Approved PRs awaiting merge | 2 |
+| Curated | 2 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->

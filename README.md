@@ -96,6 +96,27 @@ re-verification → shuttle seat → measured silicon.
   large-signal benches for output power, compression and efficiency.
 - **Layout, DRC, LVS**: klayout-tools (`klt`).
 
+## Reproduce
+
+Every committed result has one documented command. Run them from the repo
+root. `scripts/setup-env.sh` fetches the pinned PDK and builds the OSDI models
+into `~/.cache/sg13g2-pa`; it installs nothing host-wide. Simulation grids go
+through `klt sim` (the Spot batch fleet on dispatch workers via
+`KLT_SIM_BACKEND=batch`) and are never hand-launched as `ngspice -b` loops.
+
+| Result | Command | Output |
+|---|---|---|
+| Environment (PDK + OSDI) | `scripts/setup-env.sh` (`--check` verifies only, offline) | `~/.cache/sg13g2-pa` |
+| Toolchain smoke (inverter corners, one `npn13g2` operating point) | `sim/smoke/run_smoke.sh` | `sim/smoke/records/` |
+| Known-answer check of `sim/lib/rf_extract.py` | `sim/known-answer/run.sh` (`--wrong-load` is the negative control and is expected to exit 1) | `sim/known-answer/records/` |
+| `npn13g2` device load-line study | `sim/device-npn13g2/run_device.sh` | `sim/device-npn13g2/records/` |
+| Layout smoke DRC/LVS (reference cell, not the PA) | the `klt drc` / `klt lvs` commands in [`layout/smoke/README.md`](layout/smoke/README.md) | `layout/smoke/reports/` |
+| Tier verdict of record | the `klt signoff --manifest` command in [`manifests/README.md`](manifests/README.md) | `manifests/sg13g2-pa.signoff.json` |
+| Unit tests | `python3 -m pytest sim/lib` (needs only numpy and pytest) | stdout |
+
+All of these are toolchain or characterization results, not PA design
+results; each record says which corner and testbench it came from.
+
 ## Repo layout
 
 ```

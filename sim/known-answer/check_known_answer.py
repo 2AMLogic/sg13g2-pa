@@ -12,7 +12,6 @@ tolerance, 1 otherwise (also for a failed extraction).
 `wrong-load` runs only sine_75 (a 75 ohm load) against the 50 ohm analytic
 value of sine_50; it is the negative control and is expected to exit 1.
 """
-import hashlib
 import json
 import math
 import os
@@ -22,6 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "lib"))
 import numpy as np  # noqa: E402
 import rf_extract as rx  # noqa: E402
+from provenance import commit_line, sha  # noqa: E402
 
 F0 = 1e9
 # Analytic values (spec: known-answer check).
@@ -40,11 +40,6 @@ CASES = {
     "sine_h3": dict(rl=50.0, v_load="v(out)", v_in="v(src)", i_in="i(v3)", supply=None),
     "dc_load": dict(rl=R_DC, v_load="v(c)", v_in=None, i_in=None, supply=("v(c)", "i(vdd)")),
 }
-
-
-def sha(path):
-    with open(path, "rb") as fh:
-        return hashlib.sha256(fh.read()).hexdigest()
 
 
 def run_case(out_dir, name):
@@ -167,7 +162,7 @@ def main(argv):
         "## Provenance",
         "",
         f"- UTC timestamp / record id: `{rid}`",
-        f"- Commit: `{git_sha}`" + (" (**working tree dirty** when run)" if dirty == "1" else ""),
+        commit_line(git_sha, dirty),
         f"- `klt`: `{klt_ver}`; backend `local` (single corner)",
         f"- Engine actually used: `{engine}`",
         "- Corner: `default/novdd/27C` (no process models; the decks include none)",
