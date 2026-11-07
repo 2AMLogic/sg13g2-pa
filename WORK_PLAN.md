@@ -8,25 +8,25 @@ Only the region between the markers is machine-generated.
 
 Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
 
-- **#53**: Bump Repo Skills 0.25.1 -> 0.25.10
+_None._
 
 ## Very Important
 
 `loom:very-important` (one counts per workspace); every stage takes these first.
 
-- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist
+_None._
 
 ## Important
 
 `loom:important`; taken before unlabelled work.
 
-- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist
+- **#58**: DRC: 28 cont.width.1 violations inside PDK npn13G2 base cell on PA placement GDS
 
 ## Ready
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist
+- **#58**: DRC: 28 cont.width.1 violations inside PDK npn13G2 base cell on PA placement GDS
 
 ## In Progress
 
@@ -44,15 +44,13 @@ _None._
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-- **#45**: docs: propose single-stage npn13g2 topology and bump klt pin to 0.8.0
-- **#53**: Bump Repo Skills 0.25.1 -> 0.25.10
+_None._
 
 ## Proposed
 
 Issues carrying `loom:curated`.
 
 - **#5**: Track the gap to T1 (klayout-tools design-evidence-tiers.md) *(curated)*
-- **#36**: T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -66,14 +64,14 @@ _None._
 
 | Bucket | Count |
 |------|-------|
-| Operator merge-risk holds | 1 |
-| Very important | 1 |
+| Operator merge-risk holds | 0 |
+| Very important | 0 |
 | Important | 1 |
 | Ready (`loom:issue`) | 1 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 2 |
-| Curated | 2 |
+| Approved PRs awaiting merge | 0 |
+| Curated | 1 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->

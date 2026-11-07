@@ -3,6 +3,18 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-07
+
+- **PR #60**: chore: remove stale digital-flow rules from .gitignore
+- **PR #59**: docs: record pinned klt drc run on PA GDS (28 cont.width.1 violations)
+- **PR #57**: feat(layout): reproducible PA core placement GDS with provenance and item 2 envelope
+- **PR #56**: feat: add xschem PA schematic, derived netlist and T1 item 1 attestation
+- **PR #53**: Bump Repo Skills 0.25.1 -> 0.25.10
+- **PR #45**: docs: propose single-stage npn13g2 topology (DR 0003, proposed)
+- **Issue #55** (closed): Remove stale .gitignore entries for flow/cocotb/harness paths this repo lacks
+- **Issue #37** (closed): T1 item 2 (Layout): reproducible PA layout generator and committed GDS
+- **Issue #36** (closed): T1 item 1 (Design sources): topology decision from the load-line study, then PA schematics and derived netlist
+
 ### 2026-11-01
 
 - **PR #50**: Bump Repo Skills 0.24.7 -> 0.25.1
