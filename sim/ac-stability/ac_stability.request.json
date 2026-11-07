@@ -1,0 +1,32 @@
+{
+  "netlist": "ac_stability.spice",
+  "models": {
+    "pdk": "ihp-sg13g2"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "hbt_typ",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_typ"
+          }
+        ]
+      }
+    ],
+    "temperature_c": [
+      27
+    ]
+  },
+  "analysis": {
+    "kind": "ac",
+    "args": "dec 50 10Meg 30G"
+  },
+  "options": {
+    "timeout_s": 300,
+    "keep_artifacts": true,
+    "waveforms": true,
+    "save_mode": "netlist"
+  }
+}

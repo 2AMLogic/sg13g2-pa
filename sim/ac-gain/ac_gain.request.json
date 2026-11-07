@@ -1,0 +1,32 @@
+{
+  "netlist": "ac_gain.spice",
+  "models": {
+    "pdk": "ihp-sg13g2"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "hbt_typ",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_typ"
+          }
+        ]
+      }
+    ],
+    "temperature_c": [
+      27
+    ]
+  },
+  "analysis": {
+    "kind": "ac",
+    "args": "lin 11 2.4e+09 2.4835e+09"
+  },
+  "options": {
+    "timeout_s": 300,
+    "keep_artifacts": true,
+    "waveforms": true,
+    "save_mode": "netlist"
+  }
+}
