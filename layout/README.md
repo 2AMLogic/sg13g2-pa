@@ -44,6 +44,8 @@ smoke test stay at 0.7.0 and are a separate concern.
   (33/0) shapes. Whether one fixed cell stands for an `Nx=10` device is not
   established; it is settled by extraction and LVS, not by this item. The
   generator states that LVS recognition of `npn13G2` is not claimed.
-- **No DRC or LVS result is claimed** (items 3 and 4). The item-2 envelope
+- **No clean DRC or LVS result is claimed** (items 3 and 4). The pinned DRC run
+  is recorded in `reports/drc.json` and is `violations` (28, `cont.width.1`);
+  see `manifests/README.md`, "T1 item 3 (DRC)". The item-2 envelope
   (`evidence/item2.json`) only checks that the stream reads, has a non-empty
   top cell and a dbu on grid, and binds the GDS by content hash.
