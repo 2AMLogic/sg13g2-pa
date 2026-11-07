@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "kind": "generic",
+  "status": "pass",
+  "t1_item": 9,
+  "summary": "T1 item 9 (Testbenches shipped): 21/21 attestation checks passed (klt signoff --attest)",
+  "source": "attest/item9.json",
+  "attestation": {
+    "producer": "klt signoff --attest",
+    "inventory_schema_version": 1,
+    "hash_algorithm": "sha256-raw-bytes",
+    "check_count": 21,
+    "passed_count": 21,
+    "checks": [
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/ac-gain/ac_gain.request.json",
+        "passed": true,
+        "content_hash": "sha256:898aa6241172770bd280b4effb94e12d5a632ca5d30f0927dbfb95c18dfe3402"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/ac-stability/ac_stability.request.json",
+        "passed": true,
+        "content_hash": "sha256:5c123945d5d65754fb41bc98c125685cddec9cbfefbdcd63d18118afcdaa3640"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/device-npn13g2/dc_family.request.json",
+        "passed": true,
+        "content_hash": "sha256:fd540da91d2074ba7d4c6da6137f065f61cd953b8f93d55af1cfb326d60d1cc8"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/device-npn13g2/ft.request.json",
+        "passed": true,
+        "content_hash": "sha256:eec111ee6adf6493e735196085e47552c1c7cd6d73805db87833cd2335ff9617"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/known-answer/dc_load.request.json",
+        "passed": true,
+        "content_hash": "sha256:75bdaa8f6d1d39050e3e5b75738c18f82a7759c408d96b1879e79c8ad615b481"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/known-answer/sine_50.request.json",
+        "passed": true,
+        "content_hash": "sha256:e26daa2ffcf0b892f002a1813ea9630871354ea6f862accf9c648f176209af45"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/known-answer/sine_75.request.json",
+        "passed": true,
+        "content_hash": "sha256:15d9cc4b7315e15001d173fb40b560971bbb1a6b46e18aa673a1c6f0bf4fc42d"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/known-answer/sine_h3.request.json",
+        "passed": true,
+        "content_hash": "sha256:a781f137b52f8b52f36dd02151b7ab306efaa3507d9975f8d6a47c9c5a7e3c86"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/psat-sweep/psat_sweep.request.json",
+        "passed": true,
+        "content_hash": "sha256:3b7c1ee4c3caaa2d8b721621c98da3c9067787b2e01b2a0931b5338b0f173aea"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/smoke/inverter_dc.request.json",
+        "passed": true,
+        "content_hash": "sha256:c97b50c7db116a3e543540c77ec2aeeb4caa5ddb65024bb35a0a1ae4636caf44"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/smoke/inverter_tran.request.json",
+        "passed": true,
+        "content_hash": "sha256:010c5c63a34682e04273d48ea1eaf87aa682416baa7b77ac56e4f938baeb4398"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/smoke/npn_op.request.json",
+        "passed": true,
+        "content_hash": "sha256:d1090e5b25db7113067b1434e898f03afb751b783f46c18987adbca177580bbf"
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
+        "argv": [
+          "scripts/setup-env.sh",
+          "--check"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
+        "testbench": "sim/ac-gain/ac_gain.request.json",
+        "argv": [
+          "sim/ac-gain/run_ac_gain.sh"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
+        "testbench": "sim/ac-stability/ac_stability.request.json",
+        "argv": [
+          "sim/ac-stability/run_ac_stability.sh"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
+        "testbench": "sim/device-npn13g2/dc_family.request.json",
+        "argv": [
+          "sim/device-npn13g2/run_device.sh"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
+        "testbench": "sim/known-answer/sine_50.request.json",
+        "argv": [
+          "sim/known-answer/run.sh"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
+        "testbench": "sim/psat-sweep/psat_sweep.request.json",
+        "argv": [
+          "sim/psat-sweep/run_psat_sweep.sh"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
+        "testbench": "sim/smoke/inverter_dc.request.json",
+        "argv": [
+          "sim/smoke/run_smoke.sh"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      },
+      {
+        "check": "pin",
+        "role": "pdk",
+        "passed": true,
+        "value": {
+          "name": "ihp-sg13g2",
+          "revision": "v0.3.0"
+        }
+      },
+      {
+        "check": "pin",
+        "role": "tools",
+        "passed": true,
+        "value": {
+          "klt": "0.9.0",
+          "ngspice": "46",
+          "openvaf-reloaded": "v24.0.1mob"
+        }
+      }
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.9.1",
+    "klayout_version": null,
+    "pdk": null,
+    "deck": null,
+    "input": {
+      "path": {
+        "path": "attest/item9.json",
+        "scope": "repo"
+      },
+      "content_hash": "sha256:003433da69bae501430ca58910ca785aeb7820078605035a0b3d738eb1a6b77f"
+    }
+  }
+}

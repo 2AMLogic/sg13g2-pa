@@ -1,0 +1,127 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "sim/ac-stability/ac_stability.spice",
+    "scope": "repo"
+  },
+  "status": "not_checked",
+  "corner_count": 1,
+  "passed": 1,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 1,
+    "sim__corner__passed_count": 1,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "46",
+    "ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "engine_build": {
+      "version_banner": "******\n** ngspice-46 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2025, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Thu Oct  1 23:51:59 UTC 2026\n******",
+      "binary_sha256": "dc859418bedd0478ff439a2d3e2e09f4386a7f4d5e3f17671953e101a000cc60",
+      "probe": "ok",
+      "reason": null
+    },
+    "models_lib": {
+      "path": null,
+      "scope": "absent"
+    },
+    "models_lib_sha256": null,
+    "models_lib_sha256_scope": "local",
+    "netlist_sha256": "411d27d53cff6d93f3841f8b735224b00fb410d7aa65589bf876cea070c01a27",
+    "netlist_closure": [
+      {
+        "path": "sim/ac-stability/ac_stability.spice",
+        "scope": "repo",
+        "sha256": "411d27d53cff6d93f3841f8b735224b00fb410d7aa65589bf876cea070c01a27"
+      }
+    ],
+    "netlist_identity": "sha256:9a3cbe458421da529958f1cc36afd56bf9afe09381d2f847f0c79f6e36f29f77",
+    "corner_section_libs": [
+      {
+        "name": "cornerHBT.lib",
+        "path": null,
+        "scope": "external",
+        "sha256": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462"
+      }
+    ],
+    "engine_host": "local",
+    "backend": {
+      "resolved": "local",
+      "source": "flag",
+      "requested": "local"
+    }
+  },
+  "coverage": {
+    "corners_simulated": 1,
+    "measurements_declared": 0,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [],
+    "skipped": [
+      {
+        "id": "corner:[0,\"hbt_typ/novdd/27C\"]",
+        "reason": "no_requested_measurements"
+      }
+    ],
+    "inapplicable": [],
+    "unknown": [],
+    "nothing_checked": true,
+    "nothing_checked_reasons": [
+      "no_requested_measurements"
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.9.0",
+    "klt_git_commit": "5dbbad05ff42265c92a6f3d2f20d1bbcd2957d49",
+    "klt_reinstall_spec": "klayout-tools==0.9.0",
+    "klayout_version": "0.30.13",
+    "pdk": {
+      "name": "ihp-sg13g2",
+      "source": "PDK_ROOT environment variable",
+      "version": "fetched:0.3.0",
+      "ambiguous_sources": [
+        "search root: ~/share/pdk"
+      ]
+    },
+    "deck": null,
+    "input": {
+      "content_hash": "sha256:411d27d53cff6d93f3841f8b735224b00fb410d7aa65589bf876cea070c01a27",
+      "role": "netlist"
+    }
+  },
+  "measurements": [],
+  "corners": [
+    {
+      "corner_id": "hbt_typ/novdd/27C",
+      "process": "hbt_typ",
+      "supply_v": {},
+      "temperature_c": 27,
+      "status": "pass",
+      "runtime_s": 0.018,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-40/sim/ac-stability/corners/20261107-125026-93cf5ae/ac_stability/hbt_typ_novdd_27C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-40/sim/ac-stability/corners/20261107-125026-93cf5ae/ac_stability/hbt_typ_novdd_27C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-40/sim/ac-stability/corners/20261107-125026-93cf5ae/ac_stability/hbt_typ_novdd_27C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-40/sim/ac-stability/corners/20261107-125026-93cf5ae/ac_stability/hbt_typ_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}
