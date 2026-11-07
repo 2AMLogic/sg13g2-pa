@@ -113,3 +113,45 @@ file identical.
 stream; item 10, repo hygiene); the other eight are `unmet` with a `reason` in
 the record (`no_evidence` for items 3-9 and 11). The record is the source of truth,
 not this paragraph.
+
+## T1 item 3 (DRC): result is `violations`, not `clean`
+
+**Item 3 is not met and is not cited in the manifest.** The pinned `klt drc`
+run on the PA placement GDS (`layout/pa/sg13g2_pa.gds`, sha256
+`630bfca67b12d51f1d422ecf3221252f480e128e33a39c825e9201c4408135ee`, the same hash
+as `layout/pa/provenance.json`) reports **`status: violations`, 28 violations**,
+all `cont.width.1`. This is simulated tooling output from the curated `klt`
+deck, not a foundry signoff, and the deck was not relaxed.
+
+- Report: [`../layout/reports/drc.json`](../layout/reports/drc.json).
+- Tool: `klt` 0.7.0 (`layout/toolchain.json` pin), KLayout engine 0.30.13
+  (`klt` warned it differs from the 0.30.12 it was tested against;
+  `provenance.klayout_version_mismatch: true`; the verdict is stated by `klt`
+  to be unaffected, counts such as `rules_skipped` may differ). Deck `sg13g2`,
+  content hash `sha256:bf483105cb17948270f0cad45d9418787654bfc0a5ffd04a2e2413d8c7d3b6e7`.
+  PDK IHP-Open-PDK v0.3.0 (`provenance.pdk.version` is `null` at 0.7.0).
+- Command (from the repo root, after `scripts/setup-env.sh`):
+  `uvx --from klayout-tools==0.7.0 klt drc --format json --deck sg13g2 --top sg13g2_pa --pdk ihp-sg13g2 --pdk-root ~/.cache/sg13g2-pa/pdk-root layout/pa/sg13g2_pa.gds > layout/reports/drc.json`
+  (exit 3 = violations). Freshness: `klt drc --check layout/reports/drc.json`
+  (reports `match`); regenerate the report whenever the GDS hash changes.
+- What the violations are: every one is on a contact (`Cont.drawing`) inside
+  the PDK-authored `npn13G2_base_CDNS_675179387640` sub-cell, 14 of
+  1.65 x 0.16 um and 14 of 1.52 x 0.16 um (two per placed HBT, 14 HBTs). The
+  rule text is "min/max Cont size (fixed 0.16 x 0.16 um square)". These are
+  PDK cell internals, not geometry drawn here. Whether they are real
+  violations or an over-strict curated-deck rule on the PDK's bar contacts
+  is **not established**; no waiver is claimed. Follow-up filed (see PR).
+
+Coverage fields quoted verbatim from `coverage` in the report (item 3's
+disclosure, claimant-enforced; these must accompany any future `clean`):
+
+- `coverage.deck_scope`: `Act, Cnt, Gat, M1, M2, M3, M4, M5, MIM, TM1, TM2, TV1, TV2, V1, V2, V3, V4`
+- `coverage.layers_in_stream_without_rules` (drawn in the GDS, no rule in the
+  deck): `1/20, 7/21, 8/2, 10/2, 14/0, 26/0, 33/0, 51/0, 63/0`
+- `coverage.rules_skipped` (33 rules): `gatpoly.enclosing.cont.1, gatpoly.separation.activ.1, gatpoly.space.1, gatpoly.width.1, metal2.enclosing.via2.1, metal3.enclosing.via3.1, metal3.space.1, metal3.width.1, metal4.enclosing.via4.1, metal4.space.1, metal4.width.1, metal5.enclosing.mim.1, metal5.enclosing.topvia1.1, metal5.space.1, metal5.width.1, mim.enclosing.topvia1.1, topmetal1.enclosing.topvia1.1, topmetal1.enclosing.topvia2.1, topmetal1.space.1, topmetal1.width.1, topmetal2.enclosing.topvia2.1, topmetal2.space.1, topmetal2.width.1, topvia1.space.1, topvia1.width.1, topvia2.space.1, topvia2.width.1, via2.space.1, via2.width.1, via3.space.1, via3.width.1, via4.space.1, via4.width.1`
+
+`coverage.skipped` is `[]` and every `rules_skipped` entry also appears in
+`coverage.inapplicable` with reason `no_applicable_geometry`. `layers_checked`
+is `1/0, 6/0, 8/0, 10/0, 19/0` and `rules_checked` has 12 rules. The layers the HBT cell draws
+without rules (the list above) are not DRC-checked at all, so even a future
+`clean` would not cover them.
