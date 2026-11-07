@@ -6,6 +6,10 @@
       "file": "evidence/item1.json",
       "content_hash": "sha256:8df48f86d2de653d7866c1216bdb6c638ead9576e6121f710e0bf35763b406b9"
     },
+    "2": {
+      "file": "evidence/item2.json",
+      "content_hash": "sha256:630bfca67b12d51f1d422ecf3221252f480e128e33a39c825e9201c4408135ee"
+    },
     "10": {
       "file": "evidence/item10.json",
       "content_hash": "sha256:062ac88f56b2034ae828ad28ae7e423f97402a6de5da1d8bb76dc1d2ba72cfcc"
