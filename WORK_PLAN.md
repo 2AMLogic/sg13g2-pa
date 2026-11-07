@@ -20,6 +20,7 @@ _None._
 
 `loom:important`; taken before unlabelled work.
 
+- **#39**: T1 item 4 (LVS clean): klt lvs of the PA against its schematic netlist, every npn13G2 recognised
 - **#58**: DRC: 28 cont.width.1 violations inside PDK npn13G2 base cell on PA placement GDS
 
 ## Ready
@@ -51,6 +52,7 @@ _None._
 Issues carrying `loom:curated`.
 
 - **#5**: Track the gap to T1 (klayout-tools design-evidence-tiers.md) *(curated)*
+- **#39**: T1 item 4 (LVS clean): klt lvs of the PA against its schematic netlist, every npn13G2 recognised *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -66,12 +68,12 @@ _None._
 |------|-------|
 | Operator merge-risk holds | 0 |
 | Very important | 0 |
-| Important | 1 |
+| Important | 2 |
 | Ready (`loom:issue`) | 1 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
-| Curated | 1 |
+| Curated | 2 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
