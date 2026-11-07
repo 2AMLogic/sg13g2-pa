@@ -5,6 +5,8 @@ triage role. Newest first.
 
 ### 2026-11-07
 
+- **PR #62**: feat(sim): add psat-sweep, ac-gain and ac-stability benches and attest T1 item 9
+- **Issue #40** (closed): T1 item 9 (Testbenches shipped): benches for every ratified row (Psat sweep, gain/S11, stability, device stress)
 - **PR #60**: chore: remove stale digital-flow rules from .gitignore
 - **PR #59**: docs: record pinned klt drc run on PA GDS (28 cont.width.1 violations)
 - **PR #57**: feat(layout): reproducible PA core placement GDS with provenance and item 2 envelope
