@@ -1,0 +1,7 @@
+## Project-local xschemrc for sg13g2-pa (passed to xschem by `klt netlist --rcfile`).
+## Symbol search path: xschem's stock devices/ plus the IHP SG13G2 PDK's
+## sg13g2_pr/ symbols. PDK_ROOT and PDK come from the environment, the same
+## way sim/env.sh resolves them; the PDK release is pinned in sim/pdk.json.
+set XSCHEM_LIBRARY_PATH {}
+append XSCHEM_LIBRARY_PATH :${XSCHEM_SHAREDIR}/xschem_library
+append XSCHEM_LIBRARY_PATH :$env(PDK_ROOT)/$env(PDK)/libs.tech/xschem
