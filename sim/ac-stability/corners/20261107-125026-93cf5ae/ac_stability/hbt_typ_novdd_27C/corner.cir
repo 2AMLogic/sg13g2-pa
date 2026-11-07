@@ -1,0 +1,11 @@
+* klt sim -- generated corner deck, do not edit
+.lib /home/ubuntu/.cache/sg13g2-pa/pdk-root/ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib hbt_typ
+.include /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-40/sim/ac-stability/ac_stability.spice
+.temp 27
+.control
+set filetype=ascii
+ac dec 50 10Meg 30G
+write /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-40/sim/ac-stability/corners/20261107-125026-93cf5ae/ac_stability/hbt_typ_novdd_27C/waveform.raw
+quit
+.endc
+.end

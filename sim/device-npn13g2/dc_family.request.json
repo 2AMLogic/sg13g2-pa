@@ -771,5 +771,8 @@
     "ngspice_init": [
       "set numdgt=8"
     ]
+  },
+  "batch": {
+    "capacity_wait_s": 600
   }
 }

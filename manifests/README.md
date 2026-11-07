@@ -11,8 +11,8 @@ output, the machine-readable form of the T1 checklist in
   `evidence` map. Citations are added one T1 item at a time as artifacts
   land, each pinning the `content_hash` of what it cites. Items 1 (design
   sources, from `evidence/item1.json`), 2 (layout stream, from
-  `evidence/item2.json`) and 10 (repo hygiene, from `evidence/item10.json`)
-  are cited today.
+  `evidence/item2.json`), 9 (testbenches shipped, from `evidence/item9.json`)
+  and 10 (repo hygiene, from `evidence/item10.json`) are cited today.
 - **`../attest/item1.json`**: the item-1 attestation inventory (the xschem
   schematic and `xschemrc`, plus the netlist derived from them with its
   `klt netlist --check` freshness command, `local_only`).
@@ -21,6 +21,14 @@ output, the machine-readable form of the T1 checklist in
 - **`../evidence/item2.json`**: the envelope `klt signoff --attest 2`
   produced from `layout/pa/sg13g2_pa.gds`. Generated, never hand-edited. The
   manifest's `content_hash` for item 2 is `sha256sum layout/pa/sg13g2_pa.gds`.
+- **`../attest/item9.json`**: the item-9 attestation inventory: every committed
+  bench (`sim/smoke`, `sim/known-answer`, `sim/device-npn13g2`, `sim/psat-sweep`,
+  `sim/ac-gain`, `sim/ac-stability`), each primary bench with its cold-start argv
+  (`local_only`: they need the pinned PDK, ngspice, numpy and, for the grid benches,
+  the batch fleet), plus the PDK and tool pins.
+- **`../evidence/item9.json`**: the envelope `klt signoff --attest 9` produced from
+  it. Generated, never hand-edited. The manifest's `content_hash` for item 9 is
+  `sha256sum attest/item9.json`.
 - **`../attest/item10.json`**: the item-10 attestation inventory (hygiene
   files plus the PDK-free checks run on a stock CI runner).
 - **`../evidence/item10.json`**: the envelope `klt signoff --attest 10`
@@ -64,6 +72,15 @@ uvx --from "klayout-tools==0.9.1" klt signoff --attest 2 \
 
 `--regenerated-hash` is only honest after `generate.sh --check` passed, because
 `--generator` is echoed and never run by `klt`.
+
+Item 9 (runs every cold start for real, so it needs `scripts/setup-env.sh`
+done, ngspice, a `python3` with numpy on `PATH`, and the batch fleet for the grid
+benches; several minutes, and it appends a record under each bench's `records/`):
+
+```console
+uvx --from "klayout-tools==0.9.1" klt signoff \
+    --attest 9 --inventory attest/item9.json -o evidence/item9.json
+```
 
 Order matters. The item-10 envelope hashes `README.md`, `LICENSE` and the CI
 workflow byte-for-byte, so finish every edit to those first, then attest,
@@ -109,9 +126,9 @@ file identical.
 
 ## Current verdict
 
-`tier: null`, 3 of 11 T1 items met (item 1, design sources; item 2, layout
-stream; item 10, repo hygiene); the other eight are `unmet` with a `reason` in
-the record (`no_evidence` for items 3-9 and 11). The record is the source of truth,
+`tier: null`, 4 of 11 T1 items met (item 1, design sources; item 2, layout
+stream; item 9, testbenches shipped; item 10, repo hygiene); the other seven are
+`unmet` with a `reason` in the record (`no_evidence` for items 3-8 and 11). The record is the source of truth,
 not this paragraph.
 
 ## T1 item 3 (DRC): result is `violations`, not `clean`

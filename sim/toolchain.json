@@ -21,10 +21,11 @@
     "verified_with": "3.12"
   },
   "klt": {
-    "pin": "0.7.0",
-    "floor": "0.7.0",
-    "run_as": "uvx --from klayout-tools==0.7.0 klt (throwaway env; sim/smoke/run_smoke.sh)",
+    "pin": "0.9.0",
+    "floor": "0.9.0",
+    "run_as": "uvx --from klayout-tools==0.9.0 klt (throwaway env; sim/smoke/run_smoke.sh)",
     "used_by": "sim/smoke/run_smoke.sh (klt sim corner requests with options.osdi_preload, options.stage_model_inputs)",
-    "not_usable": "0.7.1.dev1755+gdce956c3c399 (the host-installed build): batch jobs failed on the worker with exit 2 and no report on 2026-10-17 for these requests; 0.7.0 ran them"
+    "not_usable": "0.7.1.dev1755+gdce956c3c399 (the host-installed build): batch jobs failed on the worker with exit 2 and no report on 2026-10-17 for these requests; 0.7.0 ran them",
+    "why_0_9_0": "2026-11-07: the batch fleet runner runs klt 0.9.0 and refuses a different client (\"the fleet runner runs klt 0.9.0 but the submitting client is 0.7.0 -- the request was not run\"), so any grid bench (sim/psat-sweep, sim/device-npn13g2) needs a 0.9.0 client. 0.7.0 had run the smoke, known-answer and device benches; their committed records were produced with it."
   }
 }

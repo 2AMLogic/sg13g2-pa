@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "t1-attestation-inventory",
+  "t1_item": 9,
+  "description": "Testbenches shipped: every committed bench, each with its documented cold-start invocation (sim/README.md), and the pinned PDK and tool versions. The cold starts need the pinned PDK, ngspice and numpy (and the batch fleet for the grid benches), so they are local_only: --attest runs them, --attest --check carries the committed outcome. All results are simulated, nominal-cell evidence from benches that prove they run cold; none is a pass/fail claim.",
+  "testbenches": [
+    {"path": "sim/smoke/inverter_dc.request.json", "cold_start": {"argv": ["sim/smoke/run_smoke.sh"], "local_only": true, "timeout_s": 1800}},
+    {"path": "sim/known-answer/sine_50.request.json", "cold_start": {"argv": ["sim/known-answer/run.sh"], "local_only": true, "timeout_s": 1800}},
+    {"path": "sim/device-npn13g2/dc_family.request.json", "cold_start": {"argv": ["sim/device-npn13g2/run_device.sh"], "local_only": true, "timeout_s": 3600}},
+    {"path": "sim/psat-sweep/psat_sweep.request.json", "cold_start": {"argv": ["sim/psat-sweep/run_psat_sweep.sh"], "local_only": true, "timeout_s": 3600}},
+    {"path": "sim/ac-gain/ac_gain.request.json", "cold_start": {"argv": ["sim/ac-gain/run_ac_gain.sh"], "local_only": true, "timeout_s": 1800}},
+    {"path": "sim/ac-stability/ac_stability.request.json", "cold_start": {"argv": ["sim/ac-stability/run_ac_stability.sh"], "local_only": true, "timeout_s": 1800}},
+    "sim/smoke/inverter_tran.request.json",
+    "sim/smoke/npn_op.request.json",
+    "sim/known-answer/dc_load.request.json",
+    "sim/known-answer/sine_h3.request.json",
+    "sim/known-answer/sine_75.request.json",
+    "sim/device-npn13g2/ft.request.json"
+  ],
+  "cold_start": {"argv": ["scripts/setup-env.sh", "--check"], "local_only": true, "timeout_s": 600},
+  "pins": {
+    "pdk": {"name": "ihp-sg13g2", "revision": "v0.3.0"},
+    "tools": {
+      "klt": "0.9.0",
+      "ngspice": "46",
+      "openvaf-reloaded": "v24.0.1mob"
+    }
+  }
+}

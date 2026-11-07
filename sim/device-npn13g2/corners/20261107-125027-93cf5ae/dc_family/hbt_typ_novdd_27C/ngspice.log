@@ -1,0 +1,168 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: * klt sim -- generated corner deck, do not edit
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+
+The temperature limiting function received NaN.
+Please check your power dissipation and improve your heat sink Rth!
+    This message will be shown only once.
+
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+
+No. of Data Rows : 21
+
+  Measurements for DC Analysis
+
+ic_n1_v70_vce40     =  3.67990e-06
+ic_n1_v70_vce60     =  3.68498e-06
+ic_n1_v70_vce80     =  3.68987e-06
+ic_n1_v70_vce100    =  3.69469e-06
+ic_n1_v70_vce120    =  3.69970e-06
+ic_n1_v70_vce140    =  3.70569e-06
+ic_n1_v70_vce160    =  3.71429e-06
+ic_n1_v70_vce200    =  3.74981e-06
+ic_n1_v74_vce40     =  1.64065e-05
+ic_n1_v74_vce60     =  1.64483e-05
+ic_n1_v74_vce80     =  1.64895e-05
+ic_n1_v74_vce100    =  1.65303e-05
+ic_n1_v74_vce120    =  1.65719e-05
+ic_n1_v74_vce140    =  1.66172e-05
+ic_n1_v74_vce160    =  1.66732e-05
+ic_n1_v74_vce200    =  1.68644e-05
+ic_n1_v78_vce40     =  6.94150e-05
+ic_n1_v78_vce60     =  6.98653e-05
+ic_n1_v78_vce80     =  7.03188e-05
+ic_n1_v78_vce100    =  7.07777e-05
+ic_n1_v78_vce120    =  7.12453e-05
+ic_n1_v78_vce140    =  7.17344e-05
+ic_n1_v78_vce160    =  7.22761e-05
+ic_n1_v78_vce200    =  7.37573e-05
+ic_n1_v82_vce40     =  2.49190e-04
+ic_n1_v82_vce60     =  2.53058e-04
+ic_n1_v82_vce80     =  2.57067e-04
+ic_n1_v82_vce100    =  2.61233e-04
+ic_n1_v82_vce120    =  2.65577e-04
+ic_n1_v82_vce140    =  2.70158e-04
+ic_n1_v82_vce160    =  2.75130e-04
+ic_n1_v82_vce200    =  2.87629e-04
+ic_n1_v86_vce40     =  6.64732e-04
+ic_n1_v86_vce60     =  6.82329e-04
+ic_n1_v86_vce80     =  7.01043e-04
+ic_n1_v86_vce100    =  7.21014e-04
+ic_n1_v86_vce120    =  7.42420e-04
+ic_n1_v86_vce140    =  7.65505e-04
+ic_n1_v86_vce160    =  7.90873e-04
+ic_n1_v86_vce200    =  8.54322e-04
+ic_n1_v90_vce40     =  1.32713e-03
+ic_n1_v90_vce60     =  1.37332e-03
+ic_n1_v90_vce80     =  1.42307e-03
+ic_n1_v90_vce100    =  1.47712e-03
+ic_n1_v90_vce120    =  1.53626e-03
+ic_n1_v90_vce140    =  1.60121e-03
+ic_n1_v90_vce160    =  1.67357e-03
+ic_n1_v90_vce200    =  1.85408e-03
+ic_n4_v70_vce40     =  1.47214e-05
+ic_n4_v70_vce60     =  1.47425e-05
+ic_n4_v70_vce80     =  1.47630e-05
+ic_n4_v70_vce100    =  1.47832e-05
+ic_n4_v70_vce120    =  1.48042e-05
+ic_n4_v70_vce140    =  1.48290e-05
+ic_n4_v70_vce160    =  1.48644e-05
+ic_n4_v70_vce200    =  1.50085e-05
+ic_n4_v74_vce40     =  6.56567e-05
+ic_n4_v74_vce60     =  6.58397e-05
+ic_n4_v74_vce80     =  6.60202e-05
+ic_n4_v74_vce100    =  6.61999e-05
+ic_n4_v74_vce120    =  6.63825e-05
+ic_n4_v74_vce140    =  6.65805e-05
+ic_n4_v74_vce160    =  6.68216e-05
+ic_n4_v74_vce200    =  6.76245e-05
+ic_n4_v78_vce40     =  2.78114e-04
+ic_n4_v78_vce60     =  2.80157e-04
+ic_n4_v78_vce80     =  2.82222e-04
+ic_n4_v78_vce100    =  2.84318e-04
+ic_n4_v78_vce120    =  2.86458e-04
+ic_n4_v78_vce140    =  2.88696e-04
+ic_n4_v78_vce160    =  2.91161e-04
+ic_n4_v78_vce200    =  2.97768e-04
+ic_n4_v82_vce40     =  1.00104e-03
+ic_n4_v82_vce60     =  1.01896e-03
+ic_n4_v82_vce80     =  1.03765e-03
+ic_n4_v82_vce100    =  1.05721e-03
+ic_n4_v82_vce120    =  1.07775e-03
+ic_n4_v82_vce140    =  1.09956e-03
+ic_n4_v82_vce160    =  1.12332e-03
+ic_n4_v82_vce200    =  1.18306e-03
+ic_n4_v86_vce40     =  2.67877e-03
+ic_n4_v86_vce60     =  2.76129e-03
+ic_n4_v86_vce80     =  2.85004e-03
+ic_n4_v86_vce100    =  2.94585e-03
+ic_n4_v86_vce120    =  3.04993e-03
+ic_n4_v86_vce140    =  3.16368e-03
+ic_n4_v86_vce160    =  3.29050e-03
+ic_n4_v86_vce200    =  3.61423e-03
+ic_n4_v90_vce40     =  5.36033e-03
+ic_n4_v90_vce60     =  5.57840e-03
+ic_n4_v90_vce80     =  5.81679e-03
+ic_n4_v90_vce100    =  6.07967e-03
+ic_n4_v90_vce120    =  6.37273e-03
+ic_n4_v90_vce140    =  6.70053e-03
+ic_n4_v90_vce160    =  7.07436e-03
+ic_n4_v90_vce200    =  8.04349e-03
+ic_n10_v70_vce40    =  3.68066e-05
+ic_n10_v70_vce60    =  3.68613e-05
+ic_n10_v70_vce80    =  3.69142e-05
+ic_n10_v70_vce100   =  3.69663e-05
+ic_n10_v70_vce120   =  3.70203e-05
+ic_n10_v70_vce140   =  3.70842e-05
+ic_n10_v70_vce160   =  3.71744e-05
+ic_n10_v70_vce200   =  3.75386e-05
+ic_n10_v74_vce40    =  1.64199e-04
+ic_n10_v74_vce60    =  1.64685e-04
+ic_n10_v74_vce80    =  1.65166e-04
+ic_n10_v74_vce100   =  1.65646e-04
+ic_n10_v74_vce120   =  1.66133e-04
+ic_n10_v74_vce140   =  1.66659e-04
+ic_n10_v74_vce160   =  1.67294e-04
+ic_n10_v74_vce200   =  1.69372e-04
+ic_n10_v78_vce40    =  6.96130e-04
+ic_n10_v78_vce60    =  7.01691e-04
+ic_n10_v78_vce80    =  7.07324e-04
+ic_n10_v78_vce100   =  7.13054e-04
+ic_n10_v78_vce120   =  7.18917e-04
+ic_n10_v78_vce140   =  7.25049e-04
+ic_n10_v78_vce160   =  7.31779e-04
+ic_n10_v78_vce200   =  7.49611e-04
+ic_n10_v82_vce40    =  2.51061e-03
+ic_n10_v82_vce60    =  2.56004e-03
+ic_n10_v82_vce80    =  2.61188e-03
+ic_n10_v82_vce100   =  2.66640e-03
+ic_n10_v82_vce120   =  2.72398e-03
+ic_n10_v82_vce140   =  2.78541e-03
+ic_n10_v82_vce160   =  2.85264e-03
+ic_n10_v82_vce200   =  3.02206e-03
+ic_n10_v86_vce40    =  6.73431e-03
+ic_n10_v86_vce60    =  6.96398e-03
+ic_n10_v86_vce80    =  7.21311e-03
+ic_n10_v86_vce100   =  7.48449e-03
+ic_n10_v86_vce120   =  7.78236e-03
+ic_n10_v86_vce140   =  8.11145e-03
+ic_n10_v86_vce160   =  8.48285e-03
+ic_n10_v86_vce200   =  9.44956e-03
+ic_n10_v90_vce40    =  1.34988e-02
+ic_n10_v90_vce60    =  1.41087e-02
+ic_n10_v90_vce80    =  1.47832e-02
+ic_n10_v90_vce100   =  1.55355e-02
+ic_n10_v90_vce120   =  1.63867e-02
+ic_n10_v90_vce140   =  1.73530e-02
+ic_n10_v90_vce160   =  1.84772e-02
+ic_n10_v90_vce200   =  2.14976e-02
+
+ngspice-46 done

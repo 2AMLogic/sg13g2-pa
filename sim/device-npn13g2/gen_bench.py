@@ -67,6 +67,8 @@ def dc_request():
         "analysis": {"kind": "dc", "args": "Vc 0.0 2.0 0.1"},
         "measurements": meas,
         "options": {"timeout_s": 300, "keep_artifacts": True, "ngspice_init": ["set numdgt=8"]},
+        # Fleet is vCPU-budgeted: wait with backoff on batch_no_capacity (host rule).
+        "batch": {"capacity_wait_s": 600},
     }
 
 
@@ -108,6 +110,8 @@ def ft_request():
         "analysis": {"kind": "ac", "args": "dec 20 10e9 100e9"},
         "measurements": meas,
         "options": {"timeout_s": 300, "keep_artifacts": True, "ngspice_init": ["set numdgt=8"]},
+        # Fleet is vCPU-budgeted: wait with backoff on batch_no_capacity (host rule).
+        "batch": {"capacity_wait_s": 600},
     }
 
 
