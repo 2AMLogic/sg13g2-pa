@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "generic",
+  "status": "pass",
+  "t1_item": 1,
+  "summary": "T1 item 1 (Design sources): 4/4 attestation checks passed (klt signoff --attest)",
+  "source": "attest/item1.json",
+  "attestation": {
+    "producer": "klt signoff --attest",
+    "inventory_schema_version": 1,
+    "hash_algorithm": "sha256-raw-bytes",
+    "check_count": 4,
+    "passed_count": 4,
+    "checks": [
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/sg13g2-pa.sch",
+        "passed": true,
+        "content_hash": "sha256:5d29c3e1653d0d18f9bf2b92794e9e28de4822420bad7a78bef31a4ad8c4cc06"
+      },
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/xschemrc",
+        "passed": true,
+        "content_hash": "sha256:dd8333f0379f4d150177b3930c8198217f3ccb7d5d336c4b148b6fa3f9849a5c"
+      },
+      {
+        "check": "present",
+        "role": "derived",
+        "path": "design/netlist/sg13g2-pa.spice",
+        "passed": true,
+        "content_hash": "sha256:b10bc89410f84bd0051a7009fd1648c1d12a46bda2ffebfc54bd0e6e33f056c6"
+      },
+      {
+        "check": "command",
+        "role": "freshness",
+        "target": "design/netlist/sg13g2-pa.spice",
+        "generator": "klt netlist",
+        "argv": [
+          "klt",
+          "netlist",
+          "design/sg13g2-pa.sch",
+          "-o",
+          "design/netlist/sg13g2-pa.spice",
+          "--rcfile",
+          "design/xschemrc",
+          "--block",
+          "--check"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      }
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.8.0",
+    "klayout_version": null,
+    "pdk": null,
+    "deck": null,
+    "input": {
+      "path": {
+        "path": "attest/item1.json",
+        "scope": "repo"
+      },
+      "content_hash": "sha256:8df48f86d2de653d7866c1216bdb6c638ead9576e6121f710e0bf35763b406b9"
+    }
+  }
+}

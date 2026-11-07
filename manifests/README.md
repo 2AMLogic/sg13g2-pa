@@ -9,8 +9,14 @@ output, the machine-readable form of the T1 checklist in
 - **`sg13g2-pa.json`**: the block manifest. `block: sg13g2-pa`,
   `kind: analog` (a SiGe HBT power amplifier, no digital partition) and an
   `evidence` map. Citations are added one T1 item at a time as artifacts
-  land, each pinning the `content_hash` of what it cites. Today only item 10
-  (repo hygiene) is cited, from `evidence/item10.json`.
+  land, each pinning the `content_hash` of what it cites. Items 1 (design
+  sources, from `evidence/item1.json`) and 10 (repo hygiene, from
+  `evidence/item10.json`) are cited today.
+- **`../attest/item1.json`**: the item-1 attestation inventory (the xschem
+  schematic and `xschemrc`, plus the netlist derived from them with its
+  `klt netlist --check` freshness command, `local_only`).
+- **`../evidence/item1.json`**: the envelope `klt signoff --attest 1`
+  produced from it. Generated, never hand-edited.
 - **`../attest/item10.json`**: the item-10 attestation inventory (hygiene
   files plus the PDK-free checks run on a stock CI runner).
 - **`../evidence/item10.json`**: the envelope `klt signoff --attest 10`
@@ -30,6 +36,15 @@ output, the machine-readable form of the T1 checklist in
 The signoff pin is `klayout-tools==0.8.0`: `--attest` first ships in 0.8.0.
 The `sim/` and `layout/` pins (`sim/toolchain.json`, `layout/toolchain.json`)
 stay at 0.7.0 and are a separate concern.
+
+Item 1 (needs xschem and the PDK; `source sim/env.sh` first):
+
+```console
+uvx --from "klayout-tools==0.8.0" klt signoff \
+    --attest 1 --inventory attest/item1.json -o evidence/item1.json
+```
+
+The manifest's `content_hash` for item 1 is `sha256sum attest/item1.json`.
 
 Order matters. The item-10 envelope hashes `README.md`, `LICENSE` and the CI
 workflow byte-for-byte, so finish every edit to those first, then attest,
@@ -75,6 +90,7 @@ file identical.
 
 ## Current verdict
 
-`tier: null`, 1 of 11 T1 items met (item 10, repo hygiene); the other ten are
-`unmet` with a `reason` in the record (`no_evidence` for items 1-9 and 11). The record is the source of truth,
+`tier: null`, 2 of 11 T1 items met (item 1, design sources; item 10, repo
+hygiene); the other nine are `unmet` with a `reason` in the record
+(`no_evidence` for items 2-9 and 11). The record is the source of truth,
 not this paragraph.

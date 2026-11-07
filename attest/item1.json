@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "kind": "t1-attestation-inventory",
+  "t1_item": 1,
+  "description": "Design sources: the xschem schematic and its project-local xschemrc, plus the SPICE netlist derived from them. Freshness is klt netlist --check; it needs xschem and the pinned SG13G2 PDK (PDK_ROOT/PDK), so it is local_only and skipped on the stock CI runner.",
+  "sources": [
+    "design/sg13g2-pa.sch",
+    "design/xschemrc"
+  ],
+  "derived": [
+    {
+      "path": "design/netlist/sg13g2-pa.spice",
+      "generator": "klt netlist",
+      "check": {
+        "argv": ["klt", "netlist", "design/sg13g2-pa.sch", "-o", "design/netlist/sg13g2-pa.spice", "--rcfile", "design/xschemrc", "--block", "--check"],
+        "local_only": true
+      }
+    }
+  ]
+}
