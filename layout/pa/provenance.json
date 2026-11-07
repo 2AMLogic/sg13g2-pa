@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "description": "Provenance of layout/pa/sg13g2_pa.gds (T1 item 2). Placement of PDK npn13G2 cells only; unrouted. See layout/README.md.",
+  "netlist": {
+    "path": "design/netlist/sg13g2-pa.spice",
+    "content_hash": "sha256:b10bc89410f84bd0051a7009fd1648c1d12a46bda2ffebfc54bd0e6e33f056c6"
+  },
+  "generator": {
+    "script": "layout/pa/generate.sh",
+    "script_content_hash": "sha256:d611bf4f874fc587c3563e2d6244b4b835097925496c903ed20c14a07f8a06e3",
+    "note": "A commit id cannot name the commit that contains its own provenance file; the script's content hash is recorded instead."
+  },
+  "klt": {
+    "pin": "0.9.1",
+    "run_as": "uvx --from klayout-tools==0.9.1 klt gen bjt_array"
+  },
+  "pdk": {
+    "name": "ihp-sg13g2",
+    "variant": "ihp-sg13g2",
+    "version": "fetched:0.3.0"
+  },
+  "params": {
+    "generator": "bjt_array",
+    "rows": 2,
+    "cols": 7,
+    "cell_name": "sg13g2_pa"
+  },
+  "devices_placed": 14,
+  "gds": {
+    "path": "layout/pa/sg13g2_pa.gds",
+    "content_hash": "sha256:630bfca67b12d51f1d422ecf3221252f480e128e33a39c825e9201c4408135ee",
+    "bbox_um": {
+      "x0": 0.0,
+      "y0": 0.0,
+      "x1": 58.9,
+      "y1": 16.22
+    }
+  },
+  "generator_notes": [
+    "sg13g2 HBT: 14 instance(s) of the PDK cell 'npn13G2' read from $PDK_ROOT/ihp-sg13g2/libs.ref/sg13g2_pr/gds/sg13g2_pr.gds; params emitter_um, topology, dummy, add_collector_ring do not apply to the PDK-authored HBT and are ignored (no ring, dummies or common-centroid pairing is drawn)",
+    "extraction/LVS recognition of npn13G2 is not claimed by this generator (tracked by #4397)"
+  ],
+  "reproducibility": "Byte-identical on regeneration (layout/pa/generate.sh --check compares GDS bytes)."
+}

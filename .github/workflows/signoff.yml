@@ -30,7 +30,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install pinned klt and the unit-test dependencies
-        run: pip install klayout-tools==0.8.0 numpy pytest
+        run: pip install klayout-tools==0.9.1 numpy pytest
 
       - name: Unit tests (sim/lib, no simulator needed)
         run: python3 -m pytest -q sim/lib
