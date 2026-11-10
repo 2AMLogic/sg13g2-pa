@@ -14,14 +14,13 @@ _None._
 
 `loom:very-important` (one counts per workspace); every stage takes these first.
 
-_None._
+- **#58**: DRC: 28 cont.width.1 violations inside PDK npn13G2 base cell on PA placement GDS
 
 ## Important
 
 `loom:important`; taken before unlabelled work.
 
 - **#39**: T1 item 4 (LVS clean): klt lvs of the PA against its schematic netlist, every npn13G2 recognised
-- **#58**: DRC: 28 cont.width.1 violations inside PDK npn13G2 base cell on PA placement GDS
 
 ## Ready
 
@@ -67,8 +66,8 @@ _None._
 | Bucket | Count |
 |------|-------|
 | Operator merge-risk holds | 0 |
-| Very important | 0 |
-| Important | 2 |
+| Very important | 1 |
+| Important | 1 |
 | Ready (`loom:issue`) | 1 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
