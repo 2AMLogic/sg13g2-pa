@@ -3,6 +3,10 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-12
+
+- **PR #65**: Bump Repo Skills 0.25.10 -> 0.26.1
+
 ### 2026-11-07
 
 - **PR #62**: feat(sim): add psat-sweep, ac-gain and ac-stability benches and attest T1 item 9
