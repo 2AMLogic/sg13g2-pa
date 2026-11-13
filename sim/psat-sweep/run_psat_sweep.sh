@@ -28,28 +28,12 @@ python3 -I "${SCRIPT_DIR}/../lib/gen_dut_benches.py" --check
 SIM_SCRIPT_NAME=run_psat_sweep.sh
 sim_begin_record --pathspec sim --pathspec design --pathspec ':!sim/psat-sweep/records' --pathspec ':!sim/psat-sweep/corners'
 failed=0
-# Not sim_run_one: a waveform-only request declares no measurements, so klt exits 4
-# (not_checked) with every corner `pass`; the corner statuses gate (psat_record.py,
-# sim_gate_logs). A capacity refusal is resubmitted to the batch fleet (bounded),
-# never run locally.
-for attempt in 1 2 3 4; do
-  echo "run_psat_sweep.sh: klt sim psat_sweep (attempt ${attempt})"
-  rc=0
-  ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --format json -o "${OUT}/psat_sweep" \
-      psat_sweep.request.json > "${OUT}/psat_sweep.report.json" 2> "${OUT}/psat_sweep.stderr" ) || rc=$?
-  (( rc == 0 || rc == 4 )) && break
-  if grep -q 'BATCH_MAX_VCPU\|vCPU already running\|batch_no_capacity\|BATCH_MAX_CONCURRENT_INSTANCES' \
-       "${OUT}/psat_sweep.report.json" "${OUT}/psat_sweep.stderr" 2>/dev/null && (( attempt < 4 )); then
-    echo "run_psat_sweep.sh: fleet at capacity; resubmitting to batch in 60 s" >&2
-    sleep 60
-    continue
-  fi
-  break
-done
-if (( rc != 0 && rc != 4 )); then
-  echo "run_psat_sweep.sh: klt sim exited ${rc} (see ${OUT}/psat_sweep.stderr); no local fallback is attempted." >&2
-  exit 1
-fi
+# --allow-not-checked: a waveform-only request declares no measurements, so klt
+# exits 4 (not_checked) with every corner `pass`; the corner statuses gate
+# (psat_record.py, sim_gate_logs). sim_run_one carries the bounded
+# batch-capacity resubmit and never reruns locally, and sets failed=1 rather
+# than exiting, so the gate below is what stops the record.
+sim_run_one psat_sweep --allow-not-checked
 sim_gate_logs
 (( failed == 0 )) || exit 1
 

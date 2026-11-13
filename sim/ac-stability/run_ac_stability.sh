@@ -23,15 +23,11 @@ python3 -I "${SCRIPT_DIR}/../lib/gen_dut_benches.py" --check
 
 sim_begin_record --pathspec sim --pathspec design --pathspec ':!sim/ac-stability/records' --pathspec ':!sim/ac-stability/corners'
 failed=0
-echo "run_ac_stability.sh: klt sim ac_stability --backend local"
-rc=0
-( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --backend local --format json -o "${OUT}/ac_stability" \
-    ac_stability.request.json > "${OUT}/ac_stability.report.json" 2> "${OUT}/ac_stability.stderr" ) || rc=$?
-# 4 = not_checked (a waveform-only request declares no measurements); the corner status gates.
-if (( rc != 0 && rc != 4 )); then
-  echo "run_ac_stability.sh: klt sim exited ${rc} (see ${OUT}/ac_stability.stderr); no other fallback is attempted." >&2
-  exit 1
-fi
+# A single unit, so --backend local. --allow-not-checked: a waveform-only
+# request declares no measurements, so klt exits 4 (not_checked); the corner
+# status gates. sim_run_one sets failed=1 rather than exiting, so the gate
+# below is what stops the record.
+sim_run_one ac_stability --allow-not-checked --backend local
 sim_gate_logs
 (( failed == 0 )) || exit 1
 REC="${RECORDS_DIR}/${RECORD_ID}.md"
