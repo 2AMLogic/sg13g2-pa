@@ -5,6 +5,16 @@ triage role. Newest first.
 
 ### 2026-11-13
 
+- **PR #91**: fix(ci): point check:all at the gate script and drop the no-op lint script
+- **PR #88**: refactor(sim): format the npn13G2 window limits into both summarizers' record prose
+- **PR #84**: refactor(sim): share one klt sim submit path across the waveform-only benches
+- **PR #83**: refactor(sim): define the npn13G2 breakdown/window limits once in sim/lib
+- **PR #82**: refactor(ci): run one gate script from both the workflow and check:ci
+- **Issue #89** (closed): Wire or remove the placeholder check:all and lint npm scripts: both exit 0 without checking anything
+- **Issue #86** (closed): summarize.py record prose still retypes the npn13G2 window limits as literals
+- **Issue #80** (closed): Single-source the CI gate: package.json check:ci and signoff.yml are two hand-kept copies that have drifted
+- **Issue #71** (closed): Single-source the npn13G2 breakdown/window limits: psat_record.py duplicates loadline.py
+- **Issue #68** (closed): Simplify sim runners: let sim_run_one accept klt exit 4 and drop three open-coded copies
 - **PR #78**: fix(signoff): regenerate the item-1 envelope at klt 0.9.1 and gate it in CI
 - **PR #75**: docs(manifests): cite the clean 0.9.1 PA DRC report as T1 item 3
 - **PR #74**: docs(layout): drop the stale klt.matches pin equality from layout/toolchain.json
