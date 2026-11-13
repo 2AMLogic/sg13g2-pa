@@ -56,9 +56,12 @@ Issues carrying `loom:curated`.
 
 ## Proposed (Architect / Hermit)
 
-- **#68**: Simplify sim runners: let sim_run_one accept klt exit 4 and drop three open-coded copies *(hermit)*
-- **#71**: Single-source the npn13G2 breakdown/window limits: psat_record.py duplicates loadline.py *(hermit)*
 - **#77**: Remove vendored manifests/design-evidence-tiers.md: stale against the checklist the pinned klt wheel ships *(hermit)*
+- **#85**: Collapse the layout and design klt pins onto 0.9.1: four klt releases are pinned across the repo *(hermit)*
+- **#87**: Simplify the npn13G2 device bench: read currents from the captured sweep, drop 108 probe elements and 216 .meas cards *(hermit)*
+- **#90**: Simplify sim/env.sh log gate: fold sim_check_log into sim_gate_logs, drop the unreachable BENCH_COMPLETE and exit-code checks *(hermit)*
+- **#92**: Single-source the AC bench facts: ac_record.py retypes the nominal cell, port impedance and band that gen_dut_benches.py declares *(hermit)*
+- **#93**: Make loadline.py purely analytic: its simulated-DC input feeds an unread field and a Vbe check that cannot fire *(hermit)*
 
 ## Epics
 
@@ -76,6 +79,6 @@ _None._
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
 | Curated | 3 |
-| Architect / Hermit proposals | 3 |
+| Architect / Hermit proposals | 6 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
