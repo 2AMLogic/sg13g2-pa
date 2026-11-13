@@ -32,8 +32,6 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-- **#90**: Simplify sim/env.sh log gate: fold sim_check_log into sim_gate_logs, drop the unreachable BENCH_COMPLETE and exit-code checks
-- **#92**: Single-source the AC bench facts: ac_record.py retypes the nominal cell, port impedance and band that gen_dut_benches.py declares
 - **#95**: Remove sim_run_one's shell capacity-resubmit loop: klt's batch.capacity_wait_s already waits out the same refusals
 - **#96**: Derive the smoke record's OSDI provenance from the run: summarize.py hard-codes a 'too old' claim and lists client OSDI hashes the fleet did not load
 
@@ -41,14 +39,14 @@ Issues currently being built (`loom:building`).
 
 PRs waiting on Judge (`loom:review-requested`).
 
-_None._
+- **#102**: refactor(sim): let klt own the batch-capacity wait, drop sim_run_one's resubmit loop
+- **#103**: fix(sim): derive the smoke record's model-input lines from each bench's report
 
 ## Approved (Awaiting Merge)
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-- **#97**: refactor(sim): fold sim_check_log into sim_gate_logs and test the gate
-- **#98**: refactor(sim): format the AC record's bench facts from the deck generator
+_None._
 
 ## Proposed
 
@@ -66,6 +64,8 @@ Issues carrying `loom:curated`.
 - **#87**: Simplify the npn13G2 device bench: read currents from the captured sweep, drop 108 probe elements and 216 .meas cards *(hermit)*
 - **#93**: Make loadline.py purely analytic: its simulated-DC input feeds an unread field and a Vbe check that cannot fire *(hermit)*
 - **#100**: Use klt's capture_only and complex_vectors request options: drop the --allow-not-checked exit-4 waiver and the hand-written ASCII rawfile parser *(hermit)*
+- **#104**: Trim sim/toolchain.json and sim/pdk.json to the keys tooling reads: unread fact-sheet fields restate pins held elsewhere and have gone stale *(hermit)*
+- **#106**: Route sim/known-answer/run.sh through sim_run_one: last open-coded klt sim invocation, and the only bench with no log gate *(hermit)*
 
 ## Epics
 
@@ -79,10 +79,10 @@ _None._
 | Very important | 0 |
 | Important | 1 |
 | Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 4 |
-| PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 2 |
+| In Progress (`loom:building`) | 2 |
+| PRs awaiting review | 2 |
+| Approved PRs awaiting merge | 0 |
 | Curated | 4 |
-| Architect / Hermit proposals | 5 |
+| Architect / Hermit proposals | 7 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
