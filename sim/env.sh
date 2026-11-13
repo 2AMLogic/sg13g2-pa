@@ -237,11 +237,13 @@ sim_run_one() {
   # sim_run_one <name> [--allow-not-checked] [extra klt args]
   #
   # Runs `klt sim` on <name>.request.json (in the caller's SCRIPT_DIR) into
-  # ${OUT}/<name>, with the report and stderr beside it. A batch submit refused
-  # for fleet capacity is resubmitted to the batch fleet (bounded: 4 attempts,
-  # 60 s apart) -- a resubmit, not a job pool. Any other failure, and a capacity
-  # refusal that outlasts the attempts, is reported and sets the caller's
-  # `failed=1`; nothing is ever retried locally.
+  # ${OUT}/<name>, with the report and stderr beside it. One invocation: a batch
+  # submit refused for fleet capacity is waited out by klt itself -- every grid
+  # bench asks for a 600 s wait, through the request's `batch.capacity_wait_s`
+  # or a `--wait-for-capacity 600` passed in here (sim/README.md, "Running
+  # grids") -- so there is no shell-level resubmit and no job pool. Any failure,
+  # including a capacity refusal that outlasts that wait, is reported and sets
+  # the caller's `failed=1`; nothing is ever retried locally.
   #
   # --allow-not-checked: treat klt exit 4 (`not_checked`) as a successful run.
   # A waveform-only request declares no `measurements`, so klt grades it
@@ -252,29 +254,17 @@ sim_run_one() {
   # rather than silently recording an unchecked run. Must precede the klt args.
   #
   # Needs, from the caller: SCRIPT_DIR, OUT, KLT_CMD (sim_resolve_klt), SIM_SCRIPT_NAME.
-  local name="$1" attempt rc allow_not_checked=0
+  local name="$1" rc=0 allow_not_checked=0
   shift
   while [[ "${1:-}" == "--allow-not-checked" ]]; do
     allow_not_checked=1
     shift
   done
-  for attempt in 1 2 3 4; do
-    echo "${SIM_SCRIPT_NAME}: klt sim ${name} $* (attempt ${attempt})"
-    rc=0
-    ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --format json -o "${OUT}/${name}" "$@" \
-        "${name}.request.json" > "${OUT}/${name}.report.json" 2> "${OUT}/${name}.stderr" ) || rc=$?
-    (( rc == 0 )) && return 0
-    (( allow_not_checked && rc == 4 )) && return 0
-    # The union of every fleet capacity-refusal string the benches have seen;
-    # one list, because a refusal must be resubmitted identically for all of them.
-    if grep -q 'BATCH_MAX_CONCURRENT_INSTANCES\|BATCH_MAX_VCPU\|vCPU already running\|batch_no_capacity\|batch_concurrency_cap' \
-         "${OUT}/${name}.report.json" "${OUT}/${name}.stderr" 2>/dev/null && (( attempt < 4 )); then
-      echo "${SIM_SCRIPT_NAME}: ${name}: fleet at capacity; resubmitting to batch in 60 s" >&2
-      sleep 60
-      continue
-    fi
-    break
-  done
+  echo "${SIM_SCRIPT_NAME}: klt sim ${name} $*"
+  ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --format json -o "${OUT}/${name}" "$@" \
+      "${name}.request.json" > "${OUT}/${name}.report.json" 2> "${OUT}/${name}.stderr" ) || rc=$?
+  (( rc == 0 )) && return 0
+  (( allow_not_checked && rc == 4 )) && return 0
   echo "${SIM_SCRIPT_NAME}: ${name}: klt sim exited ${rc} (see ${OUT}/${name}.stderr); no local fallback is attempted." >&2
   # shellcheck disable=SC2034  # read by the sourcing runner
   failed=1

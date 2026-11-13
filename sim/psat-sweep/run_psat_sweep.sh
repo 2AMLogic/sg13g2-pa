@@ -7,8 +7,9 @@
 # The sweep is one `klt sim` request with one corner per drive point
 # (corners.supply_v sets the source amplitude), i.e. a grid: on the dispatch worker
 # KLT_SIM_BACKEND=batch sends it to the Spot batch fleet, and the request's
-# batch.capacity_wait_s (600) waits for capacity instead of failing. A failed submit is
-# reported and never rerun locally; no `ngspice -b` loop is launched here.
+# batch.capacity_wait_s (600) makes klt wait for capacity instead of failing. That
+# wait is klt's own and the request is the only place it is set. A submit that still
+# fails is reported and never rerun locally; no `ngspice -b` loop is launched here.
 # Needs python3 + numpy. Writes the append-only records/<timestamp>-<sha>.{md,json} and the klt
 # artifacts under corners/<id>/.
 # Exit codes: 0 ok; 1 a run or the record failed; 3 preflight failed; 4 id collision.
@@ -30,9 +31,9 @@ sim_begin_record --pathspec sim --pathspec design --pathspec ':!sim/psat-sweep/r
 failed=0
 # --allow-not-checked: a waveform-only request declares no measurements, so klt
 # exits 4 (not_checked) with every corner `pass`; the corner statuses gate
-# (psat_record.py, sim_gate_logs). sim_run_one carries the bounded
-# batch-capacity resubmit and never reruns locally, and sets failed=1 rather
-# than exiting, so the gate below is what stops the record.
+# (psat_record.py, sim_gate_logs). sim_run_one submits once -- the capacity wait
+# is the request's batch.capacity_wait_s -- never reruns locally, and sets
+# failed=1 rather than exiting, so the gate below is what stops the record.
 sim_run_one psat_sweep --allow-not-checked
 sim_gate_logs
 (( failed == 0 )) || exit 1

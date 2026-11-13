@@ -4,11 +4,14 @@ ngspice-log gate every bench runs after it.
 
 No simulator, PDK or network is needed. For `sim_run_one`, `klt` is replaced by
 a stub whose exit code and stderr the test chooses, so what is under test is the
-runner's own exit handling and its bounded batch-capacity resubmit; `sleep` is
-stubbed out too (a shell function shadows the builtin/binary), so a resubmit
-case exercises the loop without its 60 s delays. For `sim_gate_logs`, the test
-writes the ngspice logs itself, so what is under test is which log text fails a
-point and which does not.
+runner's own exit handling. For `sim_gate_logs`, the test writes the ngspice
+logs itself, so what is under test is which log text fails a point and which
+does not.
+
+`sim_run_one` submits once: a fleet capacity refusal is waited out by `klt`
+itself -- from the request's `batch.capacity_wait_s`, or a
+`--wait-for-capacity` the caller passes through -- so there is no shell-level
+resubmit to exercise here.
 """
 
 import os
@@ -30,7 +33,6 @@ exit "${STUB_RC:-0}"
 HARNESS = """
 set -uo pipefail
 source "__ENV_SH__" >/dev/null 2>&1 || true
-sleep() { :; }
 SCRIPT_DIR="__TMP__/bench"
 OUT="__TMP__/out"
 SIM_SCRIPT_NAME=test_env_sh
@@ -69,7 +71,7 @@ def run_one(args, rc=0, stderr_text=""):
 def test_clean_run_is_a_success():
     failed, out, _ = run_one("bench", rc=0)
     assert failed == 0
-    assert out.count("attempt") == 1
+    assert out.count("klt sim bench") == 1
 
 
 def test_exit_4_fails_a_bench_that_did_not_opt_in():
@@ -99,23 +101,18 @@ def test_allow_not_checked_is_not_passed_through_to_klt():
     assert "bench.request.json" in argv
 
 
-def test_every_capacity_refusal_string_is_resubmitted():
-    # One union list, so a refusal is resubmitted identically for every bench:
-    # the two formerly-forked lists (sim/env.sh and psat-sweep) disagreed.
-    for needle in ("BATCH_MAX_CONCURRENT_INSTANCES",
-                   "BATCH_MAX_VCPU",
-                   "vCPU already running",
-                   "batch_no_capacity",
-                   "batch_concurrency_cap"):
-        failed, out, _ = run_one("bench", rc=1, stderr_text=f"error: {needle} reached")
-        assert failed == 1, needle
-        assert out.count("attempt") == 4, f"{needle} was not resubmitted: {out}"
-
-
-def test_a_non_capacity_failure_is_not_resubmitted():
-    failed, out, _ = run_one("bench", rc=1, stderr_text="error: netlist is broken")
-    assert failed == 1
-    assert out.count("attempt") == 1, out
+def test_a_failure_is_submitted_once_whatever_its_cause():
+    # klt owns the capacity wait (the request's batch.capacity_wait_s), so the
+    # runner submits exactly once and reports: a capacity refusal that outlasts
+    # that wait is not re-submitted here, and neither is any other failure.
+    for stderr_text in ("error: batch_no_capacity",
+                        "error: batch_concurrency_cap",
+                        "error: BATCH_MAX_CONCURRENT_INSTANCES reached",
+                        "error: BATCH_MAX_VCPU reached",
+                        "error: netlist is broken"):
+        failed, out, _ = run_one("bench", rc=1, stderr_text=stderr_text)
+        assert failed == 1, stderr_text
+        assert out.count("klt sim bench") == 1, f"re-submitted: {out}"
 
 
 # --- sim_gate_logs --------------------------------------------------------
