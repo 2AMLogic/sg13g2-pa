@@ -7,8 +7,9 @@
 # Runs, through `klt sim`:
 #   inverter_dc    5 MOS corners (tt/ff/ss/fs/sf) -- a grid, so it goes to the
 #   inverter_tran  batch fleet when KLT_SIM_BACKEND=batch (the dispatch worker
-#                  exports it). No `ngspice -b` loop is ever launched here, and
-#                  a failed batch submit is reported, never retried locally.
+#                  exports it), with klt's own capacity wait (see BATCH_WAIT
+#                  below). No `ngspice -b` loop is ever launched here, and a
+#                  failed batch submit is reported, never retried locally.
 #   npn_op         one npn13G2 DC operating point, typical HBT corner; a single
 #                  unit, so it runs locally (`--backend local`).
 # then writes the append-only record sim/smoke/records/<timestamp>-<sha>.md and
@@ -30,8 +31,27 @@ sim_resolve_klt
 sim_begin_record
 
 failed=0
-sim_run_one inverter_dc
-sim_run_one inverter_tran
+# The fleet is vCPU-budgeted, so a grid submit refused for capacity
+# (batch_no_capacity / batch_concurrency_cap) must be waited out on batch, never
+# rerun locally (host rule). klt owns that wait; this just asks for it. The other
+# grid benches declare it in the request (`batch.capacity_wait_s`: 600) -- these
+# two cannot, because `evidence/item9.json` content-hashes both request files and
+# re-attesting item 9 reruns every bench, so the flag carries the same 600 here.
+#
+# `--wait-for-capacity` is batch-only: klt exits 1 with "--wait-for-capacity
+# requires backend 'batch'" on any other backend. These two calls pass no
+# --backend and their requests declare none, so KLT_SIM_BACKEND alone decides,
+# and the flag is passed only when it resolves to batch. Without it (a laptop,
+# no KLT_SIM_BACKEND) the grids run locally and need no capacity wait.
+# (`if`, not `[[ ... ]] && ...`: under `set -e` the && form would exit 1 here on
+# every non-batch host. `${a[@]+"${a[@]}"}` expands an empty array safely under
+# `set -u`.)
+BATCH_WAIT=()
+if [[ "${KLT_SIM_BACKEND:-}" == "batch" ]]; then
+  BATCH_WAIT=(--wait-for-capacity 600)
+fi
+sim_run_one inverter_dc ${BATCH_WAIT[@]+"${BATCH_WAIT[@]}"}
+sim_run_one inverter_tran ${BATCH_WAIT[@]+"${BATCH_WAIT[@]}"}
 sim_run_one npn_op --backend local
 
 sim_gate_logs
