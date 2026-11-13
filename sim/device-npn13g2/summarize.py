@@ -18,14 +18,10 @@ import importlib.util
 _spec = importlib.util.spec_from_file_location("gen_bench", os.path.join(HERE, "gen_bench.py"))
 gb = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(gb)
-# Model-window constants and the Rth model live once, in loadline.py (provenance marked there).
-_spec = importlib.util.spec_from_file_location("loadline", os.path.join(HERE, "loadline.py"))
-ll = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(ll)
-IC_WIN_PER_NX = ll.IC_WIN_PER_NX
-TJ_MAX = ll.TJ_MAX
-rth = ll.rth
 sys.path.insert(0, os.path.join(HERE, "..", "lib"))
+# Model-window constants and the Rth model live once, in sim/lib/device_limits.py
+# (provenance marked there); never retype them here.
+from device_limits import IC_WIN_PER_NX, TJ_MAX, rth  # noqa: E402
 from provenance import commit_line, sha  # noqa: E402
 
 

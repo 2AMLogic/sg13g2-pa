@@ -18,6 +18,11 @@ recomputes that hash from the netlist on disk and byte-compares every generated
 file, so a netlist change that is not regenerated fails loudly instead of
 silently benching a stale copy.
 
+The bench facts a record must restate -- ``F0_HZ``, ``RS_OHM``, ``RL_OHM``, the
+nominal cell (``PROCESS_NOM``, ``TEMP_NOM_C``, ``VCC_NOM_V``) and the DUT's output
+array via ``output_array()`` -- are declared (or derived from the netlist) here once;
+the reducers import them rather than keeping their own copies.
+
 Nothing here is a result; the decks are simulated benches. The output network
 of the DUT is ideal passives (see `design/README.md`), and every bench says so.
 """
@@ -25,6 +30,7 @@ import hashlib
 import json
 import math
 import pathlib
+import re
 import sys
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
@@ -71,6 +77,30 @@ def netlist_text():
 
 def netlist_sha256():
     return hashlib.sha256(NETLIST.read_bytes()).hexdigest()
+
+
+# One output-array device: an npn13G2 instance on the shared COLL/VB nodes. The bias
+# reference (XQref, on VREF) is deliberately not matched.
+_ARRAY_DEVICE_RE = re.compile(r"^X\S+\s+COLL\s+VB\s+GND\s+GND\s+npn13G2\s+Nx=(\d+)\s*$",
+                              re.IGNORECASE | re.MULTILINE)
+
+
+def output_array(text=None):
+    """``(device_count, nx)`` of the DUT's output array, read from the netlist.
+
+    The reducers divide the collector current by the device count, so a hand-copied
+    count silently under-reports per-device I_C when the array is resized. Raises
+    ValueError when the netlist has no such array or mixes Nx values, so the record
+    fails loudly instead of being graded against a stale divisor.
+    """
+    nxs = [int(m) for m in _ARRAY_DEVICE_RE.findall(netlist_text() if text is None else text)]
+    if not nxs:
+        raise ValueError("no npn13G2 instance on the shared COLL/VB nodes "
+                         f"(expected the output array in {NETLIST})")
+    if len(set(nxs)) != 1:
+        raise ValueError(f"output array mixes Nx values {sorted(set(nxs))} in {NETLIST}; "
+                         "per-device stress is not well defined")
+    return len(nxs), nxs[0]
 
 
 def _header(title, lines):

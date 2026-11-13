@@ -10,6 +10,11 @@ per-device stress (peak V_CE, V_CB, V_BE, I_C, junction temperature) against the
 rf_extract.reduce_sweep then gives Psat, P1dB, peak PAE. A point that cannot be
 extracted (e.g. UNSETTLED) is listed with its ExtractError code and left out of the
 reduction; it is never dropped silently.
+
+Every limit this grades against comes from `sim/lib/device_limits.py` and every bench
+fact it restates comes from `sim/lib/gen_dut_benches.py` (which generates this bench's
+deck), including the array size read from the DUT netlist. The record prose is
+formatted from them, so it cannot fall behind the constants that produced its labels.
 """
 import json
 import math
@@ -19,19 +24,19 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
+import gen_dut_benches as gdb  # noqa: E402
 import rf_extract as rx  # noqa: E402
+# The (P) breakdown minima and the (M) model window live once, in sim/lib/device_limits.py
+# (provenance marked there); the bench facts live once in gen_dut_benches.py, which
+# generates this bench's deck. Nothing below is a retyped number, and the record prose
+# is formatted from these names.
+from device_limits import (BVCEO_MIN, BVCBO_MIN, IC_WIN_PER_NX,  # noqa: E402
+                           TJ_MAX, VBE_WIN, VCE_WIN)
 
-F0 = 2.44175e9
-RS = 50.0
-N_UNITS = 14                       # array devices sharing COLL/VB (design/netlist/sg13g2-pa.spice)
-NX = 10
-# (P) SG13G2 Process Specification Rev. 1.2, npn13g2: minima.
-BVCEO_MIN, BVCBO_MIN = 1.4, 3.8
-# (M) sg13g2_hbt_mod.lib npn13G2 validity window.
-VCE_WIN = (0.4, 2.0)
-VBE_WIN = (0.65, 0.96)
-IC_MAX_PER_DEVICE = 0.003 * NX     # 0.003*Nx A
-TJ_MAX_C = 125.0
+F0 = gdb.F0_HZ
+RS = gdb.RS_OHM
+N_UNITS, NX = gdb.output_array()   # output-array devices sharing COLL/VB, and their Nx
+IC_MAX_PER_DEVICE = IC_WIN_PER_NX * NX
 
 
 def dbm(w):
@@ -57,7 +62,7 @@ def stress(t, s, ex, ambient_c):
         "frac_vce_outside": frac((vc < VCE_WIN[0]) | (vc > VCE_WIN[1])),
         "frac_vbe_outside": frac((vb < VBE_WIN[0]) | (vb > VBE_WIN[1])),
         "frac_ic_outside": frac(ic > IC_MAX_PER_DEVICE),
-        "frac_tj_outside": frac(tj > TJ_MAX_C),
+        "frac_tj_outside": frac(tj > TJ_MAX),
     }
     out["breakdown_violation"] = bool(out["vce_pk_v"] > BVCEO_MIN or out["vcb_pk_v"] > BVCBO_MIN)
     out["outside_window"] = bool(any(out[k] > 0 for k in
@@ -122,12 +127,13 @@ def main(argv):
     w("")
     w("- Bench `sim/psat-sweep/psat_sweep.spice`; spec rows: Psat, P1dB, Peak PAE, Input match (large-signal), "
       "Device stress (RATIFIED); back-off PAE, harmonics, large-signal stability, thermal (DRAFT, reported only).")
-    w("- Cell: process `hbt_typ`, 27 C ambient, Vcc 0.8 V, self-heating on (card default `selft=1`). "
-      "One cell; the PVT matrix is item 5.")
-    w("- Source: sine EMF behind 50 ohm at 2.44175 GHz; drive = **available** power "
+    w(f"- Cell: process `{gdb.PROCESS_NOM}`, {gdb.TEMP_NOM_C:g} C ambient, Vcc {gdb.VCC_NOM_V:g} V, "
+      "self-heating on (card default `selft=1`). One cell; the PVT matrix is item 5.")
+    w(f"- Source: sine EMF behind {RS:g} ohm at {F0 / 1e9:g} GHz; drive = **available** power "
       "A^2/(8 Rs); P_in is computed from the measured input V and I (mismatch counted).")
-    w("- Load: 50 ohm resistive. **Harmonic terminations: ideal 50 ohm at 2 f0 and 3 f0 (the default, "
-      "labelled; a flat resistor).** Results under other terminations are not comparable.")
+    w(f"- Load: {gdb.RL_OHM:g} ohm resistive. **Harmonic terminations: ideal {gdb.RL_OHM:g} ohm at "
+      "2 f0 and 3 f0 (the default, labelled; a flat resistor).** Results under other terminations "
+      "are not comparable.")
     w("- PAE = (P_out,f0 - P_in,f0) / P_DC; P_DC = total supply power drawn from Vcc, including the bias "
       "reference current (the 1 mA reference is an ideal source from Vcc, so it is inside P_DC); no separate "
       "driver. Integrated by `rf_extract.extract` over an integer number of RF periods "
@@ -166,12 +172,14 @@ def main(argv):
     w("")
     w("## Device stress (peaks over the extraction window)")
     w("")
-    w("The 14 array devices share the collector and base nodes and are identical, so one device's terminals "
-      "are quoted for each. `V_CE`/`V_CB`/`V_BE` are the **external terminal** voltages (emitter at ground; "
-      "the internal collector/base nodes sit inside the card's series resistances). `I_C` per device = "
-      "(i(Lchoke) - i(load)) / 14. Junction temperature = ambient + the card's thermal node. Limits: "
-      "BVCEO(min) 1.4 V, BVCBO(min) 3.8 V (process spec Rev. 1.2); window V_CE 0.4-2.0 V, V_BE 0.65-0.96 V, "
-      "I_C < 30 mA/device, T_j <= 125 C (model card). Fractions are of the samples in the window.")
+    w(f"The {N_UNITS} array devices share the collector and base nodes and are identical, so one device's "
+      "terminals are quoted for each. `V_CE`/`V_CB`/`V_BE` are the **external terminal** voltages (emitter "
+      "at ground; the internal collector/base nodes sit inside the card's series resistances). `I_C` per "
+      f"device = (i(Lchoke) - i(load)) / {N_UNITS}. Junction temperature = ambient + the card's thermal "
+      f"node. Limits: BVCEO(min) {BVCEO_MIN:.1f} V, BVCBO(min) {BVCBO_MIN:.1f} V (process spec Rev. 1.2); "
+      f"window V_CE {VCE_WIN[0]:.1f}-{VCE_WIN[1]:.1f} V, V_BE {VBE_WIN[0]:.2f}-{VBE_WIN[1]:.2f} V, "
+      f"I_C < {1e3 * IC_MAX_PER_DEVICE:g} mA/device, T_j <= {TJ_MAX:g} C (model card). Fractions are of "
+      "the samples in the window.")
     w("")
     w("| Pavail dBm | Vce pk V | Vce min V | Vcb pk V | Vbe pk V | Ic pk mA | Tj max C | outside window (Vce / Vbe / Ic / Tj) | label |")
     w("|---|---|---|---|---|---|---|---|---|")

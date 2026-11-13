@@ -21,7 +21,8 @@ Model (one npn13G2 array, choke-fed class-A stage, ideal sinusoid):
   Tj      = Tamb + Rth*(Vcc*Iq - Pout)  Rth = 3.26e3*(4/Nx)**0.9 K/W (card)
 Limits are the spec's: BVCEO/BVCBO (min) from the PDK process spec; the VBIC
 validity window from the card header (spec/target-spec.md, "Model validity
-window").
+window"). They, and the Rth model, are defined once in `sim/lib/device_limits.py`
+and imported here -- never retyped.
 """
 import argparse
 import json
@@ -29,28 +30,20 @@ import math
 import os
 import sys
 
-BVCEO_MIN = 1.4          # V, (P) npn13g2 minimum
-BVCBO_MIN = 3.8          # V, (P) npn13g2 minimum
-VCE_WIN = (0.4, 2.0)     # V, (M) card window
-VBE_WIN = (0.65, 0.96)   # V, (M)
-IC_WIN_PER_NX = 3e-3     # A per Nx, (M)
-TJ_MAX = 125.0           # C, (M) window top
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, "..", "lib"))
+from device_limits import (BVCEO_MIN, BVCBO_MIN, IC_WIN_PER_NX, LIMITS_NOTE,  # noqa: E402
+                           TJ_MAX, VBE_WIN, VCE_WIN, rth)
+
 AMBIENTS = (-40.0, 27.0, 125.0)
 P_TARGET_DBM = 15.0
 EPS = 1e-9
 
 DEFAULT_SUPPLIES = (0.5, 0.6, 0.7, 0.8, 1.0, 1.2, 1.4)
-LIMITS_NOTE = ("BVCEO/BVCBO are DC process-control minima (spec/target-spec.md); a dynamic "
-               "excursion above them is judged a violation, per the spec. Window = card "
-               "header of sg13g2_hbt_mod.lib v0.3.0 (npn13G2).")
 
 
 def dbm(p_w):
     return 10.0 * math.log10(p_w / 1e-3)
-
-
-def rth(nx):
-    return 3.26e3 * (4.0 / nx) ** 0.9
 
 
 def frac_above(mean, amp, level):
@@ -263,9 +256,10 @@ def render(d):
          "Ideal resistive load, ideal sinusoid, class-A, **ideal passives, no output network**; "
          "fundamental only; no harmonic terminations modelled; efficiency not computed. "
          "Limits: BVCEO(min) %.1f V, BVCBO(min) %.1f V (process spec); Vce window %.1f-%.1f V, "
-         "ic < 3 mA*Nx, Tj <= %g C (model card). Vcb = Vce - Vbe with Vbe at the peak assumed "
+         "ic < %g mA*Nx, Tj <= %g C (model card). Vcb = Vce - Vbe with Vbe at the peak assumed "
          "%.2f V (conservative). Pout is a ceiling per the stated assumptions, not a result." % (
-             BVCEO_MIN, BVCBO_MIN, VCE_WIN[0], VCE_WIN[1], TJ_MAX, d["assumptions"]["vbe_at_peak_v"]), "",
+             BVCEO_MIN, BVCBO_MIN, VCE_WIN[0], VCE_WIN[1], 1e3 * IC_WIN_PER_NX, TJ_MAX,
+             d["assumptions"]["vbe_at_peak_v"]), "",
          "**Controls.** Negative: %s -> %s (flagged: %s). Positive: %s -> %s (passes: %s)." % (
              d["controls"]["negative"]["what"], d["controls"]["negative"]["verdict"],
              d["controls"]["negative"]["flagged"], d["controls"]["positive"]["what"],
@@ -337,8 +331,7 @@ def main(argv):
     if not a.out:
         ap.error("--out is required (or use --self-test)")
 
-    here = os.path.dirname(os.path.abspath(__file__))
-    dc_path = a.dc_json or latest_dc(here)
+    dc_path = a.dc_json or latest_dc(HERE)
     dc = load_dc(dc_path) if dc_path else None
     supplies = [float(x) for x in a.supplies.split(",")]
     cells = study(supplies, a.tol, a.vknee, a.vbe_at_peak, a.nx_dev, dc)
@@ -350,7 +343,7 @@ def main(argv):
         "assumptions": {
             "load": "ideal resistive, optimum for the swing; no output network (D-1 deferred), ideal passives",
             "drive": "ideal sinusoid, class-A, swing limited by headroom (Vcc - Vknee) and by the "
-                     "window ic limit (peak ic = 3 mA*Nx)",
+                     "window ic limit (peak ic = %g mA*Nx)" % (1e3 * IC_WIN_PER_NX),
             "harmonic_terminations": "none modelled; fundamental only",
             "efficiency": "not computed (no PAE claim)",
             "vknee_v": a.vknee, "vbe_at_peak_v": a.vbe_at_peak, "tolerance": a.tol,
@@ -358,7 +351,7 @@ def main(argv):
                             "fixed-nominal": "swing set at the nominal supply; low-supply cell may bottom"},
             "target_dbm": P_TARGET_DBM, "nx_dev": a.nx_dev,
         },
-        "dc_data": dc_path and os.path.relpath(dc_path, here),
+        "dc_data": dc_path and os.path.relpath(dc_path, HERE),
         "controls": controls(a.vknee, a.vbe_at_peak, a.nx_dev),
         "cells": cells,
         "recommendation": recommend(cells, supplies),

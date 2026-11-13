@@ -164,7 +164,9 @@ edit or delete one, rerun instead.
 - `pdk.json`, `toolchain.json` - pins and tool floors.
 - `env.sh` - resolver and shared runner surface (`sim_require_pdk`, `sim_resolve_klt`, `sim_run_one`, `sim_check_log`).
 - `tools/` - `build-osdi.sh`, `pdk_identity.py`.
-- `lib/` - `rf_extract.py` and its tests.
+- `lib/` - `rf_extract.py`, `device_limits.py` (the npn13G2 breakdown minima, model
+  window and Rth model, defined once for every bench that grades against them) and
+  their tests.
 - `known-answer/` - ideal decks, `run.sh`, `check_known_answer.py`,
   `records/<id>.md`, `corners/<id>/` (klt reports and ngspice logs).
 - `smoke/` - toolchain smoke test (decks, `klt sim` requests, `run_smoke.sh`,
