@@ -3,6 +3,11 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-13
+
+- **PR #70**: docs(layout): record PA DRC cont.width.1 result as a 0.7.0 deck artifact, add clean 0.9.1 report
+- **Issue #58** (closed): DRC: 28 cont.width.1 violations inside PDK npn13G2 base cell on PA placement GDS
+
 ### 2026-11-12
 
 - **PR #65**: Bump Repo Skills 0.25.10 -> 0.26.1
