@@ -48,7 +48,14 @@ Changes made (the diff against the source is the full account):
   `SIM_PDK_RELEASE` / `SIM_PDK_ID_ROUTE` (issue #11); every failure now carries a named
   error; added `SG13G2_TOOLS_CACHE/pdk-root` to the resolution order and
   `SIM_LOG_REQUIRE_COMPLETE`; `--osdi` now checks `cornerMOSlv.lib` (core MOS)
-  and `r3_cmc.osdi`.
+  and `r3_cmc.osdi`. Later also folded `sim_check_log` into its one caller,
+  `sim_gate_logs`, and dropped with it the `BENCH_COMPLETE` marker check, the
+  `SIM_LOG_REQUIRE_COMPLETE` switch that disabled it and the ngspice exit-code
+  argument (issue #90): no deck, request or klt-generated log emits the marker,
+  the only call passed the literal `0` for the exit code, and `klt sim`'s real
+  exit status is gated in `sim_run_one`. The error-pattern list and the
+  `--tolerate-recovered-gmin` filter are unchanged, so every log that failed
+  the gate still fails it.
 - `sim/tools/build-osdi.sh`: new `NGSPICE_TOO_OLD_FOR_OSDI` check (status 5):
   `openvaf-r v24.0.1mob` emits OSDI 0.4, which ngspice-43 and earlier reject.
   The compiler tag and the per-platform sha256 pins are unchanged.
