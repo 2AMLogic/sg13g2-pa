@@ -4,8 +4,7 @@
     "pin": "0.7.0",
     "run_as": "uvx --from klayout-tools==0.7.0 klt",
     "klt_required_commands": ["drc", "lvs"],
-    "used_by": "layout/smoke/README.md",
-    "matches": ["PR #6 signoff workflow (klayout-tools==0.7.0)"]
+    "used_by": "layout/smoke/README.md"
   },
   "pa_drc": {
     "pin": "0.9.1",
