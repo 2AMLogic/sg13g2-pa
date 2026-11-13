@@ -10,6 +10,10 @@
       "file": "evidence/item2.json",
       "content_hash": "sha256:630bfca67b12d51f1d422ecf3221252f480e128e33a39c825e9201c4408135ee"
     },
+    "3": {
+      "file": "layout/reports/drc-klt-0.9.1.json",
+      "content_hash": "sha256:630bfca67b12d51f1d422ecf3221252f480e128e33a39c825e9201c4408135ee"
+    },
     "9": {
       "file": "evidence/item9.json",
       "content_hash": "sha256:003433da69bae501430ca58910ca785aeb7820078605035a0b3d738eb1a6b77f"
