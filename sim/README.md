@@ -101,6 +101,28 @@ carries no second copy of that wait and no job pool: `sim_run_one` submits once,
 and a refusal that outlasts the 600 s is reported and fails the bench rather
 than falling back to a local run. Raising the wait is one number.
 
+The two codes are not a narrower classification than the five stderr strings
+`sim_run_one` used to `grep` for: they are the *same* classification, read from
+the side that owns it. In the pinned `klt` (0.9.0, `sim/toolchain.json`),
+`sim_batch._classify_launch_failure` maps the provisioner's three refusal
+messages onto them -- `no capacity in any of the …` and `… exceeds
+BATCH_MAX_VCPU=V` (the "`N` vCPU already running" message) to
+`batch_no_capacity`, `… exceeds BATCH_MAX_CONCURRENT_INSTANCES=M` to
+`batch_concurrency_cap` -- and `_RETRYABLE_LAUNCH_CODES` is exactly those two,
+so both are waited out under `capacity_wait_s`. The deleted shell list matched
+substrings of those same three messages (plus the two code names), which is why
+removing it loses no refusal the fleet is known to emit. The one residual gap is
+stated rather than papered over: the shell matched the bare substrings
+`vCPU already running` and `BATCH_MAX_CONCURRENT_INSTANCES`, where `klt` requires
+the longer `exceeds BATCH_MAX_VCPU` / `exceeds BATCH_MAX_CONCURRENT_INSTANCES`.
+Both halves occur in the same single provisioner `fail` line today, so no current
+message classifies differently; a *future* provisioner message that said
+"vCPU already running" without "exceeds BATCH_MAX_VCPU" would now fail after one
+submit instead of being retried. That is a `klt`-side classification bug to file
+under the friction protocol, not something to re-fork a shell string list over.
+This is read from `klt`'s own source at the pin, not from an induced fleet
+refusal -- see "Not exercised live" in PR #102.
+
 The 600 s reaches `klt` two ways, both meaning the same thing:
 
 | Bench | How | Why |
