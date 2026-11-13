@@ -52,6 +52,7 @@ Issues carrying `loom:curated`.
 
 - **#5**: Track the gap to T1 (klayout-tools design-evidence-tiers.md) *(curated)*
 - **#39**: T1 item 4 (LVS clean): klt lvs of the PA against its schematic netlist, every npn13G2 recognised *(curated)*
+- **#42**: T1 item 11 (Power delivery): PA klt erc supply spec plus LVS supply pairing *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -72,7 +73,7 @@ _None._
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
-| Curated | 2 |
+| Curated | 3 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
