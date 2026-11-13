@@ -14,7 +14,7 @@ _None._
 
 `loom:very-important` (one counts per workspace); every stage takes these first.
 
-- **#58**: DRC: 28 cont.width.1 violations inside PDK npn13G2 base cell on PA placement GDS
+_None._
 
 ## Important
 
@@ -26,7 +26,7 @@ _None._
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-- **#58**: DRC: 28 cont.width.1 violations inside PDK npn13G2 base cell on PA placement GDS
+_None._
 
 ## In Progress
 
@@ -57,6 +57,8 @@ Issues carrying `loom:curated`.
 ## Proposed (Architect / Hermit)
 
 - **#68**: Simplify sim runners: let sim_run_one accept klt exit 4 and drop three open-coded copies *(hermit)*
+- **#71**: Single-source the npn13G2 breakdown/window limits: psat_record.py duplicates loadline.py *(hermit)*
+- **#77**: Remove vendored manifests/design-evidence-tiers.md: stale against the checklist the pinned klt wheel ships *(hermit)*
 
 ## Epics
 
@@ -67,13 +69,13 @@ _None._
 | Bucket | Count |
 |------|-------|
 | Operator merge-risk holds | 0 |
-| Very important | 1 |
+| Very important | 0 |
 | Important | 1 |
-| Ready (`loom:issue`) | 1 |
+| Ready (`loom:issue`) | 0 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
 | Curated | 3 |
-| Architect / Hermit proposals | 1 |
+| Architect / Hermit proposals | 3 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->

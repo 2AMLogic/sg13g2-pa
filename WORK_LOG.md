@@ -5,6 +5,12 @@ triage role. Newest first.
 
 ### 2026-11-13
 
+- **PR #78**: fix(signoff): regenerate the item-1 envelope at klt 0.9.1 and gate it in CI
+- **PR #75**: docs(manifests): cite the clean 0.9.1 PA DRC report as T1 item 3
+- **PR #74**: docs(layout): drop the stale klt.matches pin equality from layout/toolchain.json
+- **Issue #76** (closed): T1 item 1 attest envelope no longer reproduces: provenance.input.paths null in the committed evidence
+- **Issue #38** (closed): T1 item 3 (DRC clean): klt drc on the PA GDS with coverage disclosed
+- **Issue #72** (closed): layout/toolchain.json: klt.matches still claims the signoff workflow installs klayout-tools 0.7.0
 - **PR #70**: docs(layout): record PA DRC cont.width.1 result as a 0.7.0 deck artifact, add clean 0.9.1 report
 - **Issue #58** (closed): DRC: 28 cont.width.1 violations inside PDK npn13G2 base cell on PA placement GDS
 
