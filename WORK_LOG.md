@@ -5,6 +5,12 @@ triage role. Newest first.
 
 ### 2026-11-13
 
+- **PR #105**: fix(sim): refuse to build the AC decks when RS_OHM != RL_OHM
+- **PR #98**: refactor(sim): format the AC record's bench facts from the deck generator
+- **PR #97**: refactor(sim): fold sim_check_log into sim_gate_logs and test the gate
+- **Issue #99** (closed): AC record and deck header label unequal Rs/Rl S-parameters that sparams.s_from_nodes does not compute
+- **Issue #92** (closed): Single-source the AC bench facts: ac_record.py retypes the nominal cell, port impedance and band that gen_dut_benches.py declares
+- **Issue #90** (closed): Simplify sim/env.sh log gate: fold sim_check_log into sim_gate_logs, drop the unreachable BENCH_COMPLETE and exit-code checks
 - **PR #91**: fix(ci): point check:all at the gate script and drop the no-op lint script
 - **PR #88**: refactor(sim): format the npn13G2 window limits into both summarizers' record prose
 - **PR #84**: refactor(sim): share one klt sim submit path across the waveform-only benches
