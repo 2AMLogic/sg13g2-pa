@@ -32,6 +32,10 @@ quiescent point only).
 - `dc_family.spice`: Nx 1/4/10 x Vbe 0.70-0.90 V, Vce swept 0-2 V, 4-terminal device, self-heating on (`selft=1`, card default). Ic is read back through a 1 ohm CCVS (ngspice caps `par()` at 99 calls per file).
 - `ft.spice`: same instances at Vce = 1.0 V, 1 V ac base drive, collector ac-shorted; h21 = |Ic_ac/Ib_ac| at 20 and 50 GHz; fT = |h21| f0. Valid only where |h21| >> 1 and the two f0 agree.
 - `summarize.py` renders the record; `loadline.py` is the analytic study.
+- The breakdown minima, the model-validity window and the Rth model that both grade
+  against are defined once, in `sim/lib/device_limits.py` (with their (P)/(M)
+  provenance), and imported -- including by `sim/psat-sweep/psat_record.py`. The numbers
+  restated below are that module's; change them there, never here or in a bench.
 
 ## loadline.py definitions
 
