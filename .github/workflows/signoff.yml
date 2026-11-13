@@ -4,9 +4,18 @@ name: klt signoff
 # (manifests/sg13g2-pa.json) and byte-compare it against the committed
 # verdict of record (manifests/sg13g2-pa.signoff.json). A manifest, vendored
 # checklist or klt-pin change without a regenerated record fails here.
-# Also runs the unit tests and re-attests T1 item 10 (attest/item10.json ->
-# evidence/item10.json): the envelope hashes README.md and the other hygiene
-# files byte-for-byte, so editing them without regenerating it fails here.
+# Also runs the unit tests and re-attests T1 items 1 and 10 against their
+# committed envelopes:
+#   - item 10 (attest/item10.json -> evidence/item10.json): the envelope hashes
+#     README.md, LICENSE and THIS WORKFLOW FILE byte-for-byte, so editing any of
+#     them without regenerating it fails here.
+#   - item 1 (attest/item1.json -> evidence/item1.json): the envelope hashes the
+#     schematic, xschemrc and the derived netlist, so a design edit -- or an
+#     envelope left behind a klt pin bump -- fails here. Its one PDK-dependent
+#     check (klt netlist --check) is local_only, so --check skips it and
+#     compares hashes only; no xschem or PDK is needed on the runner.
+# Items 2, 3 and 9 are deliberately not re-attested here: item 2 needs the GDS
+# generator, item 3 the DRC deck, item 9 runs the benches.
 # See manifests/README.md.
 
 on:
@@ -34,6 +43,9 @@ jobs:
 
       - name: Unit tests (sim/lib, no simulator needed)
         run: python3 -m pytest -q sim/lib
+
+      - name: Re-attest T1 item 1 against the committed envelope
+        run: klt signoff --attest 1 --inventory attest/item1.json --check evidence/item1.json
 
       - name: Re-attest T1 item 10 against the committed envelope
         run: klt signoff --attest 10 --inventory attest/item10.json --check evidence/item10.json
