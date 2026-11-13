@@ -143,13 +143,20 @@ workflow byte-for-byte, so finish every edit to those first, then attest,
 then render the record:
 
 ```console
-uvx --from "klayout-tools==0.9.1" --with numpy --with pytest klt signoff \
+uvx --from "klayout-tools==0.9.1" klt signoff \
     --attest 10 --inventory attest/item10.json -o evidence/item10.json
 ```
 
-The inventory's `unit-tests` check runs `python3 -m pytest`, so the throwaway
-environment needs `numpy` and `pytest` (`--with`); CI installs them next to
-`klt`. The same applies to `--check`.
+**Run that from a `python3` that already has `numpy` and `pytest`** -- a venv
+is enough. The inventory's `unit-tests` check runs `python3 -m pytest`, and
+`klt signoff --attest` removes its own virtualenv's `bin` directory from
+`PATH` before running an inventory check, so the `python3` the check finds is
+the host's. At 0.9.1, `uvx --with numpy --with pytest` therefore does *not*
+reach it and the check fails with `No module named pytest`; the `--with`
+recipe this file used to give never had any effect (whether an earlier `klt`
+behaved differently was not measured). CI has no such split -- its `pip
+install` puts `klt`, `numpy` and `pytest` in one interpreter. The same
+applies to `--check`.
 
 If `attest/item10.json` changed, update its `content_hash` in
 `sg13g2-pa.json` (`sha256sum attest/item10.json`) before the next step.
@@ -169,24 +176,33 @@ vendored-doc bump, a `klt` pin bump) regenerates and commits the record in the
 same PR. **Any later edit to `README.md`, `LICENSE` or the workflow drifts
 the envelope and fails CI**; re-run the attest command above and regenerate
 the record in the same PR. Check locally with
+`./scripts/check-ci.sh` (below), or on its own with
 `klt signoff --attest 10 --inventory attest/item10.json --check evidence/item10.json`
 (exit `0` holds, `3` drifted).
 
 ## Freshness is CI-enforced
 
-[`.github/workflows/signoff.yml`](../.github/workflows/signoff.yml) re-runs the
-command with the same pinned `klt` on every push and pull request and
-byte-compares the output against the committed record, so a manifest change
-without a regenerated record fails. Keep the pin in the workflow and in this
-file identical.
+The gate is [`../scripts/check-ci.sh`](../scripts/check-ci.sh), which holds
+the check list and the `klt` pin once.
+[`.github/workflows/signoff.yml`](../.github/workflows/signoff.yml) runs it on
+every push and pull request, and `npm run check:ci` runs the same script
+locally, so the two cannot check different things -- they did for six days
+(issue #76, issue #80). It re-renders the record with the pinned `klt` and
+byte-compares it against the committed one, so a manifest change without a
+regenerated record fails, locally as well as in CI. Keep the pin in that
+script and in this file identical; the workflow's own `pip install` version
+is compared against the script's `KLT_PIN` at run time and a mismatch stops
+the run, so those two cannot drift silently. Locally the script needs a
+`python3` with `numpy` and `pytest` (above) and reports a missing one by name
+(`PYTEST_ENV_INCOMPLETE`) instead of failing inside `klt`.
 
-The workflow also re-attests items **1** and **10** against their committed
+The gate also re-attests items **1** and **10** against their committed
 envelopes (`klt signoff --attest N --inventory attest/itemN.json --check
 evidence/itemN.json`), so an envelope left stale behind a `klt` pin bump or an
 edited input fails there too. Both checks run on a stock runner without the
 PDK: item 1's only PDK-dependent check (`klt netlist --check`) is marked
 `local_only` in the inventory, so `--check` skips it and compares hashes only.
-Items 2, 3 and 9 are not re-attested in CI — item 2 needs the GDS generator,
+Items 2, 3 and 9 are not re-attested in the gate — item 2 needs the GDS generator,
 item 3 the DRC deck, and item 9 runs the benches.
 
 ## Current verdict
