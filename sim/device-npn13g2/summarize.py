@@ -21,7 +21,7 @@ _spec.loader.exec_module(gb)
 sys.path.insert(0, os.path.join(HERE, "..", "lib"))
 # Model-window constants and the Rth model live once, in sim/lib/device_limits.py
 # (provenance marked there); never retype them here.
-from device_limits import IC_WIN_PER_NX, TJ_MAX, rth  # noqa: E402
+from device_limits import IC_WIN_PER_NX, TJ_MAX, VBE_WIN, VCE_WIN, rth  # noqa: E402
 from provenance import commit_line, sha  # noqa: E402
 
 
@@ -86,10 +86,11 @@ def main(argv):
 
     L += ["", "## Ic-Vce family (simulated, mA)", "",
           "Bench `dc_family.spice`: 4-terminal `npn13G2`, self-heating on (card default `selft=1`), "
-          "Vbe fixed per row, Vce swept. `†` = ic above the card window `0.003*Nx` A "
-          "(OUTSIDE MODEL WINDOW for ic). Vce columns span the window 0.4-2.0 V; Vbe rows are "
-          "inside the 0.65-0.96 V window. At 125 C ambient the card's temperature window is "
-          "already at its top, so any self-heating puts Tj outside it (labelled below).", ""]
+          f"Vbe fixed per row, Vce swept. `†` = ic above the card window `{IC_WIN_PER_NX:g}*Nx` A "
+          f"(OUTSIDE MODEL WINDOW for ic). Vce columns span the window {VCE_WIN[0]:.1f}-{VCE_WIN[1]:.1f} V; "
+          f"Vbe rows are inside the {VBE_WIN[0]:.2f}-{VBE_WIN[1]:.2f} V window. At {TJ_MAX:g} C ambient "
+          "the card's temperature window is already at its top, so any self-heating puts Tj outside "
+          "it (labelled below).", ""]
     vces = gb.VCE
     for proc in gb.PROCESS:
         for t in gb.TEMPS:
@@ -112,7 +113,7 @@ def main(argv):
           "slope holds, so the two f0 should agree; where |h21| is near or below 1 the "
           "two estimates disagree and fT is **not** established). Ic is the dc family value at the same Vbe, "
           "Vce = 1.0 V. dT = Rth*Ic*Vce with Rth = 3.26e3*(4/Nx)^0.9 K/W (card), Tj = ambient + dT "
-          "(estimate; the simulated device self-heats internally). `†` = Tj above the +125 C "
+          f"(estimate; the simulated device self-heats internally). `†` = Tj above the +{TJ_MAX:g} C "
           "window ceiling; `‡` = ic above the window.", ""]
     ft = {}
     if reports["ft"]:
