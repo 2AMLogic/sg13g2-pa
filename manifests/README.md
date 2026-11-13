@@ -131,44 +131,141 @@ stream; item 9, testbenches shipped; item 10, repo hygiene); the other seven are
 `unmet` with a `reason` in the record (`no_evidence` for items 3-8 and 11). The record is the source of truth,
 not this paragraph.
 
-## T1 item 3 (DRC): result is `violations`, not `clean`
+## T1 item 3 (DRC): the 28 `cont.width.1` violations were a deck artifact
 
-**Item 3 is not met and is not cited in the manifest.** The pinned `klt drc`
-run on the PA placement GDS (`layout/pa/sg13g2_pa.gds`, sha256
-`630bfca67b12d51f1d422ecf3221252f480e128e33a39c825e9201c4408135ee`, the same hash
-as `layout/pa/provenance.json`) reports **`status: violations`, 28 violations**,
-all `cont.width.1`. This is simulated tooling output from the curated `klt`
-deck, not a foundry signoff, and the deck was not relaxed.
+The 28 `cont.width.1` violations previously recorded here were **not real
+violations**. They were an artifact of the curated `klt` 0.7.0 `sg13g2` deck
+applying the foundry's square-contact rule to the PDK's bar contacts. The
+same stream re-run on `klt` 0.9.1 reports **`status: clean`, 0 violations**,
+with `cont.width.1` still in `coverage.rules_checked` (the rule ran; it was
+not dropped or relaxed). No deck was relaxed and no waiver is claimed.
 
-- Report: [`../layout/reports/drc.json`](../layout/reports/drc.json).
-- Tool: `klt` 0.7.0 (`layout/toolchain.json` pin), KLayout engine 0.30.13
-  (`klt` warned it differs from the 0.30.12 it was tested against;
-  `provenance.klayout_version_mismatch: true`; the verdict is stated by `klt`
-  to be unaffected, counts such as `rules_skipped` may differ). Deck `sg13g2`,
-  content hash `sha256:bf483105cb17948270f0cad45d9418787654bfc0a5ffd04a2e2413d8c7d3b6e7`.
-  PDK IHP-Open-PDK v0.3.0 (`provenance.pdk.version` is `null` at 0.7.0).
-- Command (from the repo root, after `scripts/setup-env.sh`):
-  `uvx --from klayout-tools==0.7.0 klt drc --format json --deck sg13g2 --top sg13g2_pa --pdk ihp-sg13g2 --pdk-root ~/.cache/sg13g2-pa/pdk-root layout/pa/sg13g2_pa.gds > layout/reports/drc.json`
-  (exit 3 = violations). Freshness: `klt drc --check layout/reports/drc.json`
-  (reports `match`); regenerate the report whenever the GDS hash changes.
-- What the violations are: every one is on a contact (`Cont.drawing`) inside
-  the PDK-authored `npn13G2_base_CDNS_675179387640` sub-cell, 14 of
-  1.65 x 0.16 um and 14 of 1.52 x 0.16 um (two per placed HBT, 14 HBTs). The
-  rule text is "min/max Cont size (fixed 0.16 x 0.16 um square)". These are
-  PDK cell internals, not geometry drawn here. Whether they are real
-  violations or an over-strict curated-deck rule on the PDK's bar contacts
-  is **not established**; no waiver is claimed. Follow-up filed (see PR).
+### Why the 0.7.0 result was wrong
 
-Coverage fields quoted verbatim from `coverage` in the report (item 3's
-disclosure, claimant-enforced; these must accompany any future `clean`):
+In the pinned PDK (IHP-Open-PDK v0.3.0) the foundry runset splits Cont (6/0)
+into squares and bars before any Cont rule runs
+(`libs.tech/klayout/tech/drc/ihp-sg13g2.drc`, "cont/contbar general
+derivations"):
 
-- `coverage.deck_scope`: `Act, Cnt, Gat, M1, M2, M3, M4, M5, MIM, TM1, TM2, TV1, TV2, V1, V2, V3, V4`
+```ruby
+cont_nseal = cont_drw.not(edgeseal_drw)
+contbar    = cont_nseal.non_squares
+cont_sq    = cont_nseal.not(contbar)
+```
+
+`Cnt.a` — the "min. and max. Cont width 0.16 µm" rule the curated deck
+transcribes as `cont.width.1` — is measured on `cont_sq` **only**
+(`rule_decks/feol/5_14_cont.drc`):
+
+```ruby
+cnt_a_l = cont_sq.without_bbox_width(cnt_a_value.um)
+```
+
+All 28 flagged polygons are 1.65 × 0.16 µm or 1.52 × 0.16 µm. Those are
+non-squares, so the foundry runset routes them to `contbar` and `Cnt.a`
+never sees them. Bars are governed by the separate 5.15 ContBar table
+(`rule_decks/feol/5_15_contbar.drc`), which contains **no** bar width or
+size rule at all — only `CntB.b1` (bar-to-bar space for a common run
+> 5 µm) and `CntB.h1` (min. Metal1 enclosure), and `CntB.h1` explicitly
+excludes the HBT cell: `contbar.not(npn13g2)`. The foundry deck therefore
+treats these PDK-authored bars as legal geometry by construction.
+
+`klt` 0.7.0's `cont.width.1` carried no layer selection, so it measured
+every merged Cont polygon, bars included. `klt` 0.8.0 added
+`layer_selection="squares"` to `cont.width.1` and `cont.space.1`, mirroring
+upstream's `cont_sq`; the deck source cites klayout-tools issues #2943 and
+#3139 for it. Both are closed, so no new tool issue was filed for this
+cause — see "Residual gap" below for what was filed instead.
+
+### The corrected report
+
+- Report: [`../layout/reports/drc-klt-0.9.1.json`](../layout/reports/drc-klt-0.9.1.json),
+  `status: clean`, `violation_count: 0`, schema_version 3.
+- Same stream, same hash: `layout/pa/sg13g2_pa.gds`, sha256
+  `630bfca67b12d51f1d422ecf3221252f480e128e33a39c825e9201c4408135ee` — the
+  hash in `layout/pa/provenance.json`. The GDS was not regenerated or edited.
+- Tool: `klt` 0.9.1 (`provenance.klt_reinstall_spec`,
+  `klt_git_commit 4d0d29be4fd991f499d59e783a908082d5e24c56`), the same pin
+  `layout/pa/generate.sh` and the `signoff` workflow already use. KLayout
+  engine 0.30.13 (`klt` warned it differs from the 0.30.12 it was tested
+  against; `provenance.klayout_version_mismatch: true` — `klt` states the
+  verdict is unaffected, counts such as `rules_skipped` may differ). Deck
+  `sg13g2`, content hash
+  `sha256:1c95db40596afc5412e216009bcf0b775d1d74895b32738447eccbc76336dd15`.
+  PDK IHP-Open-PDK `fetched:0.3.0` (0.9.1 records
+  `provenance.pdk.version`; 0.7.0 left it `null`).
+- Command (from the repo root, after `scripts/setup-env.sh`, with
+  `source sim/env.sh` for `PDK_ROOT`):
+  `uvx --from klayout-tools==0.9.1 klt drc --format json --deck sg13g2 --top sg13g2_pa --pdk ihp-sg13g2 --pdk-root "$PDK_ROOT" layout/pa/sg13g2_pa.gds > layout/reports/drc-klt-0.9.1.json`
+  (exit 0 = clean). Freshness:
+  `uvx --from klayout-tools==0.9.1 klt drc --check layout/reports/drc-klt-0.9.1.json`
+  (reports `match`); regenerate whenever the GDS hash changes.
+- The superseded 0.7.0 report is kept as append-only evidence at
+  [`../layout/reports/drc.json`](../layout/reports/drc.json) (`status:
+  violations`, 28). It is the record of the artifact, not a current result.
+  `layout/toolchain.json`'s `klt.pin` stays 0.7.0: it is the
+  `layout/smoke/` pin and those reports were generated with it. The PA DRC
+  pin is recorded separately in that file as `pa_drc.pin`.
+
+### What the `clean` does and does not cover
+
+This is simulated tooling output from a curated deck, not a foundry signoff.
+Two limits must travel with it:
+
+- **`cont.width.1` and `cont.space.1` are vacuous on this stream.** All 28
+  merged Cont polygons in the GDS are bars; there are **zero** square
+  contacts, so `layer_selection="squares"` leaves both rules with nothing to
+  measure. They nevertheless appear in `coverage.rules_checked` and
+  `coverage.checked`, and 6/0 appears in `coverage.layers_checked`. Their
+  `clean` means "no square contacts exist here", not "square contacts were
+  measured and passed".
+- **The 28 bars get no size or spacing check from this deck.** The curated
+  deck does not transcribe the `CntB.*` family (its own `cont.width.1`
+  docstring says so). The foundry deck has no bar width rule either, so
+  nothing is being hidden on size — but `CntB.b1` bar spacing is a real
+  foundry rule that this run did not evaluate, and the coverage block does
+  not disclose that, because 6/0 does have rules.
+
+### Residual gap filed
+
+The `cont_sq` fix is upstream and closed. What remains is generic: a rule
+narrowed by `layer_selection` grades `checked` even when the selection
+empties its input, so a stream can earn `clean` with the rule listed as
+checked and zero geometry measured — while rules with no input geometry at
+all are correctly graded `inapplicable` / `no_applicable_geometry`. Filed
+generically as
+[`2AMLogic/klayout-tools#5435`](https://github.com/2AMLogic/klayout-tools/issues/5435)
+per the friction protocol.
+
+### Coverage disclosure
+
+Quoted verbatim from `coverage` in `drc-klt-0.9.1.json` (item 3's
+disclosure, claimant-enforced; these must accompany any `clean` claim):
+
+- `coverage.deck_scope`: `Act, Cnt, Gat, M1, M2, M3, M4, M5, MIM, NW, TM1, TM2, TV1, TV2, V1, V2, V3, V4, pSD`
 - `coverage.layers_in_stream_without_rules` (drawn in the GDS, no rule in the
-  deck): `1/20, 7/21, 8/2, 10/2, 14/0, 26/0, 33/0, 51/0, 63/0`
-- `coverage.rules_skipped` (33 rules): `gatpoly.enclosing.cont.1, gatpoly.separation.activ.1, gatpoly.space.1, gatpoly.width.1, metal2.enclosing.via2.1, metal3.enclosing.via3.1, metal3.space.1, metal3.width.1, metal4.enclosing.via4.1, metal4.space.1, metal4.width.1, metal5.enclosing.mim.1, metal5.enclosing.topvia1.1, metal5.space.1, metal5.width.1, mim.enclosing.topvia1.1, topmetal1.enclosing.topvia1.1, topmetal1.enclosing.topvia2.1, topmetal1.space.1, topmetal1.width.1, topmetal2.enclosing.topvia2.1, topmetal2.space.1, topmetal2.width.1, topvia1.space.1, topvia1.width.1, topvia2.space.1, topvia2.width.1, via2.space.1, via2.width.1, via3.space.1, via3.width.1, via4.space.1, via4.width.1`
+  deck): `7/21, 8/2, 10/2, 26/0, 33/0, 51/0, 63/0`
+- `coverage.rules_skipped` (47 rules): `gatpoly.enclosing.cont.1, gatpoly.separation.activ.1, gatpoly.space.1, gatpoly.width.1, metal2.enclosing.via2.1, metal3.enclosing.via3.1, metal3.space.1, metal3.width.1, metal4.enclosing.via4.1, metal4.space.1, metal4.width.1, metal5.enclosing.mim.1, metal5.enclosing.topvia1.1, metal5.space.1, metal5.width.1, mim.enclosing.topvia1.1, nwell.enclosing.nactiv.1, nwell.enclosing.nactiv.dig.1, nwell.enclosing.nactiv.hv.1, nwell.enclosing.pactiv.1, nwell.enclosing.pactiv.dig.1, nwell.enclosing.pactiv.hv.1, nwell.space.1, nwell.space.nactiv.1, nwell.space.nactiv.dig.1, nwell.space.nactiv.hv.1, nwell.space.pactiv.1, nwell.space.pactiv.dig.1, nwell.space.pactiv.hv.1, nwell.width.1, topmetal1.enclosing.topvia1.1, topmetal1.enclosing.topvia2.1, topmetal1.space.1, topmetal1.width.1, topmetal2.enclosing.topvia2.1, topmetal2.space.1, topmetal2.width.1, topvia1.space.1, topvia1.width.1, topvia2.space.1, topvia2.width.1, via2.space.1, via2.width.1, via3.space.1, via3.width.1, via4.space.1, via4.width.1`
+- `coverage.unmodeled_rules` (foundry rules the deck does not model): `LU.a, LU.c, LU.c1, LU.d, LU.d1, Pad.a1, Pad.aR, Pad.bR, Pad.d, Pad.d1R, Pad.dR, Pad.gR, Pad.jR, Pad.kR`
 
-`coverage.skipped` is `[]` and every `rules_skipped` entry also appears in
-`coverage.inapplicable` with reason `no_applicable_geometry`. `layers_checked`
-is `1/0, 6/0, 8/0, 10/0, 19/0` and `rules_checked` has 12 rules. The layers the HBT cell draws
-without rules (the list above) are not DRC-checked at all, so even a future
-`clean` would not cover them.
+`coverage.skipped` is `[]`, `coverage.nothing_checked` is `false`, and all 47
+`rules_skipped` entries also appear in `coverage.inapplicable` with reason
+`no_applicable_geometry`. `coverage.layers_checked` is
+`1/0, 1/20, 6/0, 8/0, 10/0, 14/0, 19/0` and `coverage.rules_checked` has 15
+rules: `activ.enclosing.cont.1, activ.space.1, activ.width.1, cont.space.1,
+cont.width.1, metal1.enclosing.via1.1, metal1.space.1, metal1.width.1,
+metal2.space.1, metal2.width.1, psd.area.1, psd.space.1, psd.width.1,
+via1.space.1, via1.width.1` — two of which (`cont.width.1`, `cont.space.1`)
+measured nothing, as above. The layers the HBT cell draws without rules are
+not DRC-checked at all, so this `clean` does not cover them.
+
+Relative to the 0.7.0 run, 0.9.1 also added the `pSD` and `NW` scopes and
+rules for 1/20 and 14/0, which is why those two layers moved out of
+`layers_in_stream_without_rules` and `rules_checked` grew from 12 to 15.
+
+### Item 3's status is not changed here
+
+Whether item 3 renders `met` is decided in #38, which owns the item-3 claim
+and its manifest citation. This section records the determination and the
+corrected report only; `manifests/sg13g2-pa.json` is untouched and item 3 is
+still `unmet` / `no_evidence` in the record.

@@ -1,8 +1,9 @@
 # layout
 
 `smoke/` holds the DRC/LVS toolchain smoke test on a PDK reference cell (not a
-design result); `toolchain.json` pins `klt` for it (0.7.0). `pa/` holds the PA
-layout described below. See the repo README for scope.
+design result); `toolchain.json` pins `klt` for it (`klt.pin`, 0.7.0) and
+pins the PA DRC separately (`pa_drc.pin`, 0.9.1 -- see below). `pa/` holds the
+PA layout described below. See the repo README for scope.
 
 ## `pa/`: PA core placement (T1 item 2)
 
@@ -20,7 +21,8 @@ in the stock-runner `signoff` workflow.
 The generator runs `klt gen bjt_array` (rows 2, columns = devices / 2) under
 `uvx --from klayout-tools==0.9.1`. This is the pin the generator needs: the
 sg13g2 HBT flavor of `bjt_array` and `klt signoff --attest 2` are not in 0.7.0
-or 0.8.0. It is also the `signoff` workflow pin. `toolchain.json` and the
+or 0.8.0. It is also the `signoff` workflow pin and, since the DRC artifact
+below, `toolchain.json`'s `pa_drc.pin`. `toolchain.json`'s `klt.pin` and the
 smoke test stay at 0.7.0 and are a separate concern.
 
 ### What this layout is, and is not
@@ -44,8 +46,19 @@ smoke test stay at 0.7.0 and are a separate concern.
   (33/0) shapes. Whether one fixed cell stands for an `Nx=10` device is not
   established; it is settled by extraction and LVS, not by this item. The
   generator states that LVS recognition of `npn13G2` is not claimed.
-- **No clean DRC or LVS result is claimed** (items 3 and 4). The pinned DRC run
-  is recorded in `reports/drc.json` and is `violations` (28, `cont.width.1`);
-  see `manifests/README.md`, "T1 item 3 (DRC)". The item-2 envelope
+- **DRC is `clean`; no LVS result is claimed** (items 3 and 4). `klt drc` on
+  this stream at `klt` 0.9.1 (`toolchain.json` `pa_drc.pin`) is
+  `reports/drc-klt-0.9.1.json`, `status: clean`, 0 violations. The earlier
+  `reports/drc.json` run at `klt` 0.7.0 is `violations` (28, `cont.width.1`)
+  and is **superseded**: 0.7.0's deck measured the PDK `npn13G2` cell's
+  contact *bars* with the foundry's square-contact rule (`Cnt.a`, which
+  upstream applies to `cont_sq` only). It is kept as append-only evidence of
+  the artifact. Two limits travel with the `clean`: `cont.width.1` and
+  `cont.space.1` measured nothing on this stream (all 28 merged Cont polygons
+  are bars; there are no square contacts), and the curated deck does not
+  transcribe the foundry's `CntB.*` bar-contact family, so bar spacing
+  (`CntB.b1`) was not evaluated. Full derivation, citations and the coverage
+  disclosure: `manifests/README.md`, "T1 item 3 (DRC)". Whether item 3
+  renders `met` is decided in #38, not here. The item-2 envelope
   (`evidence/item2.json`) only checks that the stream reads, has a non-empty
   top cell and a dbu on grid, and binds the GDS by content hash.
