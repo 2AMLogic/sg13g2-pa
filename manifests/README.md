@@ -11,8 +11,20 @@ output, the machine-readable form of the T1 checklist in
   `evidence` map. Citations are added one T1 item at a time as artifacts
   land, each pinning the `content_hash` of what it cites. Items 1 (design
   sources, from `evidence/item1.json`), 2 (layout stream, from
-  `evidence/item2.json`), 9 (testbenches shipped, from `evidence/item9.json`)
-  and 10 (repo hygiene, from `evidence/item10.json`) are cited today.
+  `evidence/item2.json`), 3 (DRC clean, from
+  `../layout/reports/drc-klt-0.9.1.json`), 9 (testbenches shipped, from
+  `evidence/item9.json`) and 10 (repo hygiene, from `evidence/item10.json`)
+  are cited today.
+- **`../layout/reports/drc-klt-0.9.1.json`**: the item-3 citation. Unlike
+  items 1, 2, 9 and 10 there is no `evidence/item3.json` wrapper and no
+  `--attest` step: `klt drc` already emits a first-class envelope, so the
+  manifest cites the report itself and `klt signoff` grades its `status`
+  directly (`citation.kind: "drc"`). The manifest's `content_hash` for item 3
+  is the **stream's** hash, `sha256sum layout/pa/sg13g2_pa.gds` — the same
+  value item 2 pins — because that is what the envelope's
+  `provenance.input.content_hash` names and what `input_verified` re-hashes.
+  Generated, never hand-edited. See "T1 item 3 (DRC)" below for the claim and
+  the coverage disclosure that must travel with it.
 - **`../attest/item1.json`**: the item-1 attestation inventory (the xschem
   schematic and `xschemrc`, plus the netlist derived from them with its
   `klt netlist --check` freshness command, `local_only`).
@@ -73,6 +85,29 @@ uvx --from "klayout-tools==0.9.1" klt signoff --attest 2 \
 `--regenerated-hash` is only honest after `generate.sh --check` passed, because
 `--generator` is echoed and never run by `klt`.
 
+Item 3 (the DRC report; there is no attest step — the report *is* the
+envelope). Re-running it needs the PDK (`scripts/setup-env.sh`, then
+`source sim/env.sh` for `PDK_ROOT`); the freshness check does not:
+
+```console
+uvx --from "klayout-tools==0.9.1" klt drc --check layout/reports/drc-klt-0.9.1.json
+```
+
+Exit `0` and `status: match` means the committed report still binds the
+committed GDS and deck. Regenerate it — and the record below — whenever
+either hash moves:
+
+```console
+uvx --from "klayout-tools==0.9.1" klt drc --format json --deck sg13g2 \
+    --top sg13g2_pa --pdk ihp-sg13g2 --pdk-root "$PDK_ROOT" \
+    layout/pa/sg13g2_pa.gds > layout/reports/drc-klt-0.9.1.json
+```
+
+The manifest's `content_hash` for item 3 is
+`sha256sum layout/pa/sg13g2_pa.gds`, not the report's own hash. A re-run that
+is not `clean` is reported as not clean and item 3 goes back to `unmet`; the
+deck is not relaxed and no rule is waived to recover a `met`.
+
 Item 9 (runs every cold start for real, so it needs `scripts/setup-env.sh`
 done, ngspice, a `python3` with numpy on `PATH`, and the batch fleet for the grid
 benches; several minutes, and it appends a record under each bench's `records/`):
@@ -126,12 +161,49 @@ file identical.
 
 ## Current verdict
 
-`tier: null`, 4 of 11 T1 items met (item 1, design sources; item 2, layout
-stream; item 9, testbenches shipped; item 10, repo hygiene); the other seven are
-`unmet` with a `reason` in the record (`no_evidence` for items 3-8 and 11). The record is the source of truth,
+`tier: null`, 5 of 11 T1 items met (item 1, design sources; item 2, layout
+stream; item 3, DRC clean; item 9, testbenches shipped; item 10, repo
+hygiene); the other six are `unmet` with a `reason` in the record
+(`no_evidence` for items 4-8 and 11). The record is the source of truth,
 not this paragraph.
 
-## T1 item 3 (DRC): the 28 `cont.width.1` violations were a deck artifact
+## T1 item 3 (DRC clean)
+
+### The claim
+
+`manifests/sg13g2-pa.json` cites
+[`../layout/reports/drc-klt-0.9.1.json`](../layout/reports/drc-klt-0.9.1.json)
+as item 3, and the record renders item 3 **`met`**: `citation.kind: "drc"`,
+`check_status: "clean"`, `exit_status: 0`, `input_verified: true` against
+`sha256:630bfca67b12d51f1d422ecf3221252f480e128e33a39c825e9201c4408135ee`
+(`layout/pa/sg13g2_pa.gds`). `klt drc --check` on the committed report
+reports `status: match`, so the report is fresh against that stream and
+against deck `sg13g2`
+`sha256:1c95db40596afc5412e216009bcf0b775d1d74895b32738447eccbc76336dd15`.
+
+Item 3's gap disclosure is **claimant-enforced, not tool-enforced** — `klt
+signoff` grades the item on `status: "clean"` alone — so the `met` above is
+not by itself evidence that the gaps were disclosed. The disclosure this
+claim rests on is the rest of this section, and specifically:
+
+- The three `coverage` fields the checklist names, quoted verbatim from the
+  cited envelope in "Coverage disclosure" below:
+  `coverage.deck_scope`, `coverage.layers_in_stream_without_rules` (7
+  layers, non-empty) and `coverage.rules_skipped` (47 rules, non-empty).
+- Two further limits that the `coverage` block does **not** surface, set out
+  in "What the `clean` does and does not cover" below: `cont.width.1` and
+  `cont.space.1` are **vacuous** on this stream (zero square contacts, so
+  `layer_selection="squares"` left them nothing to measure, yet they grade
+  `checked`), and the foundry's `CntB.b1` bar-to-bar spacing rule is **not
+  transcribed by this deck** and so was never evaluated on the 28 contact
+  bars — a real foundry rule that the coverage block does not report as a
+  hole, because layer 6/0 does carry other rules.
+
+This is a curated open-source deck's verdict on a simulated flow, not a
+foundry signoff. No rule was waived, no deck was relaxed and the GDS was not
+edited to obtain it.
+
+### The 28 `cont.width.1` violations were a deck artifact
 
 The 28 `cont.width.1` violations previously recorded here were **not real
 violations**. They were an artifact of the curated `klt` 0.7.0 `sg13g2` deck
@@ -263,9 +335,22 @@ Relative to the 0.7.0 run, 0.9.1 also added the `pSD` and `NW` scopes and
 rules for 1/20 and 14/0, which is why those two layers moved out of
 `layers_in_stream_without_rules` and `rules_checked` grew from 12 to 15.
 
-### Item 3's status is not changed here
+### What would take item 3 back to `unmet`
 
-Whether item 3 renders `met` is decided in #38, which owns the item-3 claim
-and its manifest citation. This section records the determination and the
-corrected report only; `manifests/sg13g2-pa.json` is untouched and item 3 is
-still `unmet` / `no_evidence` in the record.
+The citation is pinned to one stream and one deck, so it is not durable by
+itself:
+
+- The GDS changes (`layout/pa/generate.sh` re-run with a different result).
+  `klt drc --check` then reports `drifted`, `input_verified` goes `false`,
+  and the item is `unmet` until the DRC is re-run on the new stream and both
+  the report and the record are regenerated in the same PR.
+- The `klt` pin or the deck moves. A different deck content hash is a
+  different measurement; `pa_drc.pin` in
+  [`../layout/toolchain.json`](../layout/toolchain.json) and the pin in this
+  file and in the workflow must stay identical.
+- The re-run is not `clean`. That is reported as not clean and item 3 goes
+  back to `unmet` with its `reason`; the deck is not relaxed and no rule is
+  waived to recover a `met`.
+
+Item 4 (LVS) is a separate item and is still `unmet` / `no_evidence`;
+nothing here claims an LVS result.

@@ -58,7 +58,9 @@ smoke test stay at 0.7.0 and are a separate concern.
   are bars; there are no square contacts), and the curated deck does not
   transcribe the foundry's `CntB.*` bar-contact family, so bar spacing
   (`CntB.b1`) was not evaluated. Full derivation, citations and the coverage
-  disclosure: `manifests/README.md`, "T1 item 3 (DRC)". Whether item 3
-  renders `met` is decided in #38, not here. The item-2 envelope
+  disclosure: `manifests/README.md`, "T1 item 3 (DRC clean)". That report is
+  now cited as T1 item 3 in `manifests/sg13g2-pa.json` and item 3 renders
+  `met` in the record; the two limits above are part of the claim, not
+  footnotes to it. The item-2 envelope
   (`evidence/item2.json`) only checks that the stream reads, has a non-empty
   top cell and a dbu on grid, and binds the GDS by content hash.
