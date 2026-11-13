@@ -2,7 +2,9 @@
 
 Pure layer (numpy only): ``read_ascii_raw`` parses ngspice's ASCII complex raw
 file; ``s_from_nodes`` turns the two-DUT-copy node voltages of
-``sim/lib/gen_dut_benches.py`` into S11/S21/S12/S22 (reference 50 ohm);
+``sim/lib/gen_dut_benches.py`` into S11/S21/S12/S22, valid only when the source
+and load resistances are equal (``gen_dut_benches._ac_deck`` refuses to build a
+deck otherwise);
 ``stability`` returns Edwards-Sinsky mu, mu', Rollett k, |delta| and the
 negative-resistance check (max |S11|, max |S22|).
 """
@@ -53,7 +55,15 @@ def read_ascii_raw(path):
 
 
 def s_from_nodes(d):
-    """S-parameters (reference 50 ohm both ports, 1 V AC EMF behind 50 ohm)."""
+    """S-parameters, one reference impedance both ports, 1 V AC EMF behind it.
+
+    ASSUMES the source and load resistances are equal: `s21`/`s12` below are the
+    voltage-ratio forms `2 v(out)/vs`, which equal S21/S12 only in that case.
+    With unequal resistances the transducer gain is `4 |Vout|^2 Rs / (|Vs|^2 Rl)`,
+    so `|2 Vout/Vs|^2` is off by `Rs/Rl`. `gen_dut_benches._ac_deck` enforces
+    `RS_OHM == RL_OHM`, so no deck this reads can violate it; teaching per-port
+    reference impedances here is what lifts that restriction.
+    """
     vs1, vs2 = d["v(s1)"], d["v(s2)"]
     return {
         "s11": 2 * d["v(in1)"] / vs1 - 1,

@@ -145,10 +145,26 @@ Rl outl 0 {RL_OHM:g}
 
 
 def _ac_deck(title, extra_header):
+    # The AC decks are only readable as S-parameters through
+    # `sim/lib/sparams.py` `s_from_nodes`, whose 2 v(out)/vs forms are S21/S12
+    # only when the source and load resistances are equal (with unequal ones the
+    # transducer gain |2 Vout/Vs|^2 is off by Rs/Rl). Port 2 is also driven
+    # behind RL_OHM here, so S22 would reference RL_OHM while the record labels
+    # it RS_OHM. Refuse to build the deck rather than emit a silently
+    # mislabelled S21 / transducer gain / S22 reference; whoever diverges the
+    # two constants must teach `s_from_nodes` per-port reference impedances and
+    # drop this guard in the same change.
+    if RS_OHM != RL_OHM:
+        raise ValueError(
+            f"unequal port impedances RS_OHM={RS_OHM:g} ohm, RL_OHM={RL_OHM:g} ohm: "
+            "sparams.s_from_nodes only supports equal port impedances, so the AC "
+            "decks' S21, transducer gain and S22 reference would not be what the "
+            "record labels them. Teach sparams.s_from_nodes per-port reference "
+            "impedances before diverging the two constants.")
     h = _header(title, extra_header + [
         f"Two independent DUT copies so one analysis gives all four S-parameters (reference {RS_OHM:g} ohm):",
-        "  X1: AC source at port 1 (RFIN), 50 ohm load at RFOUT      -> S11 = 2 v(in1)/vs - 1, S21 = 2 v(out1)/vs",
-        "  X2: AC source at port 2 (RFOUT), 50 ohm termination at RFIN -> S22 = 2 v(out2)/vs - 1, S12 = 2 v(in2)/vs",
+        f"  X1: AC source at port 1 (RFIN), {RL_OHM:g} ohm load at RFOUT      -> S11 = 2 v(in1)/vs - 1, S21 = 2 v(out1)/vs",
+        f"  X2: AC source at port 2 (RFOUT), {RS_OHM:g} ohm termination at RFIN -> S22 = 2 v(out2)/vs - 1, S12 = 2 v(in2)/vs",
         f"Quiescent point: DC operating point at Vcc = {VCC_NOM_V} V (the bias is the DUT's own mirror).",
         "Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT).",
     ])
