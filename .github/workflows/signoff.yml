@@ -1,22 +1,27 @@
 name: klt signoff
 
-# Re-render the tier verdict from the committed block manifest
-# (manifests/sg13g2-pa.json) and byte-compare it against the committed
-# verdict of record (manifests/sg13g2-pa.signoff.json). A manifest, vendored
-# checklist or klt-pin change without a regenerated record fails here.
-# Also runs the unit tests and re-attests T1 items 1 and 10 against their
-# committed envelopes:
-#   - item 10 (attest/item10.json -> evidence/item10.json): the envelope hashes
-#     README.md, LICENSE and THIS WORKFLOW FILE byte-for-byte, so editing any of
-#     them without regenerating it fails here.
-#   - item 1 (attest/item1.json -> evidence/item1.json): the envelope hashes the
-#     schematic, xschemrc and the derived netlist, so a design edit -- or an
-#     envelope left behind a klt pin bump -- fails here. Its one PDK-dependent
-#     check (klt netlist --check) is local_only, so --check skips it and
-#     compares hashes only; no xschem or PDK is needed on the runner.
-# Items 2, 3 and 9 are deliberately not re-attested here: item 2 needs the GDS
-# generator, item 3 the DRC deck, item 9 runs the benches.
-# See manifests/README.md.
+# The gate is scripts/check-ci.sh, not this file. It holds the check list and
+# the klt pin once; `npm run check:ci` runs the same script, so the local gate
+# and CI cannot check different things. What each check is, and which T1 items
+# are deliberately not re-attested here, is documented at the top of that
+# script; how to regenerate each envelope and the record is in
+# manifests/README.md.
+#
+# The one thing this file still states for itself is the installed klt
+# version below. It is not a second pin: the script refuses to run unless
+# `klt --version` equals its own KLT_PIN, so a bump that edits only one of
+# the two fails here rather than silently grading the evidence with the
+# wrong release.
+#
+# scripts/check-ci.sh needs a `python3` that has numpy and pytest, because
+# the item-10 inventory's `unit-tests` check runs the host interpreter. The
+# install step below puts klt, numpy and pytest in the same interpreter,
+# which is why the step passes KLT=klt instead of letting the script build a
+# throwaway uvx environment.
+#
+# Editing THIS FILE drifts evidence/item10.json, whose envelope hashes it
+# byte-for-byte; regenerate the envelope and then the signoff record in the
+# same change or the item-10 check below fails.
 
 on:
   push:
@@ -41,33 +46,5 @@ jobs:
       - name: Install pinned klt and the unit-test dependencies
         run: pip install klayout-tools==0.9.1 numpy pytest
 
-      - name: Unit tests (sim/lib, no simulator needed)
-        run: python3 -m pytest -q sim/lib
-
-      - name: Re-attest T1 item 1 against the committed envelope
-        run: klt signoff --attest 1 --inventory attest/item1.json --check evidence/item1.json
-
-      - name: Re-attest T1 item 10 against the committed envelope
-        run: klt signoff --attest 10 --inventory attest/item10.json --check evidence/item10.json
-
-      - name: Re-run klt signoff and compare against the committed record
-        run: |
-          set -uo pipefail
-          rc=0
-          klt signoff --manifest manifests/sg13g2-pa.json \
-                      --tiers-doc manifests/design-evidence-tiers.md \
-                      --format json > "$RUNNER_TEMP/fresh-signoff.json" || rc=$?
-          # 0 = every T1 item met; 3 = grader ran clean, at least one item
-          # unmet. Both are valid runs. Anything else is a hard error.
-          if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
-            echo "::error::klt signoff exited $rc (expected 0 or 3): manifest, vendored tier doc, or cited evidence is broken"
-            exit 1
-          fi
-          if ! cmp -s "$RUNNER_TEMP/fresh-signoff.json" manifests/sg13g2-pa.signoff.json; then
-            echo "::error::Fresh klt signoff output differs from manifests/sg13g2-pa.signoff.json - the committed verdict is stale."
-            echo "Regenerate and commit the record in this same PR (see manifests/README.md)."
-            diff <(python3 -m json.tool "$RUNNER_TEMP/fresh-signoff.json") \
-                 <(python3 -m json.tool manifests/sg13g2-pa.signoff.json) || true
-            exit 1
-          fi
-          echo "Committed signoff record is fresh."
+      - name: Run the gate (scripts/check-ci.sh)
+        run: KLT=klt scripts/check-ci.sh
