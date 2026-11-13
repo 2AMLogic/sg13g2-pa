@@ -54,7 +54,6 @@ REPO_ROOT="$(cd "${SIM_DIR}/.." && pwd)"
 
 # --- Shared runner surface -----------------------------------------------
 SIM_SCRIPT_NAME=""         # set by sim_require_pdk; prefixes every message
-SIM_LOG_REQUIRE_COMPLETE=1 # 0 = do not require a BENCH_COMPLETE line (klt-generated logs have none)
 SIM_PDK_PROVENANCE_JSON="" # set by sim_require_pdk: verified PDK identity + model hashes
 
 sim_require_pdk() {
@@ -141,23 +140,6 @@ sim_require_pdk() {
   SIM_PDK_PROVENANCE_JSON="${__srp_json}"
 }
 
-sim_check_log() {
-  # sim_check_log <point-id> <log> <rc>
-  #
-  # The per-point pass/fail gate: a non-zero ngspice exit, a missing
-  # "BENCH_COMPLETE" marker (unless SIM_LOG_REQUIRE_COMPLETE=0), or any model/convergence error pattern fails
-  # the point (returns 1 and names it on stderr).
-  local point_id="$1" log="$2" rc="$3"
-  local base='Unable to find definition of model|couldn.t be loaded|Unknown model type|no such file|singular matrix|Timestep too small|convergence problem|doAnalyses: .*(failed|error)|Error:'
-  if [[ "${rc}" -ne 0 ]] \
-    || grep -qiE "${base}" "${log}" \
-    || { [[ "${SIM_LOG_REQUIRE_COMPLETE}" == 1 ]] && ! grep -q "^BENCH_COMPLETE" "${log}"; }; then
-    echo "${SIM_SCRIPT_NAME}: FAILED ${point_id} (rc=${rc}) -- see ${log}" >&2
-    return 1
-  fi
-  return 0
-}
-
 sim_begin_record() {
   # sim_begin_record [--suffix S] [--pathspec P]...
   #
@@ -204,9 +186,10 @@ sim_begin_record() {
 sim_gate_logs() {
   # sim_gate_logs [--tolerate-recovered-gmin]
   #
-  # Per-corner log gate over ${OUT}/*/*/ngspice.log (klt-generated logs carry
-  # no BENCH_COMPLETE line): no missing-model / non-convergence error. Sets the
-  # caller's `failed=1` for any log that fails.
+  # Per-corner log gate over ${OUT}/*/*/ngspice.log: a log carrying any
+  # model/convergence error pattern fails its point -- the point is named on
+  # stderr and the caller's `failed=1` is set. This gate reads logs only; the
+  # `klt sim` exit code is gated separately, in sim_run_one.
   #
   # --tolerate-recovered-gmin: a "singular matrix" warning that ngspice's
   # dynamic gmin stepping recovered from (klt grades the corner `pass` with a
@@ -215,12 +198,12 @@ sim_gate_logs() {
   #
   # Needs, from the caller: OUT, SIM_SCRIPT_NAME.
   local tolerate=0 log filtered
+  local patterns='Unable to find definition of model|couldn.t be loaded|Unknown model type|no such file|singular matrix|Timestep too small|convergence problem|doAnalyses: .*(failed|error)|Error:'
   case "${1:-}" in
     "") ;;
     --tolerate-recovered-gmin) tolerate=1 ;;
     *) echo "sim_gate_logs: unknown option '$1'" >&2; exit 2 ;;
   esac
-  SIM_LOG_REQUIRE_COMPLETE=0
   for log in "${OUT}"/*/*/ngspice.log; do
     [[ -f "${log}" ]] || continue
     filtered="${log}"
@@ -228,7 +211,10 @@ sim_gate_logs() {
       filtered="$(mktemp)"
       grep -v '^Warning: singular matrix' "${log}" > "${filtered}" || true
     fi
-    sim_check_log "${log#"${OUT}/"}" "${filtered}" 0 || failed=1
+    if grep -qiE "${patterns}" "${filtered}"; then
+      echo "${SIM_SCRIPT_NAME}: FAILED ${log#"${OUT}/"} -- see ${log}" >&2
+      failed=1
+    fi
     [[ "${filtered}" == "${log}" ]] || rm -f "${filtered}"
   done
 }

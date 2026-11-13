@@ -183,7 +183,9 @@ edit or delete one, rerun instead.
 ## Layout
 
 - `pdk.json`, `toolchain.json` - pins and tool floors.
-- `env.sh` - resolver and shared runner surface (`sim_require_pdk`, `sim_resolve_klt`, `sim_run_one`, `sim_check_log`).
+- `env.sh` - resolver and shared runner surface, in the order a runner calls it
+  (`sim_require_pdk`, `sim_resolve_klt`, `sim_begin_record`, `sim_run_one`,
+  `sim_gate_logs`).
 - `tools/` - `build-osdi.sh`, `pdk_identity.py`.
 - `lib/` - `rf_extract.py`, `device_limits.py` (the npn13G2 breakdown minima, model
   window and Rth model, defined once for every bench that grades against them) and
