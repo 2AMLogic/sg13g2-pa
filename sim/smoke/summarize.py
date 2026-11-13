@@ -13,7 +13,15 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
+# The model-card window lives once, in sim/lib/device_limits.py (provenance marked
+# there); the statement below is formatted from those names, never retyped.
+from device_limits import IC_WIN_PER_NX, VBE_WIN, VCE_WIN  # noqa: E402
 from provenance import commit_line, sha  # noqa: E402
+
+
+# The smoke npn13G2 operating point is a single unit device (npn_op.spice: Nx=1),
+# so the card's per-Nx ic window limit is this device's limit.
+SMOKE_NX = 1
 
 
 def main(argv):
@@ -90,7 +98,9 @@ def main(argv):
         "",
         "- Toolchain smoke test only; no claim about any PA figure of merit.",
         "- HBT: `hbt_typ` corner only. The npn13G2 point (Vbe 0.80 V, Vce 1.0 V, Nx=1) is inside the "
-        "model card's stated validity window (ic < 3 mA, vbe 0.65-0.96 V, vce 0.4-2.0 V); breakdown "
+        # Nx=1 at this point, so the per-Nx ic window limit is the limit for this device.
+        f"model card's stated validity window (ic < {1e3 * IC_WIN_PER_NX * SMOKE_NX:g} mA, "
+        f"vbe {VBE_WIN[0]:.2f}-{VBE_WIN[1]:.2f} V, vce {VCE_WIN[0]:.1f}-{VCE_WIN[1]:.1f} V); breakdown "
         "and VBIC-validity checks for the PA are out of scope here.",
         "- MOS: core (LV) `sg13_lv_nmos` / `sg13_lv_pmos`, minimum size, five corners tt/ff/ss/fs/sf, "
         "VDD 1.2 V, 27 C, fixed 10 fF load.",

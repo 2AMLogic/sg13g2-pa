@@ -32,13 +32,15 @@ def _load(name, relpath):
 LOADLINE = _load("_loadline", "sim/device-npn13g2/loadline.py")
 SUMMARIZE = _load("_summarize", "sim/device-npn13g2/summarize.py")
 PSAT = _load("_psat_record", "sim/psat-sweep/psat_record.py")
+SMOKE = _load("_smoke_summarize", "sim/smoke/summarize.py")
 
 # (module, attribute) pairs that must be the shared object, not a local copy.
 CONSUMERS = [(LOADLINE, n) for n in ("BVCEO_MIN", "BVCBO_MIN", "VCE_WIN", "VBE_WIN",
                                      "IC_WIN_PER_NX", "TJ_MAX", "LIMITS_NOTE", "rth")]
-CONSUMERS += [(SUMMARIZE, n) for n in ("IC_WIN_PER_NX", "TJ_MAX", "rth")]
+CONSUMERS += [(SUMMARIZE, n) for n in ("IC_WIN_PER_NX", "TJ_MAX", "VBE_WIN", "VCE_WIN", "rth")]
 CONSUMERS += [(PSAT, n) for n in ("BVCEO_MIN", "BVCBO_MIN", "VCE_WIN", "VBE_WIN",
                                   "IC_WIN_PER_NX", "TJ_MAX")]
+CONSUMERS += [(SMOKE, n) for n in ("IC_WIN_PER_NX", "VBE_WIN", "VCE_WIN")]
 
 
 @pytest.mark.parametrize("mod,name", CONSUMERS, ids=lambda x: getattr(x, "__name__", x))
@@ -46,6 +48,21 @@ def test_limit_is_the_shared_object(mod, name):
     assert getattr(mod, name) is getattr(dl, name), (
         f"{mod.__name__}.{name} is not sim/lib/device_limits.{name} -- a second copy of a "
         "graded limit has reappeared")
+
+
+def test_smoke_ic_limit_follows_the_bench_array_size():
+    """The smoke record's ic limit is the per-Nx window limit times the bench's Nx.
+
+    `sim/smoke/npn_op.spice` instantiates `npn13G2` with no Nx override, so the
+    device is one unit; the record must not restate `3 mA` independently of that.
+    """
+    assert SMOKE.SMOKE_NX == 1
+    text = open(os.path.join(REPO, "sim/smoke/npn_op.spice")).read()
+    inst = [ln for ln in text.splitlines() if "npn13G2" in ln and not ln.startswith("*")]
+    assert len(inst) == 1, f"expected one npn13G2 instance in npn_op.spice, got {inst}"
+    assert "Nx=" not in inst[0], (
+        f"npn_op.spice now sets Nx explicitly ({inst[0]!r}); SMOKE_NX in "
+        "sim/smoke/summarize.py must follow it")
 
 
 def test_psat_per_device_current_limit_is_derived():
