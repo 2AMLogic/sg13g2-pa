@@ -94,9 +94,8 @@ def main(argv):
         "### Submitting host's preflight inputs (sha256)",
         "",
         "What `sim_require_pdk` hashed on **this** host before submitting. It is not a",
-        "statement about what any bench loaded: a batch worker resolves its own OSDI",
-        "objects from its own install. Each bench under `## Results` names the model",
-        "inputs its own `klt sim` report records.",
+        "statement about what any bench loaded: each bench under `## Results` names the",
+        "model inputs its own `klt sim` report records.",
         "",
     ]
     for f in prov["model_inputs"]:

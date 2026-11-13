@@ -7,8 +7,10 @@ went wrong the first time the toolchain moved underneath them (issue #96):
 - a literal "too old to load the OSDI objects" printed beside whatever local
   ngspice banner the host had, and
 - one client-side hash list, headed "OSDI objects and model inputs", printed for
-  every bench -- including the two that ran on a batch worker which resolved its
-  own OSDI objects and never saw the client's files.
+  every bench as though it described what each had loaded -- which the 0.9.0 run
+  disproves: its two batch benches resolved their own OSDI objects from the
+  runner's install and never saw the client's files, while the 0.7.0 run's were
+  staged with the request.
 
 The regression guarded here is any return to a provenance statement a report does
 not support. The fixtures are the two committed runs themselves, one from each
@@ -159,7 +161,19 @@ def test_client_preflight_list_is_kept_once_and_labelled_as_the_host_s(rendered)
         head = text.split("\n## Results\n", 1)[0]
         assert "### OSDI objects and model inputs (sha256)" not in text
         assert "### Submitting host's preflight inputs (sha256)" in head
-        assert "a batch worker resolves its own OSDI" in head
+        # The heading states only what is always true: whose hashes these are,
+        # and that each bench's own block is the statement about what it
+        # loaded. It must not assert how a runner comes by its OSDI objects --
+        # that is conditional on the klt version and the runner's environment
+        # (the 0.9.0 run gives reason `env_var`), and STAGED_RUN's batch bench
+        # loaded the client's staged objects, so any such sentence is false for
+        # one of these two records and goes stale on the next klt change.
+        para = " ".join(head.split())
+        assert "What `sim_require_pdk` hashed on **this** host before submitting." in para
+        assert ("It is not a statement about what any bench loaded: each bench under "
+                "`## Results` names the model inputs its own `klt sim` report "
+                "records.") in para
+        assert "batch worker" not in para
         # Listed once, ahead of the results, and never again except where a
         # bench's own report puts the same object in its model inputs.
         for h in client_osdi_hashes(rid):
