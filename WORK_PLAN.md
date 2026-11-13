@@ -32,7 +32,10 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-_None._
+- **#90**: Simplify sim/env.sh log gate: fold sim_check_log into sim_gate_logs, drop the unreachable BENCH_COMPLETE and exit-code checks
+- **#92**: Single-source the AC bench facts: ac_record.py retypes the nominal cell, port impedance and band that gen_dut_benches.py declares
+- **#95**: Remove sim_run_one's shell capacity-resubmit loop: klt's batch.capacity_wait_s already waits out the same refusals
+- **#96**: Derive the smoke record's OSDI provenance from the run: summarize.py hard-codes a 'too old' claim and lists client OSDI hashes the fleet did not load
 
 ## PRs Awaiting Review
 
@@ -44,7 +47,8 @@ _None._
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-_None._
+- **#97**: refactor(sim): fold sim_check_log into sim_gate_logs and test the gate
+- **#98**: refactor(sim): format the AC record's bench facts from the deck generator
 
 ## Proposed
 
@@ -53,15 +57,15 @@ Issues carrying `loom:curated`.
 - **#5**: Track the gap to T1 (klayout-tools design-evidence-tiers.md) *(curated)*
 - **#39**: T1 item 4 (LVS clean): klt lvs of the PA against its schematic netlist, every npn13G2 recognised *(curated)*
 - **#42**: T1 item 11 (Power delivery): PA klt erc supply spec plus LVS supply pairing *(curated)*
+- **#96**: Derive the smoke record's OSDI provenance from the run: summarize.py hard-codes a 'too old' claim and lists client OSDI hashes the fleet did not load *(curated)*
 
 ## Proposed (Architect / Hermit)
 
 - **#77**: Remove vendored manifests/design-evidence-tiers.md: stale against the checklist the pinned klt wheel ships *(hermit)*
 - **#85**: Collapse the layout and design klt pins onto 0.9.1: four klt releases are pinned across the repo *(hermit)*
 - **#87**: Simplify the npn13G2 device bench: read currents from the captured sweep, drop 108 probe elements and 216 .meas cards *(hermit)*
-- **#90**: Simplify sim/env.sh log gate: fold sim_check_log into sim_gate_logs, drop the unreachable BENCH_COMPLETE and exit-code checks *(hermit)*
-- **#92**: Single-source the AC bench facts: ac_record.py retypes the nominal cell, port impedance and band that gen_dut_benches.py declares *(hermit)*
 - **#93**: Make loadline.py purely analytic: its simulated-DC input feeds an unread field and a Vbe check that cannot fire *(hermit)*
+- **#100**: Use klt's capture_only and complex_vectors request options: drop the --allow-not-checked exit-4 waiver and the hand-written ASCII rawfile parser *(hermit)*
 
 ## Epics
 
@@ -75,10 +79,10 @@ _None._
 | Very important | 0 |
 | Important | 1 |
 | Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 0 |
+| In Progress (`loom:building`) | 4 |
 | PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 0 |
-| Curated | 3 |
-| Architect / Hermit proposals | 6 |
+| Approved PRs awaiting merge | 2 |
+| Curated | 4 |
+| Architect / Hermit proposals | 5 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
