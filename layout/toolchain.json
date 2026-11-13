@@ -1,10 +1,17 @@
 {
-  "_comment": "Tool pin for layout/ (DRC, LVS). 'pin' is the exact klayout-tools release; layout/smoke/README.md records what it was run against. Same pin as sim/toolchain.json (klt.pin) and the 0.7.0 that the signoff workflow in PR #6 installs; re-check PR #6 if either changes. klt is run through a throwaway uvx environment, never a host install.",
+  "_comment": "Tool pins for layout/. 'klt.pin' is the exact klayout-tools release used for the layout/smoke/ DRC+LVS toolchain smoke test; layout/smoke/README.md records what it was run against. 'pa_drc.pin' is the release used for the PA DRC in layout/reports/ and differs on purpose: 0.7.0's sg13g2 deck lacked the square-contact selection on cont.width.1/cont.space.1 and reported the PDK's npn13G2 bar contacts as violations (see manifests/README.md, 'T1 item 3'). Same pin as layout/pa/generate.sh and the signoff workflow. klt is run through a throwaway uvx environment, never a host install.",
   "klt": {
     "pin": "0.7.0",
     "run_as": "uvx --from klayout-tools==0.7.0 klt",
     "klt_required_commands": ["drc", "lvs"],
     "used_by": "layout/smoke/README.md",
-    "matches": ["sim/toolchain.json klt.pin", "PR #6 signoff workflow (klayout-tools==0.7.0)"]
+    "matches": ["PR #6 signoff workflow (klayout-tools==0.7.0)"]
+  },
+  "pa_drc": {
+    "pin": "0.9.1",
+    "run_as": "uvx --from klayout-tools==0.9.1 klt drc",
+    "used_by": "layout/reports/drc-klt-0.9.1.json",
+    "matches": ["layout/pa/generate.sh KLT_PIN", "package.json check:ci"],
+    "why_not_klt_pin": "klayout-tools 0.8.0 added layer_selection=\"squares\" to the sg13g2 deck's cont.width.1/cont.space.1, mirroring the foundry runset's cont_sq derivation; 0.7.0 measured the PDK's contact bars with the square-contact rule. See manifests/README.md, 'T1 item 3'."
   }
 }
