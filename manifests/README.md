@@ -68,7 +68,28 @@ uvx --from "klayout-tools==0.9.1" klt signoff \
     --attest 1 --inventory attest/item1.json -o evidence/item1.json
 ```
 
-The manifest's `content_hash` for item 1 is `sha256sum attest/item1.json`.
+The manifest's `content_hash` for item 1 is the **input-set digest** the
+envelope records at `provenance.input.content_hash` — a single hash over all
+four input files (`attest/item1.json`, `design/netlist/sg13g2-pa.spice`,
+`design/sg13g2-pa.sch`, `design/xschemrc`), not `sha256sum attest/item1.json`.
+Read it out of the regenerated envelope rather than computing it by hand:
+
+```console
+python3 -I -c 'import json;print(json.load(open("evidence/item1.json"))["provenance"]["input"]["content_hash"])'
+```
+
+Up to `klt` 0.8.0 the envelope hashed the inventory file alone, so the two
+values coincided; 0.9.1 hashes the input set and they no longer do. Pinning
+the inventory hash under 0.9.1 grades item 1 `unmet` / `stale_evidence`, and
+`klt signoff --manifest` then re-hashes each of the four members and reports
+them individually (`member <path>: verified`).
+
+This is specific to item 1, the only inventory here that declares a
+multi-file input set (`sources` plus `derived`). Items 9 and 10 declare a
+single input, so 0.9.1 still records `provenance.input.path` for them and
+their manifest hashes stay `sha256sum attest/item9.json` and
+`sha256sum attest/item10.json` as stated below — do not "correct" those to an
+input-set digest.
 
 Item 2 (the layout stream; regenerate the GDS first, see
 [`../layout/README.md`](../layout/README.md)):
@@ -158,6 +179,15 @@ command with the same pinned `klt` on every push and pull request and
 byte-compares the output against the committed record, so a manifest change
 without a regenerated record fails. Keep the pin in the workflow and in this
 file identical.
+
+The workflow also re-attests items **1** and **10** against their committed
+envelopes (`klt signoff --attest N --inventory attest/itemN.json --check
+evidence/itemN.json`), so an envelope left stale behind a `klt` pin bump or an
+edited input fails there too. Both checks run on a stock runner without the
+PDK: item 1's only PDK-dependent check (`klt netlist --check`) is marked
+`local_only` in the inventory, so `--check` skips it and compares hashes only.
+Items 2, 3 and 9 are not re-attested in CI — item 2 needs the GDS generator,
+item 3 the DRC deck, and item 9 runs the benches.
 
 ## Current verdict
 

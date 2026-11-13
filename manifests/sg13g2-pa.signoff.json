@@ -33,17 +33,48 @@
         "command": null,
         "kind": "generic",
         "check_status": "pass",
-        "content_hash": "sha256:8df48f86d2de653d7866c1216bdb6c638ead9576e6121f710e0bf35763b406b9",
+        "content_hash": "sha256:acbcd09c20624fbe129e724385163066747cd5180fa72eb6aad01ae11ee24299",
         "input_verified": true,
         "exit_status": 0,
         "artifact_binding": {
           "t1_item": 1,
-          "path": {
-            "path": "attest/item1.json",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:8df48f86d2de653d7866c1216bdb6c638ead9576e6121f710e0bf35763b406b9",
+          "path": null,
+          "content_hash": "sha256:acbcd09c20624fbe129e724385163066747cd5180fa72eb6aad01ae11ee24299",
           "input_verified": true,
+          "members": [
+            {
+              "path": {
+                "path": "attest/item1.json",
+                "scope": "repo"
+              },
+              "content_hash": "sha256:8df48f86d2de653d7866c1216bdb6c638ead9576e6121f710e0bf35763b406b9",
+              "status": "verified"
+            },
+            {
+              "path": {
+                "path": "design/netlist/sg13g2-pa.spice",
+                "scope": "repo"
+              },
+              "content_hash": "sha256:b10bc89410f84bd0051a7009fd1648c1d12a46bda2ffebfc54bd0e6e33f056c6",
+              "status": "verified"
+            },
+            {
+              "path": {
+                "path": "design/sg13g2-pa.sch",
+                "scope": "repo"
+              },
+              "content_hash": "sha256:5d29c3e1653d0d18f9bf2b92794e9e28de4822420bad7a78bef31a4ad8c4cc06",
+              "status": "verified"
+            },
+            {
+              "path": {
+                "path": "design/xschemrc",
+                "scope": "repo"
+              },
+              "content_hash": "sha256:dd8333f0379f4d150177b3930c8198217f3ccb7d5d336c4b148b6fa3f9849a5c",
+              "status": "verified"
+            }
+          ],
           "summary": "T1 item 1 (Design sources): 4/4 attestation checks passed (klt signoff --attest)",
           "source": "attest/item1.json",
           "attestation": {

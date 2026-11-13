@@ -57,16 +57,42 @@
     ]
   },
   "provenance": {
-    "klt_version": "0.8.0",
+    "klt_version": "0.9.1",
     "klayout_version": null,
     "pdk": null,
     "deck": null,
     "input": {
-      "path": {
-        "path": "attest/item1.json",
-        "scope": "repo"
-      },
-      "content_hash": "sha256:8df48f86d2de653d7866c1216bdb6c638ead9576e6121f710e0bf35763b406b9"
+      "paths": [
+        {
+          "path": {
+            "path": "attest/item1.json",
+            "scope": "repo"
+          },
+          "content_hash": "sha256:8df48f86d2de653d7866c1216bdb6c638ead9576e6121f710e0bf35763b406b9"
+        },
+        {
+          "path": {
+            "path": "design/netlist/sg13g2-pa.spice",
+            "scope": "repo"
+          },
+          "content_hash": "sha256:b10bc89410f84bd0051a7009fd1648c1d12a46bda2ffebfc54bd0e6e33f056c6"
+        },
+        {
+          "path": {
+            "path": "design/sg13g2-pa.sch",
+            "scope": "repo"
+          },
+          "content_hash": "sha256:5d29c3e1653d0d18f9bf2b92794e9e28de4822420bad7a78bef31a4ad8c4cc06"
+        },
+        {
+          "path": {
+            "path": "design/xschemrc",
+            "scope": "repo"
+          },
+          "content_hash": "sha256:dd8333f0379f4d150177b3930c8198217f3ccb7d5d336c4b148b6fa3f9849a5c"
+        }
+      ],
+      "content_hash": "sha256:acbcd09c20624fbe129e724385163066747cd5180fa72eb6aad01ae11ee24299"
     }
   }
 }
