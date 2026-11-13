@@ -248,7 +248,7 @@ sim_resolve_klt() {
 }
 
 sim_run_one() {
-  # sim_run_one <name> [extra klt args]
+  # sim_run_one <name> [--allow-not-checked] [extra klt args]
   #
   # Runs `klt sim` on <name>.request.json (in the caller's SCRIPT_DIR) into
   # ${OUT}/<name>, with the report and stderr beside it. A batch submit refused
@@ -257,16 +257,31 @@ sim_run_one() {
   # refusal that outlasts the attempts, is reported and sets the caller's
   # `failed=1`; nothing is ever retried locally.
   #
+  # --allow-not-checked: treat klt exit 4 (`not_checked`) as a successful run.
+  # A waveform-only request declares no `measurements`, so klt grades it
+  # `not_checked` and exits 4 even when every corner passed -- the bench's
+  # numbers are computed from the waveform afterwards, and the per-corner
+  # status is what gates (sim_gate_logs and the bench's record script). Opt-in,
+  # so a bench whose request DOES declare measurements still fails on exit 4
+  # rather than silently recording an unchecked run. Must precede the klt args.
+  #
   # Needs, from the caller: SCRIPT_DIR, OUT, KLT_CMD (sim_resolve_klt), SIM_SCRIPT_NAME.
-  local name="$1" attempt rc
+  local name="$1" attempt rc allow_not_checked=0
   shift
+  while [[ "${1:-}" == "--allow-not-checked" ]]; do
+    allow_not_checked=1
+    shift
+  done
   for attempt in 1 2 3 4; do
     echo "${SIM_SCRIPT_NAME}: klt sim ${name} $* (attempt ${attempt})"
     rc=0
     ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --format json -o "${OUT}/${name}" "$@" \
         "${name}.request.json" > "${OUT}/${name}.report.json" 2> "${OUT}/${name}.stderr" ) || rc=$?
     (( rc == 0 )) && return 0
-    if grep -q 'BATCH_MAX_CONCURRENT_INSTANCES\|batch_no_capacity\|batch_concurrency_cap' \
+    (( allow_not_checked && rc == 4 )) && return 0
+    # The union of every fleet capacity-refusal string the benches have seen;
+    # one list, because a refusal must be resubmitted identically for all of them.
+    if grep -q 'BATCH_MAX_CONCURRENT_INSTANCES\|BATCH_MAX_VCPU\|vCPU already running\|batch_no_capacity\|batch_concurrency_cap' \
          "${OUT}/${name}.report.json" "${OUT}/${name}.stderr" 2>/dev/null && (( attempt < 4 )); then
       echo "${SIM_SCRIPT_NAME}: ${name}: fleet at capacity; resubmitting to batch in 60 s" >&2
       sleep 60

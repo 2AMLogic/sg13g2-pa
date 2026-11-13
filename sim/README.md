@@ -141,9 +141,12 @@ terminations (the default is an ideal 50 ohm at 2 f0 and 3 f0, labelled as
 such), window length and whether the passives are ideal in its own record;
 power or PAE under different terminations are not compared.
 
-A waveform-only request declares no measurements, so `klt sim` exits 4
-(`not_checked`) with every corner `pass`; gate on the report's corner status,
-as `known-answer/run.sh` does.
+A waveform-only request declares no measurements, so `klt sim` grades the run
+`not_checked` and exits 4 even with every corner `pass`. Such a bench runs
+through `sim_run_one ... --allow-not-checked` (`env.sh`), which accepts exit 4
+as a successful run; the flag is opt-in, so a bench whose request does declare
+measurements still fails on 4. Either way, gate on the report's corner status,
+as the record scripts and `known-answer/run.sh` do.
 
 ### Known-answer check (`known-answer/`)
 
