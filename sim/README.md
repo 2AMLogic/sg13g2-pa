@@ -70,6 +70,7 @@ cold. Cold start, after `scripts/setup-env.sh` and with `python3` + `numpy` avai
 | Spec rows | Bench | Cold-start command | Where it runs |
 |---|---|---|---|
 | Psat, P1dB, peak PAE, large-signal S11, device stress (peak `V_CE`/`V_CB`/`V_BE`/`I_C`/T_j per device, window labelling), harmonics and back-off PAE reported | `psat-sweep/` | `sim/psat-sweep/run_psat_sweep.sh` | one `klt sim` request, 72 drive points: the batch fleet; a submit refused for capacity is waited out by `klt` (`batch.capacity_wait_s` 600 in the request), never run locally |
+| The same rows, **through an ideal off-chip output match** (study variant, see "The off-chip output match" below) | `psat-sweep/` (`--match`) | `sim/psat-sweep/run_psat_sweep.sh --match` | one `klt sim` request, 87 drive points, `remote.hosts` 8: the batch fleet, same capacity wait |
 | Power gain, small-signal S11 (S22, S12) over the band | `ac-gain/` | `sim/ac-gain/run_ac_gain.sh` | single unit, `--backend local` |
 | Small-signal stability: mu, mu', k, abs(delta), negative-resistance check, 10 MHz-30 GHz at 50 pts/decade | `ac-stability/` | `sim/ac-stability/run_ac_stability.sh` | single unit, `--backend local` |
 
@@ -85,7 +86,60 @@ deleted after the record is written. `lib/sparams.py` and `lib/ac_record.py` do 
 S-parameter and stability reduction (tests: `python3 -m pytest sim/lib`).
 
 The item-9 inventory of every bench and its cold start is `../attest/item9.json`
-(envelope `../evidence/item9.json`, see `../manifests/README.md`).
+(envelope `../evidence/item9.json`, see `../manifests/README.md`). **The matched psat
+deck (`psat_sweep_match.{spice,request.json}`) is a study variant of the psat bench and
+is deliberately outside that inventory**, which covers "every committed bench": folding
+it in means re-running every bench to re-attest item 9, which would move
+`manifests/sg13g2-pa.signoff.json`. It is to be added when item 9 is next re-attested
+for its own reasons, not before.
+
+### The off-chip output match (`run_psat_sweep.sh --match`)
+
+The default psat deck drives a **bare 50 ohm** from `RFOUT`, so nothing transforms the
+load and the output array is not loaded the way the load-line study
+(`device-npn13g2/records/`, DR 0003) sized it. `--match` runs the same sweep through an
+**ideal, lossless off-chip L-section**, so the collector sees that study's load-line
+resistance. It evidences the spec's **Fallback** Output-port cell -- "50 ohm, **off-chip**
+output match (stated boundary)" -- and only its boundary convention; the **Target**
+(on-chip match) row stays unevidenced while DR 0001 D-1, the inductor-model source, is
+deferred. No inductor model is used or needed.
+
+**The chip boundary is `RFOUT`** (`design/README.md`), and the two sides are:
+
+| Side | Elements |
+|---|---|
+| **On chip** | the DUT: its output array and `Lchoke`, `Cblock`, `Cin` |
+| **Off chip** | `Vbsense` (a 0 V boundary sense), `Lmatch`, `Cmatch`, `Vlsense`, the 50 ohm load -- all **ideal and lossless**: no Q, no self-resonance |
+
+By that same spec row, a real off-chip network's loss is **not counted as the chip's**,
+which is why none is modelled. The record says all of this, and makes no pass claim.
+
+Element values are **derived in `lib/gen_dut_benches.py` (`match_network`), never
+tuned**: the resistance is the load-line record's own array-independent
+`vswing_v / iq_per_nx_a` over the array the DUT netlist actually has (via
+`output_array()`), and the L-section is the closed form for it with the DUT's on-chip
+`Cblock` -- a third of that resistance in reactance at f0 -- absorbed into the series
+branch, so the **collector**, not `RFOUT`, sees a real load line. The study's own
+`nx_needed.load_ohm_ideal` is **not** used: it belongs to the larger array the study
+*recommends*, not the one benched.
+
+Two things about the matched bench are easy to get wrong silently, so both are declared
+in `psat_bench(variant)` and read from there by `psat_record.py` rather than assumed:
+
+- **The harmonic terminations stop being the labelled ideal-50-ohm default** -- the
+  network sets them, and the collector sees nothing like 50 ohm at 2 f0 / 3 f0. The
+  record states both impedances (at `RFOUT` and at `COLL`) and, per
+  `../spec/target-spec.md` ("Harmonic terminations"), does **not** compare its P_out or
+  PAE with the bare-50-ohm record's.
+- **Both extraction nodes move.** `P_out` and the harmonics come from the 50 ohm
+  resistor's own V and I; per-device `I_C` comes from the boundary sense at `RFOUT`
+  (`Cblock`'s current, which is what closes KCL at `COLL`) and **not** from the load
+  branch, which `Cmatch` now shunts part of. Neither mistake raises anything --
+  `lib/test_psat_record.py` is what catches them.
+
+Its record is suffixed `-match` (`sim_begin_record --suffix`, as
+`known-answer/run.sh --wrong-load` does), so it cannot be confused with or overwrite a
+bare-deck record.
 
 ## Running grids
 
@@ -222,6 +276,8 @@ edit or delete one, rerun instead.
   `corners/<id>/` artifacts, `records/<id>.md`). Not a design result.
 - `psat-sweep/`, `ac-gain/`, `ac-stability/` - the DUT benches above (decks and requests
   generated by `lib/gen_dut_benches.py`, `run_*.sh`, `records/`, `corners/<id>/`).
+  `psat-sweep/` carries two generated decks: `psat_sweep` (bare 50 ohm, the default) and
+  `psat_sweep_match` (through the ideal off-chip match, `--match`).
   `run_ac_gain.sh` and `run_ac_stability.sh` are wrappers over `env.sh`'s
   `sim_run_ac_bench`, so a gate change reaches both at once; `run_psat_sweep.sh`
   keeps its own body (batch backend, `psat_record.py`, waveform cleanup).
