@@ -113,6 +113,20 @@ PSAT_MATCH_TIMEOUT_S = 300
 # This is a measured bound, not a fitted one: `reduce_sweep`'s `psat_at_sweep_end` still
 # judges every run, and a record that reaches its sweep end is extended and rerun.
 PSAT_MATCH_TOP_DBM = 10.0
+# Top of the matched grid's COARSE (0.8 dB) tail. Above it every point is on the 0.4 dB
+# fine step. The coarse tail exists only to establish the reference gain cheaply, in the
+# flat region; everything that might be compressing is fine-stepped, because
+# `reduce_sweep` requires <= 0.5 dB of *measured* P_in across the 1 dB compression
+# bracket and that bracket's position is a property of the run, not of the grid.
+#
+# The bare deck can afford a coarse tail up to -16.8 dBm: it compresses 1 dB at
+# P_in -16.6 dBm. The matched deck compresses far earlier in available drive -- the
+# second matched run (`records/20261114-033006-28e69b9-match.*`, committed) measured the
+# 1 dB point between Pavail -25.6 and -24.8 dBm, and was refused
+# `SWEEP_STEP_TOO_COARSE` (0.912 dB across the bracket) for exactly that reason. Hence a
+# coarse tail that stops at -28.0 dBm, which leaves the whole compressing range -- the
+# bracket with ~3 dB to spare below it -- on the fine step.
+PSAT_MATCH_COARSE_TOP_DBM = -28.0
 
 
 def drive_grid_dbm():
@@ -127,40 +141,41 @@ def drive_grid_dbm():
 
 
 def drive_grid_match_dbm():
-    """``drive_grid_dbm()`` EXTENDED at the top, to ``PSAT_MATCH_TOP_DBM``.
+    """Available drive power, dBm, ascending, for the matched deck.
 
-    The matched deck drops the collector load from ``RL_OHM`` to the load-line
-    resistance, which costs ``match_network()["gain_drop_db"]`` (~14.2 dB) of power
-    gain, so saturation sits that much further up in drive and the bare grid's top
-    (+2.0 dBm) does not reach it. The **top** therefore has to move.
+    Same start, same two step sizes and the same step limits as ``drive_grid_dbm()``,
+    but the coarse/fine boundary and the top are the matched load's own. Both were
+    settled by real runs rather than argued from the bare grid, because translating or
+    reusing the bare grid does not work and the two failures are instructive:
 
-    The **bottom** must not. Translating the whole grid up by the gain drop is the
-    obvious thing and it does not work: it carries the three lowest points into
-    compression, and ``reduce_sweep`` takes its reference gain from exactly those
-    (``LINEAR_REGION_NOT_FOUND`` when they disagree by more than 0.1 dB). The first
-    matched run was a +14 dB translation and was refused for precisely that --
-    0.391 dB of spread at a grid starting from -22.0 dBm, where this deck is already
-    compressing. So the linear region stays where the bare grid already proved it is,
-    and only the top is extended.
+    * **The bottom must not move.** A grid shifted up by the ~14.2 dB of gain the load
+      drop costs starts at -22.0 dBm, where this deck is already compressing, so the
+      three lowest-drive points ``reduce_sweep`` takes its reference gain from disagree
+      (0.391 dB against a 0.1 dB limit) and the whole reduction is refused
+      ``LINEAR_REGION_NOT_FOUND``. First matched run, ``…-651c0cf-match``.
+    * **The coarse tail must stop early.** With the bare grid's boundary (-16.8 dBm) the
+      1 dB compression point lands inside the 0.8 dB region: measured P_in steps 0.912 dB
+      across the bracket against a 0.5 dB limit, refused ``SWEEP_STEP_TOO_COARSE``.
+      Second matched run, ``…-28e69b9-match``.
 
-    Step sizes are the bare grid's, and so are the limits they respect: 0.8 dB in the
-    linear region (``reduce_sweep``'s limit is 1 dB of *measured* P_in up to Psat) and
-    0.4 dB from -16.4 dBm up through compression and saturation (limit 0.5 dB across
-    the 1 dB point). The extension continues the 0.4 dB step, so the whole compressing
-    and saturating half of the sweep is on the finer one.
+    So: 0.8 dB up to ``PSAT_MATCH_COARSE_TOP_DBM`` (the linear reference tail only), then
+    0.4 dB the whole way to ``PSAT_MATCH_TOP_DBM``, which puts the entire compressing and
+    saturating range on the fine step and the P1dB bracket well inside it. The measured
+    P_in step tracks the available step at up to ~1.15x here (the input match improves as
+    the device compresses), so 0.4 dB of available drive stays under the 0.5 dB limit.
     """
-    pts = list(drive_grid_dbm())
-    step = 0.4
-    top = pts[-1]
-    n = int(round((PSAT_MATCH_TOP_DBM - top) / step))
-    if n < 1:
+    lo, coarse_top, top, coarse, fine = -36.0, PSAT_MATCH_COARSE_TOP_DBM, PSAT_MATCH_TOP_DBM, 0.8, 0.4
+    if not lo < coarse_top < top:
         raise ValueError(
-            f"PSAT_MATCH_TOP_DBM ({PSAT_MATCH_TOP_DBM:g} dBm) is not above the bare "
-            f"grid's top ({top:g} dBm): the matched sweep would not reach saturation, "
-            "which is the whole reason it extends the grid")
-    pts += [round(top + step * (k + 1), 1) for k in range(n)]
+            f"the matched grid needs {lo:g} < PSAT_MATCH_COARSE_TOP_DBM "
+            f"({coarse_top:g}) < PSAT_MATCH_TOP_DBM ({top:g}): a coarse tail that does "
+            "not end leaves the P1dB bracket on the 0.8 dB step, and a top below it "
+            "never reaches saturation")
+    n_coarse = int(round((coarse_top - lo) / coarse)) + 1
+    pts = [round(lo + coarse * k, 1) for k in range(n_coarse)]
+    n_fine = int(round((top - coarse_top) / fine))
+    pts += [round(coarse_top + fine * (k + 1), 1) for k in range(n_fine)]
     return pts
-
 
 def batch_hosts(unit_count, per_unit_timeout_s):
     """The smallest ``remote.hosts`` whose largest shard stays inside the fleet ceiling.

@@ -320,43 +320,68 @@ def test_outputs_carries_both_psat_variants():
 # --- The matched drive grid and its batch sharding ---
 
 
-def test_the_matched_grid_extends_the_bare_grid_and_does_not_shift_it():
-    """The bare grid is a PREFIX of the matched one -- bottom fixed, top extended.
+def test_the_matched_grid_starts_where_the_bare_one_does():
+    """The bottom must not move: the linear reference gain is measured there.
 
-    The regression this pins is the first matched run's actual failure: a grid
-    translated up by the ~14 dB of gain the load drop costs starts at -22.0 dBm, where
-    this deck is already compressing, and `reduce_sweep` refuses the whole reduction
-    with `LINEAR_REGION_NOT_FOUND` because its three reference points disagree by
-    0.391 dB. Keeping the bare grid's low end keeps the reference gain measurable.
+    Pins the first matched run's failure -- a grid translated up by the ~14 dB of gain
+    the load drop costs starts at -22.0 dBm, where this deck already compresses, and
+    `reduce_sweep` refuses the reduction (`LINEAR_REGION_NOT_FOUND`, 0.391 dB of spread
+    against a 0.1 dB limit) because its three reference points are no longer linear.
     """
     bare, match = gdb.drive_grid_dbm(), gdb.drive_grid_match_dbm()
-    assert match[:len(bare)] == bare, "the matched grid must not move the bare points"
     assert match[0] == bare[0] == -36.0
+    assert match[:3] == bare[:3]          # the three reference points are the bare ones
+
+
+def test_the_matched_grid_reaches_above_the_bare_grids_top():
+    """Saturation sits ~14 dB further up in drive, so the top has to move."""
+    bare, match = gdb.drive_grid_dbm(), gdb.drive_grid_match_dbm()
     assert match[-1] == pytest.approx(gdb.PSAT_MATCH_TOP_DBM, abs=1e-9)
     assert match[-1] > bare[-1]
-    # The extension is the bare grid's fine step, continued.
-    assert len(match) == len(bare) + int(round((gdb.PSAT_MATCH_TOP_DBM - bare[-1]) / 0.4))
+    # the gain drop is what makes that necessary, and it is derived, not assumed
+    assert gdb.match_network()["gain_drop_db"] < -10.0
 
 
-def test_the_matched_grid_top_is_above_the_bare_grids_or_refused():
-    """A top that does not extend the grid defeats the bench's whole purpose."""
-    import unittest.mock as _mock
-    with _mock.patch.object(gdb, "PSAT_MATCH_TOP_DBM", gdb.drive_grid_dbm()[-1]):
-        with pytest.raises(ValueError, match="would not reach saturation"):
-            gdb.drive_grid_match_dbm()
+def test_the_matched_grid_fine_steps_the_whole_compressing_range():
+    """AC 9's real constraint, and the second matched run's failure.
+
+    With the bare grid's coarse/fine boundary (-16.8 dBm) the 1 dB compression point
+    landed inside the 0.8 dB region: 0.912 dB of measured P_in across the bracket
+    against a 0.5 dB limit, refused `SWEEP_STEP_TOO_COARSE`. Everything that might be
+    compressing has to be on the 0.4 dB step, with the measured bracket (-25.6 ..
+    -24.8 dBm available) well inside it.
+    """
+    grid = gdb.drive_grid_match_dbm()
+    steps = [round(b - a, 6) for a, b in zip(grid, grid[1:])]
+    boundary = gdb.PSAT_MATCH_COARSE_TOP_DBM
+    assert boundary == -28.0
+    # coarse only in the reference tail, fine everywhere above it
+    assert {s for g, s in zip(grid, steps) if g < boundary} == {0.8}
+    assert {s for g, s in zip(grid, steps) if g >= boundary} == {0.4}
+    # the measured 1 dB bracket is on the fine step, with margin below it
+    assert boundary < -25.6 - 2.0
+    # a 0.4 dB available step stays under the 0.5 dB P_in limit at the ~1.15x observed
+    assert 0.4 * 1.15 < 0.5
 
 
 def test_the_matched_grid_keeps_the_specs_step_limits():
     """<= 1 dB to saturation, <= 0.5 dB through compression (spec: Psat, P1dB rows)."""
     grid = gdb.drive_grid_match_dbm()
     assert grid == sorted(grid)
+    assert len(grid) == len(set(grid)), "a repeated drive point would be a wasted unit"
     steps = [round(b - a, 6) for a, b in zip(grid, grid[1:])]
     assert max(steps) <= 1.0                      # never coarser than the Psat limit
     assert set(steps) <= {0.4, 0.8}               # the bare grid's two steps, unchanged
-    # Everything from -16.4 dBm up -- the whole compressing and saturating half, where
-    # P1dB and Psat land -- is on the 0.4 dB step.
-    fine = [s for g, s in zip(grid, steps) if g >= -16.4]
-    assert set(fine) == {0.4}
+
+
+@pytest.mark.parametrize("coarse_top,top", [(-28.0, -28.0), (-40.0, 10.0), (-28.0, -30.0)])
+def test_the_matched_grid_refuses_a_degenerate_range(coarse_top, top):
+    """A tail that never ends, or a top that does not extend, defeats the bench."""
+    import unittest.mock as _mock
+    with _mock.patch.object(gdb, "PSAT_MATCH_COARSE_TOP_DBM", coarse_top), \
+            _mock.patch.object(gdb, "PSAT_MATCH_TOP_DBM", top):
+        with pytest.raises(ValueError, match="the matched grid needs"):
+            gdb.drive_grid_match_dbm()
 
 
 def test_batch_hosts_keeps_every_shard_inside_the_fleet_ceiling():
