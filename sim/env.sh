@@ -140,6 +140,26 @@ sim_require_pdk() {
   SIM_PDK_PROVENANCE_JSON="${__srp_json}"
 }
 
+sim_require_numpy() {
+  # sim_require_numpy
+  #
+  # The numpy preflight shared by every bench whose record is computed from the
+  # waveform. Prints "<script-name>: PREFLIGHT: python3 numpy missing." on
+  # stderr and exits 3 -- the same named-error-and-exit-3 shape sim_require_pdk
+  # uses, and the same message the runners printed when each spelled it out.
+  #
+  # Needs, from the caller: SIM_SCRIPT_NAME (sim_require_pdk sets it; a runner
+  # that does not call sim_require_pdk must set it first).
+  #
+  # sim/known-answer/run.sh deliberately does NOT use this: it runs its numpy
+  # preflight before it sources this file, so a missing numpy is reported
+  # without first resolving klt through uvx.
+  python3 -I -c 'import numpy' 2>/dev/null || {
+    echo "${SIM_SCRIPT_NAME}: PREFLIGHT: python3 numpy missing." >&2
+    exit 3
+  }
+}
+
 sim_begin_record() {
   # sim_begin_record [--suffix S] [--pathspec P]...
   #
@@ -183,6 +203,8 @@ sim_begin_record() {
   fi
 }
 
+# shellcheck disable=SC2120  # the option below is passed by a caller in
+# another file (sim/device-npn13g2/run_device.sh), which shellcheck cannot see.
 sim_gate_logs() {
   # sim_gate_logs [--tolerate-recovered-gmin]
   #
@@ -268,4 +290,57 @@ sim_run_one() {
   echo "${SIM_SCRIPT_NAME}: ${name}: klt sim exited ${rc} (see ${OUT}/${name}.stderr); no local fallback is attempted." >&2
   # shellcheck disable=SC2034  # read by the sourcing runner
   failed=1
+}
+
+sim_run_ac_bench() {
+  # sim_run_ac_bench <kind>
+  #
+  # The whole body of the two AC bench runners, which differ only in the bench
+  # name: <kind> is `gain` or `stability`, the klt request is
+  # ac_<kind>.request.json and the bench directory is sim/ac-<kind>/. Holds the
+  # deck-staleness gate, the record prelude, the single local `klt sim` submit,
+  # both gates and the ac_record.py render, so a change to any of them reaches
+  # both benches at once -- a gate applied to one runner and missed on the other
+  # would record one bench's append-only evidence through a weaker gate.
+  #
+  # sim/psat-sweep/run_psat_sweep.sh is deliberately NOT a caller: it submits to
+  # the batch backend, renders through its own psat_record.py with a JSON
+  # side-output, and deletes its waveforms afterwards.
+  #
+  # Exits 1 if the run, either gate or the record render failed; 2 on a bad
+  # <kind>; 4 on a record-id collision (sim_begin_record).
+  #
+  # Needs, from the caller: SCRIPT_DIR (the bench directory -- records and
+  # corners land under it), SIM_SCRIPT_NAME and NGSPICE_VERSION
+  # (sim_require_pdk). Calls sim_resolve_klt itself.
+  local kind="${1:-}"
+  case "${kind}" in
+    gain|stability) ;;
+    "") echo "sim_run_ac_bench: <kind> (gain or stability) is required" >&2; exit 2 ;;
+    *) echo "sim_run_ac_bench: unknown kind '${kind}' (want gain or stability)" >&2; exit 2 ;;
+  esac
+  local bench="ac_${kind}" dir="ac-${kind}"
+
+  sim_resolve_klt
+
+  # The committed deck must match the DUT netlist (fails loudly on a stale copy).
+  python3 -I "${SIM_DIR}/lib/gen_dut_benches.py" --check
+
+  # Earlier records/corners of this bench are evidence, not inputs: ignore them.
+  sim_begin_record --pathspec sim --pathspec design \
+    --pathspec ":!sim/${dir}/records" --pathspec ":!sim/${dir}/corners"
+  local failed=0
+  # A single unit, so --backend local. --allow-not-checked: a waveform-only
+  # request declares no measurements, so klt exits 4 (not_checked); the corner
+  # status gates. sim_run_one sets failed=1 rather than exiting, so the gate
+  # below is what stops the record.
+  sim_run_one "${bench}" --allow-not-checked --backend local
+  # shellcheck disable=SC2119  # no --tolerate-recovered-gmin: an AC corner that
+  # needed gmin stepping is not evidence these benches record.
+  sim_gate_logs
+  (( failed == 0 )) || exit 1
+  local rec="${RECORDS_DIR}/${RECORD_ID}.md"
+  python3 -I "${SIM_DIR}/lib/ac_record.py" "${kind}" "${RECORD_ID}" "${REPO_GIT_SHA}" "${DIRTY}" \
+    "${KLT_VERSION}" "${NGSPICE_VERSION}" "${OUT}/${bench}.report.json" > "${rec}" || exit 1
+  echo "${SIM_SCRIPT_NAME}: record ${rec}"
 }

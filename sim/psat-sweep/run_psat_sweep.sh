@@ -19,14 +19,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../env.sh
 source "${SCRIPT_DIR}/../env.sh"
 sim_require_pdk run_psat_sweep.sh
-python3 -I -c 'import numpy' 2>/dev/null || { echo "run_psat_sweep.sh: PREFLIGHT: python3 numpy missing." >&2; exit 3; }
+sim_require_numpy
 sim_resolve_klt
 
 # The deck must match the DUT netlist. (The extractor's known-answer record,
 # sim/known-answer/records/, is the gate before any DUT record and is not re-run here.)
 python3 -I "${SCRIPT_DIR}/../lib/gen_dut_benches.py" --check
 
-SIM_SCRIPT_NAME=run_psat_sweep.sh
 sim_begin_record --pathspec sim --pathspec design --pathspec ':!sim/psat-sweep/records' --pathspec ':!sim/psat-sweep/corners'
 failed=0
 # --allow-not-checked: a waveform-only request declares no measurements, so klt
