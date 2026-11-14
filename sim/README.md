@@ -272,6 +272,35 @@ as the demonstration. A 51 ohm load is not a usable control: it moves the
 power by only 0.0004 dB, inside the tolerance. Records are evidence: never
 edit or delete one, rerun instead.
 
+### Known-answer check (thermal) (`known-answer-thermal/`)
+
+`known-answer-thermal/run.sh` is the thermal-node check DR 0001 Q4 deferred
+(D-2): does ngspice solve the `npn13G2` VBIC self-heating node the way the
+card intends? Cold start, after `scripts/setup-env.sh`:
+
+```sh
+sim/known-answer-thermal/run.sh        # the check; exit 0 = verified
+sim/known-answer-thermal/run.sh --neg  # selft=0 control; exit 1 by contract
+```
+
+The deck instantiates the 5-terminal `npn13G2_5t`, holds idle devices at known
+injected power (2 Nx x 2 powers), runs one biased case whose node is driven by
+the device's own dissipation, and one 4-terminal `npn13G2` at the same bias
+whose internal node is probed hierarchically as `v(x<inst>.t)` -- the node
+`psat-sweep/psat_record.py` reads. Expected values come from
+`lib/device_limits.rth()` (the card's expression, never retyped); the request
+declares graded `measurements`, so `klt` itself gates every value (0.01 %
+relative on the injections, 0.1 % on the biased case, 1 uV on the comparison).
+Each subckt ends with `Rt t 0 R = 1e9`, so every reading sits low by
+`-rth/1e9` relative; the tolerances absorb that systematic on purpose. The
+injection decks' benign NaN temperature-limiter note and recovered gmin
+stepping match no `sim_gate_logs` error pattern, so the gate runs with no
+flags. One corner (`hbt_typ`, 27 C) is the whole PVT information the check can
+carry: the card's `rth` has no process or temperature coefficient. Records
+(`records/<timestamp>-<sha>[-neg].md`) are append-only, and the verdict is
+scoped to the DC `rth` network and the device-to-node power path -- not `cth`
+or a thermal time constant (an `op` solve cannot time-resolve them).
+
 ## Layout
 
 - `pdk.json`, `toolchain.json` - pins and tool floors.
@@ -288,6 +317,10 @@ edit or delete one, rerun instead.
   `records/<id>.md`, `corners/<id>/` (klt reports, plus the deck and ngspice log
   per `<case>/<corner>/`, which is what `sim_gate_logs` reads; the raw traces are
   deleted once the record is written).
+- `known-answer-thermal/` - the npn13G2 VBIC self-heating node's known-answer
+  check (DR 0001 D-2): `gen_bench.py` (decks and graded requests from
+  `lib/device_limits.rth()`), `run.sh` (`--neg` is the selft=0 control, expected
+  to exit 1), `thermal_record.py`, `records/`, `corners/`.
 - `smoke/` - toolchain smoke test (decks, `klt sim` requests, `run_smoke.sh`,
   `corners/<id>/` artifacts, `records/<id>.md`). Not a design result.
 - `psat-sweep/`, `ac-gain/`, `ac-stability/` - the DUT benches above (decks and requests

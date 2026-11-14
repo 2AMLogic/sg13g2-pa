@@ -227,13 +227,17 @@ def test_the_matched_record_derives_ropt_and_cites_the_load_line_row(tmp_path):
     assert doc["bench"] == "psat_sweep_match"
 
 
-def test_the_matched_record_labels_tj_as_unchecked(tmp_path):
-    """AC 13: the self-heating node has no known-answer check (issue #115)."""
+def test_the_matched_record_states_the_tj_check_and_its_scope(tmp_path):
+    """AC: the self-heating node is known-answer checked (issue #115), scope stated."""
     md, _doc = _render(str(tmp_path), "match")
     assert "#115" in md
-    assert "has no \"known-answer\" check" in md or "no known-answer check yet" in md
-    assert "Tj max C" in md       # the column it qualifies is still there
-    assert "rest on the model card as supplied" in md
+    assert "known-answer checked" in md
+    assert "`sim/known-answer-thermal/`" in md
+    assert "20261114-205927-00b692a" in md   # the record that licensed the wording
+    assert "v(x<inst>.t)" in md              # the node this record actually reads
+    assert "Tj max C" in md                  # the column it qualifies is still there
+    assert "**not** `cth`" in md             # the verdict's scope
+    assert "as checked within that scope" in md
 
 
 # --- the Conditions bullet must stay readable when the run is sharded ---------

@@ -11,12 +11,13 @@ gen_bench.py derives from sim/lib/device_limits.rth(), and prints the
 append-only Markdown record on stdout. The solver-diagnostics section is read
 from the run's own ngspice log (the report's log artifact), not asserted.
 
-Exit 0 if the check passed (mode `normal`: corner pass and every graded value
-inside tolerance; mode `neg` never exits 0 -- the control is expected to fail,
-and exits 1 with its record kept, as `known-answer/run.sh --wrong-load` does).
-Exit 1 on a failed or missing report, an out-of-tolerance value, or a negative
-control that did NOT fail (a control that passes is broken and says so).
-Stdlib only; run with -I.
+Exit 0 if the check behaved as designed: mode `normal`, the corner passed and
+every graded value is inside tolerance; mode `neg`, the control FAILED its
+grading as expected (run.sh still exits 1 in that mode by contract, because
+the klt grading itself failed -- the renderer's exit distinguishes a behaving
+control from a broken one). Exit 1 on a failed or missing report, an
+out-of-tolerance value, or a negative control that did NOT fail (a control
+that passes is broken and says so). Stdlib only; run with -I.
 """
 import json
 import os
