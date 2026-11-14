@@ -6,7 +6,13 @@ A SiGe HBT power amplifier on
 [klayout-tools](https://github.com/2AMLogic/klayout-tools) and the
 open-source xschem + ngspice flow.
 
-**Status: just opened, specification phase.** Nothing is designed yet.
+**Status: specification ratified, design and verification in progress.**
+The target spec is ratified by
+[decision record 0001](spec/decision-records/0001-ratify-target-spec.md); a
+placement-level (not yet routed) PA layout, a clean DRC report and the T1
+testbenches are committed. The routed layout, LVS, the corner verification
+and the characterization report are outstanding. Per-item T1 state is not
+restated here — the verdict of record below is the only authority on it.
 
 **T1 status.** The tier verdict is graded by `klt signoff`, not read by hand;
 the verdict of record is
