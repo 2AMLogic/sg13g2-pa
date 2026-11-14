@@ -213,7 +213,9 @@ edit or delete one, rerun instead.
   window and Rth model, defined once for every bench that grades against them) and
   their tests.
 - `known-answer/` - ideal decks, `run.sh`, `check_known_answer.py`,
-  `records/<id>.md`, `corners/<id>/` (klt reports and ngspice logs).
+  `records/<id>.md`, `corners/<id>/` (klt reports, plus the deck and ngspice log
+  per `<case>/<corner>/`, which is what `sim_gate_logs` reads; the raw traces are
+  deleted once the record is written).
 - `smoke/` - toolchain smoke test (decks, `klt sim` requests, `run_smoke.sh`,
   `corners/<id>/` artifacts, `records/<id>.md`). Not a design result.
 - `psat-sweep/`, `ac-gain/`, `ac-stability/` - the DUT benches above (decks and requests
