@@ -1,0 +1,109 @@
+{
+  "netlist": "thermal.spice",
+  "models": {
+    "pdk": "ihp-sg13g2"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "hbt_typ",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_typ"
+          }
+        ]
+      }
+    ],
+    "temperature_c": [
+      27
+    ]
+  },
+  "analysis": {
+    "kind": "op",
+    "args": ""
+  },
+  "measurements": [
+    {
+      "name": "vt5_n1_1m",
+      "expr": "v(t_n1_1m)",
+      "unit": "V",
+      "limits": {
+        "min": 11.35084414744692,
+        "max": 11.353114543315996
+      }
+    },
+    {
+      "name": "vt5_n1_10m",
+      "expr": "v(t_n1_10m)",
+      "unit": "V",
+      "limits": {
+        "min": 113.50844147446921,
+        "max": 113.53114543315996
+      }
+    },
+    {
+      "name": "vt5_n4_1m",
+      "expr": "v(t_n4_1m)",
+      "unit": "V",
+      "limits": {
+        "min": 3.2596740000000004,
+        "max": 3.260326
+      }
+    },
+    {
+      "name": "vt5_n4_10m",
+      "expr": "v(t_n4_10m)",
+      "unit": "V",
+      "limits": {
+        "min": 32.596740000000004,
+        "max": 32.60326
+      }
+    },
+    {
+      "name": "ic_bias",
+      "expr": "-i(vc5b)",
+      "unit": "A"
+    },
+    {
+      "name": "p_bias",
+      "expr": "-(v(c5b)*i(vc5b) + v(b5b)*i(vb5b))",
+      "unit": "W"
+    },
+    {
+      "name": "vt5_bias",
+      "expr": "v(t5b)",
+      "unit": "V"
+    },
+    {
+      "name": "rth_meas",
+      "expr": "v(t5b)/(-(v(c5b)*i(vc5b) + v(b5b)*i(vb5b)))",
+      "unit": "K/W",
+      "limits": {
+        "min": 3256.74,
+        "max": 3263.2599999999998
+      }
+    },
+    {
+      "name": "vt4_bias",
+      "expr": "v(x4t.t)",
+      "unit": "V"
+    },
+    {
+      "name": "vt4_minus_vt5",
+      "expr": "v(x4t.t) - v(t5b)",
+      "unit": "V",
+      "limits": {
+        "min": -1e-06,
+        "max": 1e-06
+      }
+    }
+  ],
+  "options": {
+    "timeout_s": 60,
+    "keep_artifacts": true,
+    "ngspice_init": [
+      "set numdgt=8"
+    ]
+  }
+}

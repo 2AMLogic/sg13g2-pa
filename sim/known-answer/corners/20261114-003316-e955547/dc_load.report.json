@@ -1,0 +1,114 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "sim/known-answer/dc_load.spice",
+    "scope": "repo"
+  },
+  "status": "not_checked",
+  "corner_count": 1,
+  "passed": 1,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 1,
+    "sim__corner__passed_count": 1,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "47",
+    "ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "engine_build": {
+      "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******",
+      "binary_sha256": "39ca1adb826660324c3626f72bd946ec40704f0f3fc8e243c623f76e24b3eee2",
+      "probe": "ok",
+      "reason": null
+    },
+    "models_lib": {
+      "path": null,
+      "scope": "absent"
+    },
+    "models_lib_sha256": null,
+    "models_lib_sha256_scope": "local",
+    "netlist_sha256": "974846d8c9e780eccb6b4af25a63be88f09cb81ff70b2816354637a16e27203c",
+    "netlist_closure": [
+      {
+        "path": "sim/known-answer/dc_load.spice",
+        "scope": "repo",
+        "sha256": "974846d8c9e780eccb6b4af25a63be88f09cb81ff70b2816354637a16e27203c"
+      }
+    ],
+    "netlist_identity": "sha256:a4036f441a08bb12796ad07ec778a5d2aad5ae9abd51aa4071e2eb39c4f6d166",
+    "engine_host": "local",
+    "backend": {
+      "resolved": "local",
+      "source": "flag",
+      "requested": "local"
+    },
+    "timeout_preflight_warning": "options.timeout_s (300s) looks implausible for a tran analysis with ~6e+04 timepoints (2.5p step, 150n window) -- even 50 timepoints/s (a generous floor, not a real engine-rate estimate) would need 1.2e+03s per corner. This is only a coarse, advisory pre-grid heuristic -- it does not block the sweep, and a plausible-looking budget can still turn out to be too short in practice."
+  },
+  "coverage": {
+    "corners_simulated": 1,
+    "measurements_declared": 0,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [],
+    "skipped": [
+      {
+        "id": "corner:[0,\"default/novdd/27C\"]",
+        "reason": "no_requested_measurements"
+      }
+    ],
+    "inapplicable": [],
+    "unknown": [],
+    "nothing_checked": true,
+    "nothing_checked_reasons": [
+      "no_requested_measurements"
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.9.0",
+    "klt_git_commit": "5dbbad05ff42265c92a6f3d2f20d1bbcd2957d49",
+    "klt_reinstall_spec": "klayout-tools==0.9.0",
+    "klayout_version": "0.30.13",
+    "pdk": null,
+    "deck": null,
+    "input": {
+      "content_hash": "sha256:974846d8c9e780eccb6b4af25a63be88f09cb81ff70b2816354637a16e27203c",
+      "role": "netlist"
+    }
+  },
+  "measurements": [],
+  "corners": [
+    {
+      "corner_id": "default/novdd/27C",
+      "process": null,
+      "supply_v": {},
+      "temperature_c": 27,
+      "status": "pass",
+      "runtime_s": 0.167,
+      "peak_rss_bytes": 49430528,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-106/sim/known-answer/corners/20261114-003316-e955547/dc_load/default_novdd_27C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-106/sim/known-answer/corners/20261114-003316-e955547/dc_load/default_novdd_27C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-106/sim/known-answer/corners/20261114-003316-e955547/dc_load/default_novdd_27C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-106/sim/known-answer/corners/20261114-003316-e955547/dc_load/default_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}
