@@ -62,7 +62,7 @@ def graded_rows(m):
         for i in gb.I_INJ_A:
             name = gb.inj_name(nx, i)
             rows.append((name, "V(t) at Nx=%d, P = %g W injected" % (nx, i),
-                         i * rth(nx), "rel 0.01 %%", "rel", gb.TOL_INJ_REL))
+                         i * rth(nx), "rel 0.01 %", "rel", gb.TOL_INJ_REL))
     rows.append(("rth_meas",
                  "V(t)/P, biased Nx=%d (Vce %g V, Vbe %g V): rth"
                  % (gb.BIAS_NX, gb.BIAS_VCE_V, gb.BIAS_VBE_V),
@@ -151,7 +151,7 @@ def main(argv):
     else:
         # The control is expected to fail: a passing control is a broken control.
         ok = (not corner_ok) and rows and all(r[6] == "FAIL" for r in rows)
-        verdict = "FAIL" if not ok else "CONTROL DID NOT FAIL"
+        verdict = "FAIL" if ok else "CONTROL DID NOT FAIL"
         expect = (" (expected: `selft=0` removes the card's thermal network, so the same "
                   "injections must miss `P * rth`; this run failing is the demonstration "
                   "that the check can fail)")
@@ -174,7 +174,17 @@ def main(argv):
         bias_ic = m.get("ic_bias", {}).get("value")
         bias_p = m.get("p_bias", {}).get("value")
         diff4 = m.get("vt4_minus_vt5", {}).get("value")
-        if bias_ic is not None and bias_p is not None:
+        if mode == "neg":
+            L += ["## Bench", "",
+                  "- `thermal_neg.spice` repeats the injection cases of `thermal.spice`",
+                  "  (idle 5-terminal `npn13G2_5t`, 2 Nx x 2 powers) with `selft=0` on every",
+                  "  instance: the card's `rth` collapses to 0 and only the subckt's own",
+                  "  `Rt t 0 R = 1e9` shunt remains, so each node reads `I * 1e9`. Its grading",
+                  "  reuses the positive request's limits, so a PASS here would mean the",
+                  "  positive check cannot detect a dead thermal network.",
+                  "- Single corner `hbt_typ` at 27 C, `--backend local` (one unit; no batch",
+                  "  submit)."]
+        elif bias_ic is not None and bias_p is not None:
             L += ["## Bench", "",
                   "- `thermal.spice` instantiates the 5-terminal `npn13G2_5t` subcircuit",
                   "  (ports `c b e bn t`). The injection cases hold the device idle (all",
