@@ -8,11 +8,18 @@ next to this file. The decks hold one `npn13G2` instance per (Nx, Vbe) pair,
 each with its own base source and a zero-volt collector ammeter, so one
 `klt sim` corner request (process x temperature) covers the whole Nx x Vbe
 family. With --check, regenerate in memory and exit 1 if the committed files
-differ (the committed files are what the record hashes).
+differ (the committed files are what the record hashes); any other argument is
+a usage error (exit 2) and writes nothing.
 """
 import json
 import os
 import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
+# The PDK constants, the request skeleton and the strict write/--check driver live
+# once in sim/lib/bench_gen.py, shared with sim/lib/gen_dut_benches.py; never retype
+# the corner-library path or the capacity wait here.
+import bench_gen  # noqa: E402
 
 NX = (1, 4, 10)
 VBE = (0.70, 0.74, 0.78, 0.82, 0.86, 0.90)  # inside the card's 0.65-0.96 V window
@@ -25,11 +32,6 @@ TEMPS = (-40, 27, 125)
 
 def tag(nx, vbe):
     return "n%d_v%d" % (nx, round(vbe * 100))
-
-
-def process_block():
-    return [{"name": p, "sections": [{"lib": "libs.tech/ngspice/models/cornerHBT.lib", "section": p}]}
-            for p in PROCESS]
 
 
 def dc_deck():
@@ -60,16 +62,11 @@ def dc_request():
                 name = "ic_%s_vce%d" % (t, round(vce * 100))
                 meas.append({"name": name, "spice": ".meas dc %s FIND v(ico_%s) AT=%g" % (name, t, vce),
                              "unit": "A"})
-    return {
-        "netlist": "dc_family.spice",
-        "models": {"pdk": "ihp-sg13g2"},
-        "corners": {"process": process_block(), "temperature_c": list(TEMPS)},
-        "analysis": {"kind": "dc", "args": "Vc 0.0 2.0 0.1"},
-        "measurements": meas,
-        "options": {"timeout_s": 300, "keep_artifacts": True, "ngspice_init": ["set numdgt=8"]},
-        # Fleet is vCPU-budgeted: wait with backoff on batch_no_capacity (host rule).
-        "batch": {"capacity_wait_s": 600},
-    }
+    return bench_gen.request(
+        "dc_family.spice",
+        {"kind": "dc", "args": "Vc 0.0 2.0 0.1"},
+        {"timeout_s": 300, "keep_artifacts": True, "ngspice_init": ["set numdgt=8"]},
+        process=PROCESS, temperature_c=TEMPS, measurements=meas, batch=True)
 
 
 def ft_deck():
@@ -103,16 +100,11 @@ def ft_request():
                     name = "%sac_%s_f%s" % (q, t, f)
                     meas.append({"name": name, "spice": ".meas ac %s FIND vm(%s_%s) AT=%s" % (name, node, t, f),
                                  "unit": "A"})
-    return {
-        "netlist": "ft.spice",
-        "models": {"pdk": "ihp-sg13g2"},
-        "corners": {"process": process_block(), "temperature_c": list(TEMPS)},
-        "analysis": {"kind": "ac", "args": "dec 20 10e9 100e9"},
-        "measurements": meas,
-        "options": {"timeout_s": 300, "keep_artifacts": True, "ngspice_init": ["set numdgt=8"]},
-        # Fleet is vCPU-budgeted: wait with backoff on batch_no_capacity (host rule).
-        "batch": {"capacity_wait_s": 600},
-    }
+    return bench_gen.request(
+        "ft.spice",
+        {"kind": "ac", "args": "dec 20 10e9 100e9"},
+        {"timeout_s": 300, "keep_artifacts": True, "ngspice_init": ["set numdgt=8"]},
+        process=PROCESS, temperature_c=TEMPS, measurements=meas, batch=True)
 
 
 def files():
@@ -121,19 +113,10 @@ def files():
             "ft.request.json": json.dumps(ft_request(), indent=2) + "\n"}
 
 
-def main(argv):
-    here = os.path.dirname(os.path.abspath(__file__))
-    bad = 0
-    for name, text in files().items():
-        path = os.path.join(here, name)
-        if "--check" in argv:
-            if not os.path.isfile(path) or open(path).read() != text:
-                print("gen_bench.py: %s differs from the generator" % name, file=sys.stderr)
-                bad = 1
-        else:
-            with open(path, "w") as fh:
-                fh.write(text)
-    return bad
+def main(args):
+    return bench_gen.write_or_check(
+        files(), args, "gen_bench.py", os.path.dirname(os.path.abspath(__file__)),
+        "python3 -I sim/device-npn13g2/gen_bench.py")
 
 
 if __name__ == "__main__":
