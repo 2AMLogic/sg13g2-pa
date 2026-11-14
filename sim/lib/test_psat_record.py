@@ -234,3 +234,43 @@ def test_the_matched_record_labels_tj_as_unchecked(tmp_path):
     assert "has no \"known-answer\" check" in md or "no known-answer check yet" in md
     assert "Tj max C" in md       # the column it qualifies is still there
     assert "rest on the model card as supplied" in md
+
+
+# --- the Conditions bullet must stay readable when the run is sharded ---------
+
+
+def test_a_single_job_remote_block_is_printed_unchanged():
+    """The bare bench does not shard, and its record's wording must not move."""
+    one = {"provider": "aws-batch-fleet", "job_id": "klt-sim-abc", "region": "us-east-1"}
+    assert PSAT._remote_md(one) is one
+    assert PSAT._remote_md("n/a") == "n/a"
+    assert PSAT._remote_md({"fleet": []}) == {"fleet": []}
+
+
+def test_a_sharded_remote_block_is_summarized_not_dumped():
+    """`remote.hosts: 10` returns ten full worker captures -- ~15 kB in one bullet."""
+    shard = {
+        "provider": "aws-batch-fleet", "region": "us-east-1",
+        "instance_type": "m7i.4xlarge", "lifecycle": "spot",
+        "runner_klt_version": "0.9.0", "elapsed_seconds": 34,
+        "worker_environment": {"simulator": {"version_banner": "x" * 2000}},
+    }
+    fleet = [dict(shard, job_id=f"klt-sim-{k:04x}", elapsed_seconds=30 + k)
+             for k in range(10)]
+    out = PSAT._remote_md({"fleet": fleet})
+    assert isinstance(out, str)
+    assert "10 fleet shards" in out
+    assert "elapsed 30-39 s" in out
+    assert "klt-sim-0000" in out and "klt-sim-0009" in out   # every job id is named
+    assert "m7i.4xlarge" in out and "us-east-1" in out
+    # the point: the worker capture is NOT inlined
+    assert "version_banner" not in out and "x" * 100 not in out
+    assert len(out) < 800
+    # and it says where the full capture lives
+    assert "report.json" in out
+
+
+def test_the_matched_record_summarizes_its_sharded_backend(tmp_path):
+    md, _doc = _render(str(tmp_path), "match")
+    # the synthetic report uses a plain string, which must pass through untouched
+    assert "remote job: `n/a`" in md

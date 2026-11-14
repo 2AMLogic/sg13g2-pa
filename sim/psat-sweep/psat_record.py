@@ -86,6 +86,36 @@ def stress(t, s, ex, ambient_c, ic_sense):
     return out
 
 
+def _remote_md(remote):
+    """The `remote` block for the record's Conditions bullet.
+
+    A single-job submit is printed whole, as it always has been. A **sharded** one
+    (`request.remote.hosts > 1`, which the matched bench sets) comes back as
+    `{"fleet": [... one full block per shard ...]}`, and each block carries the worker's
+    whole environment capture -- ten of them is some 15 kB of JSON in one bullet, which
+    buries the record it is supposed to annotate. Summarize those to the identity a
+    record actually needs: how many shards, which jobs, and the instance/region/engine
+    they agreed on. The full blocks stay in the committed
+    `corners/<id>/psat_sweep_match.report.json`, which is where someone auditing the run
+    would look anyway.
+    """
+    if not isinstance(remote, dict):
+        return remote
+    fleet = remote.get("fleet")
+    if not isinstance(fleet, list) or not fleet:
+        return remote
+    def uniq(key):
+        vals = sorted({str(s.get(key)) for s in fleet if s.get(key) is not None})
+        return ", ".join(vals) if vals else "n/a"
+    ids = ", ".join(str(s.get("job_id", "?")) for s in fleet)
+    elapsed = [s.get("elapsed_seconds") for s in fleet if s.get("elapsed_seconds") is not None]
+    return (f"{len(fleet)} fleet shards (request.remote.hosts); provider {uniq('provider')}; "
+            f"region {uniq('region')}; instance_type {uniq('instance_type')}; "
+            f"lifecycle {uniq('lifecycle')}; runner klt {uniq('runner_klt_version')}; "
+            f"elapsed {min(elapsed)}-{max(elapsed)} s; job ids: {ids}"
+            + "  -- full per-shard environment capture in corners/<id>/*.report.json")
+
+
 def label(st):
     tags = []
     if st["breakdown_violation"]:
@@ -182,7 +212,7 @@ def main(argv):
     w(f"- Repo `{sha}` (dirty={dirty}); klt {klt_v}; {ng_v}; PDK per `sim/pdk.json`; "
       "known-answer check of the extractor: `sim/known-answer/` (run before DUT records).")
     w(f"- Backend: `{rep.get('environment', {}).get('backend', 'see report')}`; "
-      f"remote job: `{rep.get('environment', {}).get('remote', 'n/a')}`.")
+      f"remote job: `{_remote_md(rep.get('environment', {}).get('remote', 'n/a'))}`.")
     w("")
     if net is not None:
         ll = net["loadline_cell"]
