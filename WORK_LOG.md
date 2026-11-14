@@ -3,8 +3,19 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-14
+
+- **PR #103**: fix(sim): derive the smoke record's model-input lines from each bench's report
+- **Issue #96** (closed): Derive the smoke record's OSDI provenance from the run: summarize.py hard-codes a 'too old' claim and lists client OSDI hashes the fleet did not load
+- **PR #109**: refactor(sim): route known-answer through sim_run_one and gate its ngspice logs
+- **Issue #106** (closed): Route sim/known-answer/run.sh through sim_run_one: last open-coded klt sim invocation, and the only bench with no log gate
+- **PR #110**: refactor(sim): collapse the two AC bench runners onto one shared driver
+- **Issue #108** (closed): Collapse the two AC bench runners onto one shared path: run_ac_gain.sh and run_ac_stability.sh are the same script twice
+
 ### 2026-11-13
 
+- **PR #102**: refactor(sim): let klt own the batch-capacity wait, drop sim_run_one's resubmit loop
+- **Issue #95** (closed): Remove sim_run_one's shell capacity-resubmit loop: klt's batch.capacity_wait_s already waits out the same refusals
 - **PR #105**: fix(sim): refuse to build the AC decks when RS_OHM != RL_OHM
 - **PR #98**: refactor(sim): format the AC record's bench facts from the deck generator
 - **PR #97**: refactor(sim): fold sim_check_log into sim_gate_logs and test the gate
