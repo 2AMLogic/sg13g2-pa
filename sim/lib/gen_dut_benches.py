@@ -4,6 +4,9 @@
     python3 -I sim/lib/gen_dut_benches.py            # (re)write the committed decks
     python3 -I sim/lib/gen_dut_benches.py --check    # fail if a committed deck is stale
 
+Any other argument is a usage error (exit 2) and writes nothing; the shared driver
+in ``bench_gen.py`` says why.
+
 Writes, for the DUT `design/netlist/sg13g2-pa.spice` (`.subckt sg13g2-pa RFIN
 RFOUT VCC GND`):
 
@@ -29,6 +32,11 @@ load power and the chip-boundary current), so every one of those facts is declar
 ``psat_bench(variant)`` and read from there by ``psat_record.py``: a deck whose
 extraction nodes moved cannot leave a record quoting the other variant's labels.
 
+The parts that are not specific to this DUT -- the pinned PDK name and corner-library
+path, the host's capacity wait, the request skeleton and the write/``--check`` driver
+-- live once in ``sim/lib/bench_gen.py``, shared with
+``sim/device-npn13g2/gen_bench.py``.
+
 Nothing here is a result; the decks are simulated benches. The output network
 of the DUT is ideal passives (see `design/README.md`), and every bench says so.
 """
@@ -36,9 +44,16 @@ import cmath
 import hashlib
 import json
 import math
+import os
 import pathlib
 import re
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# The PDK constants, the request skeleton and the strict write/--check driver live
+# once in sim/lib/bench_gen.py, shared with sim/device-npn13g2/gen_bench.py; never
+# retype the corner-library path or the capacity wait here.
+import bench_gen  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 NETLIST = REPO / "design" / "netlist" / "sg13g2-pa.spice"
@@ -641,26 +656,11 @@ def ac_stability_deck():
                     ["Sweep: 50 points/decade, 10 MHz .. 30 GHz (spec: >= 40 pts/decade)."])
 
 
-def _process_block():
-    return [{"name": PROCESS_NOM, "sections": [
-        {"lib": "libs.tech/ngspice/models/cornerHBT.lib", "section": PROCESS_NOM}]}]
-
-
 def _request(netlist, analysis, options, corners_extra=None, batch=False):
-    corners = {"process": _process_block(), "temperature_c": [TEMP_NOM_C]}
-    corners.update(corners_extra or {})
-    req = {
-        "netlist": netlist,
-        "models": {"pdk": "ihp-sg13g2"},
-        "corners": corners,
-        "analysis": analysis,
-        "options": options,
-    }
-    if batch:
-        # The fleet is vCPU-budgeted: wait with backoff instead of failing on
-        # batch_no_capacity (host rule; same effect as --wait-for-capacity 600).
-        req["batch"] = {"capacity_wait_s": 600}
-    return req
+    """The nominal cell of this DUT's benches, in bench_gen's request skeleton."""
+    return bench_gen.request(netlist, analysis, options,
+                             process=[PROCESS_NOM], temperature_c=[TEMP_NOM_C],
+                             corners_extra=corners_extra, batch=batch)
 
 
 def psat_request(variant="bare"):
@@ -723,29 +723,13 @@ def outputs():
     }
 
 
-def main(argv):
-    check = argv[1:] == ["--check"]
-    if argv[1:] and not check:
-        print("usage: gen_dut_benches.py [--check]", file=sys.stderr)
-        return 2
-    stale = []
-    for rel, text in outputs().items():
-        path = REPO / rel
-        if check:
-            if not path.is_file() or path.read_text() != text:
-                stale.append(rel)
-        else:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(text)
-    if stale:
-        print("gen_dut_benches.py: STALE_BENCH: regenerate with `python3 -I sim/lib/gen_dut_benches.py`: "
-              + ", ".join(stale), file=sys.stderr)
-        return 1
-    if check:
-        print("gen_dut_benches.py: committed decks match design/netlist/sg13g2-pa.spice "
-              f"(sha256 {netlist_sha256()[:12]})")
-    return 0
+def main(args):
+    return bench_gen.write_or_check(
+        outputs(), args, "gen_dut_benches.py", REPO,
+        "python3 -I sim/lib/gen_dut_benches.py",
+        ok_message="committed decks match design/netlist/sg13g2-pa.spice "
+                   f"(sha256 {netlist_sha256()[:12]})")
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    sys.exit(main(sys.argv[1:]))
