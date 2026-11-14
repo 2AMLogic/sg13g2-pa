@@ -3,7 +3,7 @@
 `sg13g2-pa` is a 2.4 GHz SiGe HBT power amplifier on IHP SG13G2, built to
 exercise the open PDK and `klt` on a large-signal, breakdown-limited block.
 
-Status as of 2026-11-13, `main` @ `124f782`.
+Status as of 2026-11-14, `main` @ `355dfbf`.
 
 [`WORK_PLAN.md`](WORK_PLAN.md) is the generated label snapshot and
 [`WORK_LOG.md`](WORK_LOG.md) the merge history. The verdict of record is
@@ -51,43 +51,60 @@ stale; the record is current).
   in-band S21 at least 17.53 dB, worst S11 -1.18 dB (target < -10 dB), and
   minimum mu 0.0228 at 0.176 GHz (target mu > 1). The design does not yet
   meet its ratified rows; closing them is design work that has no issue.
-- DR 0001 Q4 (does ngspice solve the HBT thermal node as the PDK intends) has
-  no bench, so every junction temperature in the records is unverified.
-- `README.md` still says "Nothing is designed yet" and "ratification pending
-  PR approval". Both are stale.
+- The off-chip matched bench (#116, PR #120) reports Psat 12.98 dBm, output
+  P1dB -11.78 dBm and peak PAE 24.0 % at the nominal cell — **through an
+  ideal, lossless off-chip L-section**, chip boundary `RFOUT`, evidencing
+  only the spec's **Fallback** Output-port cell (its boundary convention),
+  not the Target (on-chip) cell, which stays unevidenced while DR 0001 D-1
+  is open. Its harmonic terminations are set by the network, not the labelled
+  ideal-50-ohm default, so its figures are **not comparable** with the
+  bare-50-ohm record above. #121 questions the record's `gain_drop_db`
+  labelling and is open.
+- DR 0001 Q4 (does ngspice solve the HBT thermal node as the PDK intends) now
+  has its known-answer check (#115, PR #130): `sim/known-answer-thermal/`
+  grades the thermal-node rise against the card's `P * rth` at rel 0.01 %
+  with a negative control, and PASSes; the DUT records cite it where they
+  report junction temperature. The check is single-corner (`hbt_typ`, 27 C —
+  the card's `rth` carries no process or temperature coefficient). Recording
+  the discharge in the spec (#132, parked on merged #130) and adding the
+  bench to the item-9 inventory (#131) are open.
+- The README's stale status lines ("Nothing is designed yet", "ratification
+  pending PR approval") were refreshed by #117 (PR #124); the stale
+  "Built agent-native" paragraph that remains is filed as #128.
 
-Merged work since 2026-11-07 (PRs #82 to #110) simplified `sim/` and the CI
-gate; it moved no checklist item.
+Merged work since 2026-11-07 (PRs #82 to #110, then #118, #120, #124 and
+#130) simplified `sim/` and the CI gate and landed the three seeded Now
+benches (#115, #116, #117); it moved no checklist item.
 
 ## Now
 
-1. **Thermal-node known-answer check (DR 0001 Q4).** Done when a committed
-   bench drives a constant power into the 5-terminal `npn13G2` and its record
-   compares the thermal-node rise against `P * rth`, with a stated pass
-   tolerance and a negative control. No issue yet (seed 1). Blocks: nothing.
-2. **Bench-side off-chip output match.** Done when `sim/psat-sweep/` can place
-   a stated ideal network between `RFOUT` and the 50 ohm load, the chip
-   boundary is written down, and a nominal-cell record reports Psat, P1dB, PAE
-   and device stress through it, labelled "through ideal passives, off-chip
-   match". The DUT netlist does not change. No issue yet (seed 2). Blocks:
-   nothing; this is the spec's Fallback output-port rung.
-3. **README status refresh.** Done when the two stale status lines match the
-   signoff record and DR state, `evidence/item10.json` is re-attested and
-   `scripts/check-ci.sh` passes. No issue yet (seed 3). Blocks: nothing.
-4. **#96** smoke record's model-input lines from each report: PR #103 in review.
-5. **#106** known-answer runner through `sim_run_one`: PR #109 approved.
+All five items the 2026-11-13 list carried are delivered as of `main` @
+`355dfbf`: the three seeds — thermal-node known-answer check (#115, PR #130),
+bench-side off-chip output match (#116, PR #120) and the README status
+refresh (#117, PR #124) — are merged with their done-criteria met, and #96
+(PR #103) and #106 (PR #109) are closed. What the pinned tree leaves open:
+
+- **#121** — the matched record's `gain_drop_db` labelling: it reads ~3 dB
+  where the label implies 14.2 dB (`loom:building`).
+- **#128** — the README's "Built agent-native" paragraph still claims every
+  claim traces to a PVT-corner result (no labels yet).
+- **#131** — add `sim/known-answer-thermal/` to the T1 item-9 testbench
+  inventory (`loom:triage`).
+- **#132** — record DR 0001 Q4's discharge in the spec; parked on #130,
+  which has merged.
 
 ## Next
 
 - **Small-signal stabilisation and input match.** Done when `ac-stability`
   and `ac-gain` records at the nominal cell show mu > 1 over 10 MHz to 30 GHz
   and S11 < -8 dB (Fallback), with every added element's source stated.
-  No issue. Unblocked by Now 2, which fixes the load the device sees.
+  No issue. Unblocked: the off-chip match bench (PR #120) fixes the load the
+  device sees.
 - **Provisional PVT matrix on the three DUT benches** (3 HBT corners, -40 /
   27 / 125 C, supply +/-10 %). Done when each bench has a record covering
   every cell with window and breakdown labels, marked provisional while the
-  Supply row is DRAFT. No issue. Unblocked by Now 1 and Now 2; a matrix on the
-  unmatched network would measure the placeholders.
+  Supply row is DRAFT. No issue. Unblocked: the thermal known-answer check
+  (PR #130) and the off-chip match bench (PR #120) are on main.
 - **Staged LVS run for item 4** (device census plus `klt lvs` recorded as-is
   on the placement GDS). Done when the report is committed and any
   recognition gap is filed upstream. #39. Unblocked by the scope ruling below.
@@ -123,10 +140,10 @@ gate; it moved no checklist item.
   `consumes` edge to `sg13g2-vco`'s inductor model (DR 0001 D-1).
 - **#5** needs its tracker marker added and its checklist table refreshed.
 - **Simplification proposals #77, #85, #87, #93, #104** are held for operator
-  approval; **#100** is labelled blocked on #95, which has closed.
+  approval. **#100** is no longer blocked on #95: it is curated and in work
+  (`loom:hermit`), with its body revised to read against `ad46d16`.
 
-No open issue is labelled ready for implementation today. The three unfiled
-Now items need no decision.
+No open issue is labelled ready for implementation today.
 
 ## Not planned
 
