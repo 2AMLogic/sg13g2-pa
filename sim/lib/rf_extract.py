@@ -7,7 +7,8 @@ DFT with P_k = 1/2 Re(V_k I_k*), PAE, and the Psat / P1dB sweep reducer.
 Two layers, so the unit tests need no simulator:
 
 * pure functions (arrays in, numbers out): ``resample_uniform``,
-  ``period_means``, ``check_settled``, ``extract``, ``reduce_sweep``;
+  ``period_means``, ``check_settled``, ``extract``, ``reduce_sweep``, and the
+  watts-to-dBm conversion ``dbm`` the record renderers share with the reducer;
 * a thin reader, ``load_klt_waveform``, for the ``waveform.raw.json`` that
   ``klt sim`` writes when the request sets ``options.waveforms``.
 
@@ -60,7 +61,8 @@ def _db10(x):
     return 10.0 * math.log10(x)
 
 
-def _dbm(w):
+def dbm(w):
+    """Watts -> dBm. Public: the record renderers convert their own table columns."""
     return _db10(w / 1e-3)
 
 
@@ -272,8 +274,8 @@ def reduce_sweep(points, linear_points=3, linear_spread_db=0.1):
     pts = sorted(points, key=lambda p: p["p_in_w"])
     if len(pts) < linear_points + 1:
         raise ExtractError("SWEEP_TOO_SHORT", f"need at least {linear_points + 1} drive points")
-    pin = np.array([_dbm(p["p_in_w"]) for p in pts])
-    pout = np.array([_dbm(p["p_out_w"]) for p in pts])
+    pin = np.array([dbm(p["p_in_w"]) for p in pts])
+    pout = np.array([dbm(p["p_out_w"]) for p in pts])
     gain = pout - pin
     lin = gain[:linear_points]
     if lin.max() - lin.min() > linear_spread_db:

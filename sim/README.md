@@ -281,9 +281,11 @@ edit or delete one, rerun instead.
   the whole shared body of the two AC runners, which differ only in the bench
   name.
 - `tools/` - `build-osdi.sh`, `pdk_identity.py`.
-- `lib/` - `rf_extract.py`, `device_limits.py` (the npn13G2 breakdown minima, model
-  window and Rth model, defined once for every bench that grades against them) and
-  their tests.
+- `lib/` - `rf_extract.py` (including `dbm`, the one watts-to-dBm conversion every
+  record and the sweep reducer share), `device_limits.py` (the npn13G2 breakdown
+  minima, model window and Rth model, defined once for every bench that grades
+  against them), `provenance.py` (the `- Commit:` bullet and the artifact-digest
+  helper every record renderer states its provenance through) and their tests.
 - `known-answer/` - ideal decks, `run.sh`, `check_known_answer.py`,
   `records/<id>.md`, `corners/<id>/` (klt reports, plus the deck and ngspice log
   per `<case>/<corner>/`, which is what `sim_gate_logs` reads; the raw traces are
