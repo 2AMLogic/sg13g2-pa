@@ -55,8 +55,11 @@ def measured_by_name(rep):
     return out
 
 
-def graded_rows(m):
-    """Every graded check: (name, quantity, analytic, tolerance str, kind)."""
+def graded_rows(m, declared):
+    """Every graded check the request declares: (name, quantity, analytic,
+    tolerance str, kind, tol). Rows are the spec entries gen_bench grades that
+    this deck's request declares, so the negative control (which declares the
+    injections only) renders no phantom rows."""
     rows = []
     for nx in gb.NX_INJ:
         for i in gb.I_INJ_A:
@@ -72,6 +75,8 @@ def graded_rows(m):
                  0.0, "abs 1e-06 V", "abs", gb.TOL_4T_ABS_V))
     out = []
     for name, quantity, analytic, tol_s, kind, tol in rows:
+        if name not in declared:
+            continue
         m_ = m.get(name)
         if m_ is None or m_["value"] is None:
             out.append((name, quantity, analytic, None, None, tol_s, "FAIL (no measured value)"))
@@ -142,7 +147,13 @@ def main(argv):
         corners = rep.get("corners", [])
         corner_ok = bool(corners) and corners[0].get("status") == "pass"
 
-    rows = graded_rows(measured_by_name(rep)) if rep else []
+    declared = set()
+    req_path = os.path.join(HERE, case + ".request.json")
+    try:
+        declared = {mm["name"] for mm in json.load(open(req_path)).get("measurements", [])}
+    except (OSError, ValueError, KeyError):
+        pass
+    rows = graded_rows(measured_by_name(rep) if rep else {}, declared) if rep else []
     all_inside = bool(rows) and all(r[6] == "PASS" for r in rows)
     if mode == "normal":
         ok = corner_ok and all_inside
@@ -150,7 +161,10 @@ def main(argv):
         expect = ""
     else:
         # The control is expected to fail: a passing control is a broken control.
-        ok = (not corner_ok) and rows and all(r[6] == "FAIL" for r in rows)
+        # Only rows with a measured value gate the control -- its deck declares the
+        # injections only, and a missing row is not evidence either way here.
+        valued = [r for r in rows if r[3] is not None]
+        ok = (not corner_ok) and valued and all(r[6] == "FAIL" for r in valued)
         verdict = "FAIL" if ok else "CONTROL DID NOT FAIL"
         expect = (" (expected: `selft=0` removes the card's thermal network, so the same "
                   "injections must miss `P * rth`; this run failing is the demonstration "
