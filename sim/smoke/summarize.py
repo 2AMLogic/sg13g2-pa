@@ -24,6 +24,48 @@ from provenance import commit_line, sha  # noqa: E402
 SMOKE_NX = 1
 
 
+def _digest(d, key="sha256"):
+    """A backticked sha256 when the report carries one, else say that it does not.
+
+    Never substitute a hash from anywhere else: the record's job is to state what
+    this run's report attests, and a missing digest is itself the fact (issue #96).
+    """
+    h = d.get(key)
+    return f"`{h}`" if h else "the report carries no sha256 for it"
+
+
+def model_input_lines(env):
+    """Markdown bullets naming one bench's model inputs, from its own report.
+
+    Three disjoint report fields, any of which may be absent:
+
+    - `staged_model_inputs[]`  files the client shipped with the request;
+    - `corner_section_libs[]`  the corner `.lib` the deck sections into;
+    - `osdi_preload_runner_resolved[]`  objects the runner resolved from its own
+      install. At the pinned klt these carry `entry` and `reason` only -- no
+      digest is obtainable from the report (2AMLogic/klayout-tools#5562) -- so
+      the record states the absence rather than printing a client-side hash
+      that did not describe the run.
+    """
+    staged = env.get("staged_model_inputs") or []
+    libs = [c for c in (env.get("corner_section_libs") or []) if c.get("sha256")]
+    runner = env.get("osdi_preload_runner_resolved") or []
+    if not staged and not libs and not runner:
+        return ["- model inputs: this bench's report lists none."]
+    out = ["- model inputs, from this bench's own `klt sim` report:"]
+    for m in staged:
+        src = m.get("source_sha256")
+        tail = f", source `{src}`" if src else ""
+        out.append(f"  - staged from the submitting host: `{m.get('name')}` "
+                   f"({m.get('kind')}) {_digest(m)}{tail}")
+    for c in libs:
+        out.append(f"  - corner section lib: `{c.get('name')}` {_digest(c)}")
+    for o in runner:
+        out.append(f"  - OSDI object resolved on the runner, from its own install "
+                   f"(reason `{o.get('reason')}`): `{o.get('entry')}` — {_digest(o)}")
+    return out
+
+
 def main(argv):
     rid, git_sha, dirty, klt_ver, ng_banner, prov_path, out_dir = argv[1:8]
     names = argv[8:]
@@ -47,10 +89,13 @@ def main(argv):
         f"`{prov['installed_release_raw']}` (identity route `{prov['identity_route']}`, "
         f"`.fetched-version` value `{prov['installed_release_raw']}`); verified against `sim/pdk.json`",
         f"- `klt`: `{klt_ver}`",
-        f"- Local ngspice: `{ng_banner}` (runs the single-unit npn13G2 op; too old to load the OSDI "
-        "objects, which target OSDI 0.4)",
+        f"- Local ngspice: `{ng_banner}` (runs the single-unit npn13G2 op)",
         "",
-        "### OSDI objects and model inputs (sha256)",
+        "### Submitting host's preflight inputs (sha256)",
+        "",
+        "What `sim_require_pdk` hashed on **this** host before submitting. It is not a",
+        "statement about what any bench loaded: each bench under `## Results` names the",
+        "model inputs its own `klt sim` report records.",
         "",
     ]
     for f in prov["model_inputs"]:
@@ -82,6 +127,7 @@ def main(argv):
         if rem:
             lines.append(f"- batch job id: `{rem.get('job_id')}` (state `{rem.get('state')}`, "
                          f"`{rem.get('instance_type')}` {rem.get('lifecycle')})")
+        lines += model_input_lines(env)
         lines.append("")
         meas = [m["name"] for m in r["corners"][0]["measurements"]]
         lines.append("| corner | status | " + " | ".join(meas) + " |")
