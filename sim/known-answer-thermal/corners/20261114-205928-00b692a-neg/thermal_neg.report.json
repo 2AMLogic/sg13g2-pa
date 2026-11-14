@@ -1,0 +1,215 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "sim/known-answer-thermal/thermal_neg.spice",
+    "scope": "repo"
+  },
+  "status": "fail",
+  "corner_count": 1,
+  "passed": 0,
+  "failed": 1,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 1,
+    "sim__corner__passed_count": 0,
+    "sim__corner__failed_count": 1,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "47",
+    "ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "engine_build": {
+      "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******",
+      "binary_sha256": "39ca1adb826660324c3626f72bd946ec40704f0f3fc8e243c623f76e24b3eee2",
+      "probe": "ok",
+      "reason": null
+    },
+    "models_lib": {
+      "path": null,
+      "scope": "absent"
+    },
+    "models_lib_sha256": null,
+    "models_lib_sha256_scope": "local",
+    "netlist_sha256": "8ff7b3a17d648fc33b6bc1e62d9418f5c652ddb96fe51263e0dc147794712053",
+    "netlist_closure": [
+      {
+        "path": "sim/known-answer-thermal/thermal_neg.spice",
+        "scope": "repo",
+        "sha256": "8ff7b3a17d648fc33b6bc1e62d9418f5c652ddb96fe51263e0dc147794712053"
+      }
+    ],
+    "netlist_identity": "sha256:7e0b474628cd446c17e391b3f101a510b84252d73231b31f8490288d4c6614ee",
+    "corner_section_libs": [
+      {
+        "name": "cornerHBT.lib",
+        "path": null,
+        "scope": "external",
+        "sha256": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462"
+      }
+    ],
+    "engine_host": "local",
+    "backend": {
+      "resolved": "local",
+      "source": "flag",
+      "requested": "local"
+    }
+  },
+  "coverage": {
+    "corners_simulated": 1,
+    "measurements_declared": 4,
+    "measurements_with_limits": 4,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n1_10m\",\"max\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n1_10m\",\"min\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n1_1m\",\"max\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n1_1m\",\"min\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n4_10m\",\"max\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n4_10m\",\"min\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n4_1m\",\"max\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n4_1m\",\"min\"]"
+    ],
+    "skipped": [],
+    "inapplicable": [],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.9.0",
+    "klt_git_commit": "5dbbad05ff42265c92a6f3d2f20d1bbcd2957d49",
+    "klt_reinstall_spec": "klayout-tools==0.9.0",
+    "klayout_version": "0.30.13",
+    "pdk": {
+      "name": "ihp-sg13g2",
+      "source": "PDK_ROOT environment variable",
+      "version": "fetched:0.3.0",
+      "ambiguous_sources": [
+        "search root: ~/share/pdk"
+      ]
+    },
+    "deck": null,
+    "input": {
+      "content_hash": "sha256:8ff7b3a17d648fc33b6bc1e62d9418f5c652ddb96fe51263e0dc147794712053",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "vt5_n1_1m",
+      "unit": "V",
+      "limits": {
+        "min": 11.35084414744692,
+        "max": 11.353114543315996
+      },
+      "status": "fail",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 1000000.0,
+        "margin": -999988.6468854566
+      }
+    },
+    {
+      "name": "vt5_n1_10m",
+      "unit": "V",
+      "limits": {
+        "min": 113.50844147446921,
+        "max": 113.53114543315996
+      },
+      "status": "fail",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 10000000.0,
+        "margin": -9999886.468854567
+      }
+    },
+    {
+      "name": "vt5_n4_1m",
+      "unit": "V",
+      "limits": {
+        "min": 3.2596740000000004,
+        "max": 3.260326
+      },
+      "status": "fail",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 1000000.0,
+        "margin": -999996.739674
+      }
+    },
+    {
+      "name": "vt5_n4_10m",
+      "unit": "V",
+      "limits": {
+        "min": 32.596740000000004,
+        "max": 32.60326
+      },
+      "status": "fail",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 10000000.0,
+        "margin": -9999967.39674
+      }
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "hbt_typ/novdd/27C",
+      "process": "hbt_typ",
+      "supply_v": {},
+      "temperature_c": 27,
+      "status": "fail",
+      "runtime_s": 0.018,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vt5_n1_1m",
+          "value": 1000000.0,
+          "unit": "V",
+          "status": "fail",
+          "margin": -999988.6468854566
+        },
+        {
+          "name": "vt5_n1_10m",
+          "value": 10000000.0,
+          "unit": "V",
+          "status": "fail",
+          "margin": -9999886.468854567
+        },
+        {
+          "name": "vt5_n4_1m",
+          "value": 1000000.0,
+          "unit": "V",
+          "status": "fail",
+          "margin": -999996.739674
+        },
+        {
+          "name": "vt5_n4_10m",
+          "value": 10000000.0,
+          "unit": "V",
+          "status": "fail",
+          "margin": -9999967.39674
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-115/sim/known-answer-thermal/corners/20261114-205928-00b692a-neg/thermal_neg/hbt_typ_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-115/sim/known-answer-thermal/corners/20261114-205928-00b692a-neg/thermal_neg/hbt_typ_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}
