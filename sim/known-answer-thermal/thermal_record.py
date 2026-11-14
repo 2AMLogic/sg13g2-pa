@@ -62,34 +62,32 @@ def graded_rows(m):
         for i in gb.I_INJ_A:
             name = gb.inj_name(nx, i)
             rows.append((name, "V(t) at Nx=%d, P = %g W injected" % (nx, i),
-                         i * rth(nx), "rel %g %% (0.01 %%)" % (gb.TOL_INJ_REL * 100), "rel"))
+                         i * rth(nx), "rel 0.01 %%", "rel", gb.TOL_INJ_REL))
     rows.append(("rth_meas",
                  "V(t)/P, biased Nx=%d (Vce %g V, Vbe %g V): rth"
                  % (gb.BIAS_NX, gb.BIAS_VCE_V, gb.BIAS_VBE_V),
-                 rth(gb.BIAS_NX), "rel %g %% (0.1 %%)" % (gb.TOL_BIAS_REL * 100), "rel"))
+                 rth(gb.BIAS_NX), "rel 0.1 %", "rel", gb.TOL_BIAS_REL))
     rows.append(("vt4_minus_vt5",
                  "v(x4t.t) - v(t5b), 4-terminal vs 5-terminal at the same bias",
-                 0.0, "abs %g V (1 uV)" % gb.TOL_4T_ABS_V, "abs"))
+                 0.0, "abs 1e-06 V", "abs", gb.TOL_4T_ABS_V))
     out = []
-    for name, quantity, analytic, tol_s, kind in rows:
+    for name, quantity, analytic, tol_s, kind, tol in rows:
         m_ = m.get(name)
         if m_ is None or m_["value"] is None:
-            out.append((name, quantity, analytic, None, tol_s, "FAIL (no measured value)"))
+            out.append((name, quantity, analytic, None, None, tol_s, "FAIL (no measured value)"))
             continue
         val = m_["value"]
         if kind == "rel":
             err = val / analytic - 1.0 if analytic else float("nan")
-            # per-row tolerance, straight from the spec the request was built with:
-            tol = gb.TOL_INJ_REL if name.startswith("vt5_n") else gb.TOL_BIAS_REL
             inside = abs(err) <= tol
             err_s = "%+.2e rel" % err
         else:
             err = None
-            inside = abs(val) <= gb.TOL_4T_ABS_V
+            inside = abs(val) <= tol
             err_s = "%+.3e V" % val
         if m_.get("status") != "pass":
             inside = False
-        out.append((name, quantity, analytic, val, tol_s, "PASS" if inside else "FAIL"))
+        out.append((name, quantity, analytic, val, err_s, tol_s, "PASS" if inside else "FAIL"))
     return out
 
 
@@ -145,14 +143,14 @@ def main(argv):
         corner_ok = bool(corners) and corners[0].get("status") == "pass"
 
     rows = graded_rows(measured_by_name(rep)) if rep else []
-    all_inside = bool(rows) and all(r[5] == "PASS" for r in rows)
+    all_inside = bool(rows) and all(r[6] == "PASS" for r in rows)
     if mode == "normal":
         ok = corner_ok and all_inside
         verdict = "PASS" if ok else "FAIL"
         expect = ""
     else:
         # The control is expected to fail: a passing control is a broken control.
-        ok = (not corner_ok) and rows and all(r[5] == "FAIL" for r in rows)
+        ok = (not corner_ok) and rows and all(r[6] == "FAIL" for r in rows)
         verdict = "FAIL" if not ok else "CONTROL DID NOT FAIL"
         expect = (" (expected: `selft=0` removes the card's thermal network, so the same "
                   "injections must miss `P * rth`; this run failing is the demonstration "
@@ -161,10 +159,10 @@ def main(argv):
           "## Results", "",
           "| Case | Quantity | Analytic | Measured | Error | Tolerance | |",
           "|---|---|---|---|---|---|---|"]
-    for name, quantity, analytic, val, tol_s, verdict_cell in rows:
-        a_s = f"{analytic:.6g}"
-        v_s = "-" if val is None else f"{val:.6g}"
-        L.append(f"| {name} | {quantity} | {a_s} | {v_s} | {'-' if val is None else ''} | {tol_s} | {verdict_cell} |")
+    for name, quantity, analytic, val, err_s, tol_s, verdict_cell in rows:
+        a_s = f"{analytic:.6f}"
+        v_s = "-" if val is None else f"{val:.6f}"
+        L.append(f"| {name} | {quantity} | {a_s} | {v_s} | {err_s} | {tol_s} | {verdict_cell} |")
     L += ["",
           "The analytic column is the card's own answer, `P * rth(Nx)` with `rth(Nx) =",
           "3.26e3 * (4/Nx)^0.9` K/W taken from `sim/lib/device_limits.py` (the card's",
@@ -175,8 +173,7 @@ def main(argv):
         m = measured_by_name(rep)
         bias_ic = m.get("ic_bias", {}).get("value")
         bias_p = m.get("p_bias", {}).get("value")
-        v5 = m.get("vt5_bias", {}).get("value")
-        v4 = m.get("vt4_bias", {}).get("value")
+        diff4 = m.get("vt4_minus_vt5", {}).get("value")
         if bias_ic is not None and bias_p is not None:
             L += ["## Bench", "",
                   "- `thermal.spice` instantiates the 5-terminal `npn13G2_5t` subcircuit",
@@ -184,9 +181,10 @@ def main(argv):
                   "  signal terminals grounded) and drive a known constant current into",
                   "  the thermal node, where amperes are watts, at 2 Nx (1, 4) x 2 powers",
                   "  (1 mW, 10 mW). The biased case runs the device at its own operating",
-                  "  point (Vce %g V, Vbe %g V, Nx=%d: Ic %g A, P %g W reconstructed from",
+                  "  point (Vce %g V, Vbe %g V, Nx=%d: Ic %g A, P %g W reconstructed from"
+                  % (gb.BIAS_VCE_V, gb.BIAS_VBE_V, gb.BIAS_NX, bias_ic, bias_p),
                   "  the terminal voltages and currents) and grades `V(t)/P` against",
-                  "  `rth(%d)`." % (gb.BIAS_VCE_V, gb.BIAS_VBE_V, gb.BIAS_NX, bias_ic, bias_p, gb.BIAS_NX),
+                  "  `rth(%d)`." % gb.BIAS_NX,
                   "- The biased row is graded at 0.1 % rather than 0.01 %: its P comes from",
                   "  the simulation's own terminal V and I, which is not bit-identical to the",
                   "  model's internal power, so this row is a self-consistency check on the",
@@ -195,8 +193,8 @@ def main(argv):
                   "  same bias and probes its internal thermal node hierarchically as",
                   "  `v(x4t.t)` -- the node `sim/psat-sweep/psat_record.py` reads. Agreement",
                   "  with the 5-terminal case is graded at abs 1 uV" +
-                  ("; measured %.3e V, so the verdict transfers to the device instance"
-                   % (v4 - v5) if (v4 is not None and v5 is not None)
+                  ("; measured %+.3e V, so the verdict transfers to the device instance"
+                   % diff4 if diff4 is not None
                    else "") + ". If they ever disagreed beyond that, this record's verdict",
                   "  would NOT transfer to `sim/psat-sweep`.",
                   "- Each subckt ends with `Rt t 0 R = 1e9`, so the node sees `rth || 1e9`",
@@ -239,4 +237,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main(sys.argv))
