@@ -274,3 +274,34 @@ def test_the_matched_record_summarizes_its_sharded_backend(tmp_path):
     md, _doc = _render(str(tmp_path), "match")
     # the synthetic report uses a plain string, which must pass through untouched
     assert "remote job: `n/a`" in md
+
+
+# --- the two facts this record used to retype (issue #119) -----------------
+
+
+def test_the_commit_bullet_is_provenance_commit_lines_own_output(tmp_path):
+    """The record states its commit the way every other sim/ record does.
+
+    `_render` passes git-sha `deadbee` with dirty `0`, so the bullet is exactly
+    what `provenance.commit_line` returns for that pair -- not a second format
+    that happens to carry the same sha.
+    """
+    import provenance
+    md, _doc = _render(str(tmp_path), "match")
+    assert provenance.commit_line("deadbee", "0") in md.splitlines()
+    assert "- Repo `" not in md          # the retyped bullet is gone for good
+
+
+def test_the_record_shares_the_watts_to_dbm_conversion_with_the_reducer(tmp_path):
+    """One conversion per record: the table columns and the headline Psat agree.
+
+    `reduce_sweep` converts through `rf_extract.dbm`; the per-point table used to
+    convert through a local copy in psat_record. Asserting the module no longer
+    carries its own is what keeps the two from drifting apart by a rounding rule.
+    """
+    import rf_extract as rx
+    assert not hasattr(PSAT, "dbm"), "psat_record must not define its own dbm()"
+    md, _doc = _render(str(tmp_path), "match")
+    # the one drive point's P_in, as the table prints it, straight from the library
+    p_in_w = _doc["points"][0]["p_in_w"]
+    assert f"| {rx.dbm(p_in_w):.2f} |" in md

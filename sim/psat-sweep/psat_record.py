@@ -34,10 +34,14 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
 import gen_dut_benches as gdb  # noqa: E402
 import rf_extract as rx  # noqa: E402
+from provenance import commit_line  # noqa: E402
 # The (P) breakdown minima and the (M) model window live once, in sim/lib/device_limits.py
 # (provenance marked there); the bench facts live once in gen_dut_benches.py, which
 # generates this bench's deck. Nothing below is a retyped number, and the record prose
-# is formatted from these names.
+# is formatted from these names. The same rule covers the two things this record used to
+# retype: the watts-to-dBm conversion is rf_extract.dbm -- the same one reduce_sweep uses,
+# so the table columns and the headline Psat/P1dB cannot diverge -- and the commit half of
+# the provenance bullet is provenance.commit_line, shared by every sim/ renderer.
 from device_limits import (BVCEO_MIN, BVCBO_MIN, IC_WIN_PER_NX,  # noqa: E402
                            TJ_MAX, VBE_WIN, VCE_WIN)
 
@@ -45,10 +49,6 @@ F0 = gdb.F0_HZ
 RS = gdb.RS_OHM
 N_UNITS, NX = gdb.output_array()   # output-array devices sharing COLL/VB, and their Nx
 IC_MAX_PER_DEVICE = IC_WIN_PER_NX * NX
-
-
-def dbm(w):
-    return 10 * math.log10(w / 1e-3)
 
 
 def stress(t, s, ex, ambient_c, ic_sense):
@@ -126,7 +126,7 @@ def label(st):
 
 
 def main(argv):
-    variant, rid, sha, dirty, klt_v, ng_v, report_path, out_json = argv[1:9]
+    variant, rid, git_sha, dirty, klt_v, ng_v, report_path, out_json = argv[1:9]
     bench = gdb.psat_bench(variant)       # raises ValueError on an unknown variant
     net = bench["network"]
     rep = json.load(open(report_path))
@@ -146,13 +146,13 @@ def main(argv):
                             supplies=[(s["v(vcc)"], -s["i(vcc)"])],
                             v_in=s["v(in)"], i_in=-s["i(bs)"])
             ex = {k: (float(v) if isinstance(v, (np.floating,)) else v) for k, v in ex.items()}
-            ex["p_avail_dbm"] = dbm(pav)
+            ex["p_avail_dbm"] = rx.dbm(pav)
             ex["s11_large_db"] = 10 * math.log10(max(1 - ex["p_in_w"] / pav, 1e-12))
             ex["stress"] = stress(t, s, ex, c.get("temperature_c", 27), bench["ic_sense_i"])
             ex["corner_id"] = cid
             points.append(ex)
         except rx.ExtractError as e:
-            failures.append({"corner_id": cid, "p_avail_dbm": dbm(pav), "code": e.code, "message": str(e)})
+            failures.append({"corner_id": cid, "p_avail_dbm": rx.dbm(pav), "code": e.code, "message": str(e)})
     points.sort(key=lambda p: p["p_in_w"])
     red, red_err = None, None
     try:
@@ -209,7 +209,8 @@ def main(argv):
       "(window "
       + (f"{points[0]['window_periods']} periods" if points else "n/a")
       + ") after the settling test, rectangular-window coherent DFT, step T/400.")
-    w(f"- Repo `{sha}` (dirty={dirty}); klt {klt_v}; {ng_v}; PDK per `sim/pdk.json`; "
+    w(commit_line(git_sha, dirty))
+    w(f"- klt {klt_v}; {ng_v}; PDK per `sim/pdk.json`; "
       "known-answer check of the extractor: `sim/known-answer/` (run before DUT records).")
     w(f"- Backend: `{rep.get('environment', {}).get('backend', 'see report')}`; "
       f"remote job: `{_remote_md(rep.get('environment', {}).get('remote', 'n/a'))}`.")
@@ -258,7 +259,7 @@ def main(argv):
           "has a self-resonance.")
         w(f"- Analytic ceiling for this load line: {net['nx_total']} Nx x "
           f"{ll['pout_per_nx_w']:g} W = {net['pout_ceiling_w']:g} W = "
-          f"**{dbm(net['pout_ceiling_w']):.2f} dBm**. Hand arithmetic over the load-line "
+          f"**{rx.dbm(net['pout_ceiling_w']):.2f} dBm**. Hand arithmetic over the load-line "
           "record (tier 5), **not** a simulated result and not a claim.")
         w("")
         w("**Impedance presented, at the two nodes that differ** (arithmetic over ideal "
@@ -301,8 +302,8 @@ def main(argv):
     w("| Pavail dBm | Pin dBm | Pout dBm | Gain dB | PAE % | S11 large dB | H2 dBc | H3 dBc |")
     w("|---|---|---|---|---|---|---|---|")
     for p in points:
-        g = dbm(p["p_out_w"]) - dbm(p["p_in_w"]) if p["p_out_w"] > 0 and p["p_in_w"] > 0 else float("nan")
-        w(f"| {p['p_avail_dbm']:.1f} | {dbm(p['p_in_w']):.2f} | {dbm(p['p_out_w']):.2f} | {g:.2f} | "
+        g = rx.dbm(p["p_out_w"]) - rx.dbm(p["p_in_w"]) if p["p_out_w"] > 0 and p["p_in_w"] > 0 else float("nan")
+        w(f"| {p['p_avail_dbm']:.1f} | {rx.dbm(p['p_in_w']):.2f} | {rx.dbm(p['p_out_w']):.2f} | {g:.2f} | "
           f"{100 * (p['pae'] or 0):.1f} | {p['s11_large_db']:.2f} | "
           f"{p['h2_dbc'] if p['h2_dbc'] is None else round(p['h2_dbc'], 1)} | "
           f"{p['h3_dbc'] if p['h3_dbc'] is None else round(p['h3_dbc'], 1)} |")
