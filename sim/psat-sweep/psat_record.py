@@ -324,12 +324,16 @@ def main(argv):
           "It is deliberately **not** the load-branch current: `Cmatch` shunts part of that, so "
           "the load current would under-report every `I_C` below with nothing raised.")
         w("")
-        w("**The self-heating thermal node this `Tj max C` column comes from has no "
-          "known-answer check yet** (issue #115). `sim/known-answer/` validates the "
-          "large-signal extractor (power, P_DC, harmonics) against analytic answers; it does "
-          "**not** validate the VBIC card's self-heating node, so the `Tj` column and its "
-          "`T_j <= 125 C` window labelling rest on the model card as supplied. Read it as "
-          "reported, not as checked.")
+        w("**The self-heating thermal node this `Tj max C` column comes from is "
+          "known-answer checked** in `sim/known-answer-thermal/` (issue #115; record "
+          "`20261114-205927-00b692a`): injected and device-driven power read back through "
+          "the card's `rth` within 0.01 % / 0.1 %, the 4-terminal node this bench probes "
+          "hierarchically (`v(x<inst>.t)`) agrees with the 5-terminal one to 1e-14 V, and "
+          "a `selft=0` control fails its grading as designed. The check's verdict is "
+          "scoped to the DC `rth` network and the device-to-node power path -- **not** "
+          "`cth` or a thermal time constant; `sim/known-answer/` separately validates the "
+          "large-signal extractor (power, P_DC, harmonics). Read the `Tj` column as "
+          "checked within that scope.")
         w("")
     w("| Pavail dBm | Vce pk V | Vce min V | Vcb pk V | Vbe pk V | Ic pk mA | Tj max C | outside window (Vce / Vbe / Ic / Tj) | label |")
     w("|---|---|---|---|---|---|---|---|---|")
