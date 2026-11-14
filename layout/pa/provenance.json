@@ -7,7 +7,7 @@
   },
   "generator": {
     "script": "layout/pa/generate.sh",
-    "script_content_hash": "sha256:d611bf4f874fc587c3563e2d6244b4b835097925496c903ed20c14a07f8a06e3",
+    "script_content_hash": "sha256:a0ddd403f1405ba70b4bc24d66deb900e76d9611368a710d6b807b6ad76b0269",
     "note": "A commit id cannot name the commit that contains its own provenance file; the script's content hash is recorded instead."
   },
   "klt": {
