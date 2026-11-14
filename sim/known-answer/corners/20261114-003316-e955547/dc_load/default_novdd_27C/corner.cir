@@ -1,0 +1,11 @@
+* klt sim -- generated corner deck, do not edit
+.include /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-106/sim/known-answer/dc_load.spice
+.temp 27
+.control
+save all
+set filetype=ascii
+tran 2.5p 150n
+write /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-106/sim/known-answer/corners/20261114-003316-e955547/dc_load/default_novdd_27C/waveform.raw
+quit
+.endc
+.end

@@ -9,7 +9,9 @@
 # and compares with the analytic values (+3.979 dBm into 50 ohm; P_DC = V^2/R
 # with PAE = 0; -20.00 dBc third harmonic). Writes the append-only record
 # sim/known-answer/records/<timestamp>-<sha>[-wrong-load].md and the klt
-# reports/logs under sim/known-answer/corners/<same id>/.
+# artifacts under sim/known-answer/corners/<same id>/: the per-case report and
+# stderr, plus the deck and ngspice log under <case>/<corner>/. The raw traces
+# are large and regenerable and are deleted once the record is written.
 #
 # `klt` is the release pinned in sim/toolchain.json, through uvx (sim_resolve_klt
 # in sim/env.sh); override with KLT="path/to/klt" (word-split).
@@ -43,36 +45,26 @@ SIM_SCRIPT_NAME=run.sh
 # Earlier records/corners of this directory are evidence, not inputs: ignore them.
 sim_begin_record --suffix "${suffix}" --pathspec sim \
   --pathspec ':!sim/known-answer/records' --pathspec ':!sim/known-answer/corners'
-KEEP="${OUT}"
-
-# The waveforms are large and regenerable; they live in a scratch dir. The
-# reports and ngspice logs are kept under corners/<id>/.
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/known-answer.XXXXXX")"
-trap 'rm -rf "${WORK}"' EXIT
-
 failed=0
+# --allow-not-checked: a waveform-only request declares no measurements, so klt
+# grades the run `not_checked` and exits 4 even with every corner `pass`; the
+# per-corner status in the report is what gates (sim_gate_logs below, and
+# check_known_answer.py). sim_run_one submits once, never reruns locally, and
+# sets failed=1 rather than exiting, so the test at the end is what stops the
+# run. --backend local: one corner per deck, so no grid goes to the fleet.
 for name in "${cases[@]}"; do
-  echo "run.sh: klt sim ${name} --backend local"
-  rc=0
-  ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --backend local --format json -o "${WORK}/${name}" \
-      "${name}.request.json" > "${WORK}/${name}.report.json" 2> "${WORK}/${name}.stderr" ) || rc=$?
-  # 4 = "not_checked": a waveform-only request declares no measurements. The
-  # corner status in the report is what the checker gates on.
-  if (( rc != 0 && rc != 4 )); then
-    echo "run.sh: ${name}: klt sim exited ${rc} (see ${WORK}/${name}.stderr); no local fallback is attempted." >&2
-    cat "${WORK}/${name}.stderr" >&2 || true
-    failed=1
-  fi
-  cp "${WORK}/${name}.report.json" "${WORK}/${name}.stderr" "${KEEP}/" 2>/dev/null || true
-  for log in "${WORK}/${name}"/*/ngspice.log; do
-    [[ -f "${log}" ]] && cp "${log}" "${KEEP}/${name}.ngspice.log"
-  done
+  sim_run_one "${name}" --allow-not-checked --backend local
 done
+sim_gate_logs
 
 REC="${RECORDS_DIR}/${RECORD_ID}.md"
 check=0
 python3 -I "${SCRIPT_DIR}/check_known_answer.py" "${RECORD_ID}" "${REPO_GIT_SHA}" "${DIRTY}" \
-  "${KLT_VERSION}" "${WORK}" "${mode}" > "${REC}" || check=$?
+  "${KLT_VERSION}" "${OUT}" "${mode}" > "${REC}" || check=$?
+# The waveforms are large and regenerable; the reports, decks and logs are kept,
+# the raw traces are not. This runs whether or not the checker passed, because
+# --wrong-load is EXPECTED to fail and its record is kept as the demonstration.
+find "${OUT}" -name 'waveform.raw' -delete -o -name 'waveform.raw.json' -delete
 echo "run.sh: record ${REC}"
 (( check == 0 && failed == 0 )) || exit 1
 exit 0
