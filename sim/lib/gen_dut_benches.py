@@ -96,13 +96,23 @@ BATCH_JOB_OVERHEAD_S = 120.0
 # that request's one-unit-per-job sharding (`recommended_hosts: 72`); 300 s lets whole
 # shards fit the ceiling, so `remote.hosts` below is a handful rather than one per point.
 PSAT_MATCH_TIMEOUT_S = 300
-# Headroom added above the shifted drive grid, in dB, to let saturation land INSIDE the
-# sweep. Dropping the collector load to the load-line resistance costs the gain in
-# `match_network()["gain_drop_db"]`, which says where the bare grid's drive points move
-# to, but not how much further compression then runs. This is a stated allowance for
-# that, not a fitted number: `reduce_sweep`'s `psat_at_sweep_end` is what judges whether
-# it sufficed, and a record that reaches the sweep end is extended and rerun, never quoted.
-PSAT_MATCH_HEADROOM_DB = 6.0
+# Top of the matched drive grid, dBm available. The matched sweep EXTENDS the bare grid
+# upward; it does not shift it (see `drive_grid_match_dbm`). Both ends are set by the
+# first matched run, `sim/psat-sweep/records/20261114-032358-651c0cf-match.{md,json}`,
+# which is committed as the evidence for them:
+#
+#   * P_out peaks at Pavail +5.2 dBm and has rolled off ~4 dB by +10, so +10.0 puts Psat
+#     well inside the sweep (`psat_at_sweep_end: false`) without chasing it.
+#   * Above roughly +17 dBm available the deck stops solving: that run's top 12 points
+#     came back `KLT_STATUS_error` with ngspice's `timestep_too_small` (the transient
+#     aborted, flagged on the bias-reference device `XQref`) and the two below them
+#     `UNSETTLED`. Those drive levels also sit at collector peaks near 6 V against a
+#     BVCEO(min) of 1.4 V. Either way there is nothing extractable up there, so the grid
+#     stops below it rather than spending fleet units on points no record can use.
+#
+# This is a measured bound, not a fitted one: `reduce_sweep`'s `psat_at_sweep_end` still
+# judges every run, and a record that reaches its sweep end is extended and rerun.
+PSAT_MATCH_TOP_DBM = 10.0
 
 
 def drive_grid_dbm():
@@ -116,29 +126,39 @@ def drive_grid_dbm():
     return pts
 
 
-def drive_grid_match_dbm(net=None):
-    """``drive_grid_dbm()`` shifted up for the matched load, and extended to saturation.
+def drive_grid_match_dbm():
+    """``drive_grid_dbm()`` EXTENDED at the top, to ``PSAT_MATCH_TOP_DBM``.
 
     The matched deck drops the collector load from ``RL_OHM`` to the load-line
-    resistance, which costs ``match_network()["gain_drop_db"]`` of power gain, so the
-    same output swing needs that much more drive: every point of the bare grid moves up
-    by it. The shift is snapped to the grid's own 0.4 dB fine step so the two grids stay
-    commensurate, and ``PSAT_MATCH_HEADROOM_DB`` of extra fine points are appended
-    because the shift says where the bare grid's points land, not how much further
-    compression runs past them (the bare sweep reaches Psat 10.8 dB below ITS top point).
+    resistance, which costs ``match_network()["gain_drop_db"]`` (~14.2 dB) of power
+    gain, so saturation sits that much further up in drive and the bare grid's top
+    (+2.0 dBm) does not reach it. The **top** therefore has to move.
 
-    Step sizes are the bare grid's and so are its step limits: 0.8 dB in the linear
-    region (limit 1 dB to Psat) and 0.4 dB through compression and saturation (limit
-    0.5 dB across the 1 dB point). Whether the headroom sufficed is not asserted here --
-    ``reduce_sweep``'s ``psat_at_sweep_end`` judges it on the real run.
+    The **bottom** must not. Translating the whole grid up by the gain drop is the
+    obvious thing and it does not work: it carries the three lowest points into
+    compression, and ``reduce_sweep`` takes its reference gain from exactly those
+    (``LINEAR_REGION_NOT_FOUND`` when they disagree by more than 0.1 dB). The first
+    matched run was a +14 dB translation and was refused for precisely that --
+    0.391 dB of spread at a grid starting from -22.0 dBm, where this deck is already
+    compressing. So the linear region stays where the bare grid already proved it is,
+    and only the top is extended.
+
+    Step sizes are the bare grid's, and so are the limits they respect: 0.8 dB in the
+    linear region (``reduce_sweep``'s limit is 1 dB of *measured* P_in up to Psat) and
+    0.4 dB from -16.4 dBm up through compression and saturation (limit 0.5 dB across
+    the 1 dB point). The extension continues the 0.4 dB step, so the whole compressing
+    and saturating half of the sweep is on the finer one.
     """
-    net = match_network() if net is None else net
+    pts = list(drive_grid_dbm())
     step = 0.4
-    shift = round(-net["gain_drop_db"] / step) * step
-    pts = [round(p + shift, 1) for p in drive_grid_dbm()]
-    extra = int(round(PSAT_MATCH_HEADROOM_DB / step))
     top = pts[-1]
-    pts += [round(top + step * (k + 1), 1) for k in range(extra)]
+    n = int(round((PSAT_MATCH_TOP_DBM - top) / step))
+    if n < 1:
+        raise ValueError(
+            f"PSAT_MATCH_TOP_DBM ({PSAT_MATCH_TOP_DBM:g} dBm) is not above the bare "
+            f"grid's top ({top:g} dBm): the matched sweep would not reach saturation, "
+            "which is the whole reason it extends the grid")
+    pts += [round(top + step * (k + 1), 1) for k in range(n)]
     return pts
 
 
@@ -633,7 +653,7 @@ def psat_request(variant="bare"):
     if variant == "bare":
         grid, timeout_s, hosts = drive_grid_dbm(), 1800, None
     else:
-        grid = drive_grid_match_dbm(b["network"])
+        grid = drive_grid_match_dbm()
         timeout_s = PSAT_MATCH_TIMEOUT_S
         # One corner per drive point, so the unit count IS the grid length. The bare
         # request leaves `hosts` unset and its run is warned for it (`job_ceiling`:

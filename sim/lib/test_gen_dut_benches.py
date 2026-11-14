@@ -320,19 +320,30 @@ def test_outputs_carries_both_psat_variants():
 # --- The matched drive grid and its batch sharding ---
 
 
-def test_the_matched_grid_is_the_bare_grid_shifted_up_and_extended():
-    """AC 9's precondition: the grid has to reach where saturation moved to."""
+def test_the_matched_grid_extends_the_bare_grid_and_does_not_shift_it():
+    """The bare grid is a PREFIX of the matched one -- bottom fixed, top extended.
+
+    The regression this pins is the first matched run's actual failure: a grid
+    translated up by the ~14 dB of gain the load drop costs starts at -22.0 dBm, where
+    this deck is already compressing, and `reduce_sweep` refuses the whole reduction
+    with `LINEAR_REGION_NOT_FOUND` because its three reference points disagree by
+    0.391 dB. Keeping the bare grid's low end keeps the reference gain measurable.
+    """
     bare, match = gdb.drive_grid_dbm(), gdb.drive_grid_match_dbm()
-    net = gdb.match_network()
-    shift = round(-net["gain_drop_db"] / 0.4) * 0.4
-    assert shift == pytest.approx(14.0, abs=1e-9)
-    assert len(match) == len(bare) + int(round(gdb.PSAT_MATCH_HEADROOM_DB / 0.4))
-    # Every bare point is present, shifted by the derived amount.
-    for b, m in zip(bare, match):
-        assert m == pytest.approx(b + shift, abs=1e-9)
-    # ...and the extension continues the fine step past the bare grid's top.
-    assert match[-1] == pytest.approx(bare[-1] + shift + gdb.PSAT_MATCH_HEADROOM_DB, abs=1e-9)
-    assert match[0] == pytest.approx(-22.0, abs=1e-9)
+    assert match[:len(bare)] == bare, "the matched grid must not move the bare points"
+    assert match[0] == bare[0] == -36.0
+    assert match[-1] == pytest.approx(gdb.PSAT_MATCH_TOP_DBM, abs=1e-9)
+    assert match[-1] > bare[-1]
+    # The extension is the bare grid's fine step, continued.
+    assert len(match) == len(bare) + int(round((gdb.PSAT_MATCH_TOP_DBM - bare[-1]) / 0.4))
+
+
+def test_the_matched_grid_top_is_above_the_bare_grids_or_refused():
+    """A top that does not extend the grid defeats the bench's whole purpose."""
+    import unittest.mock as _mock
+    with _mock.patch.object(gdb, "PSAT_MATCH_TOP_DBM", gdb.drive_grid_dbm()[-1]):
+        with pytest.raises(ValueError, match="would not reach saturation"):
+            gdb.drive_grid_match_dbm()
 
 
 def test_the_matched_grid_keeps_the_specs_step_limits():
@@ -342,16 +353,10 @@ def test_the_matched_grid_keeps_the_specs_step_limits():
     steps = [round(b - a, 6) for a, b in zip(grid, grid[1:])]
     assert max(steps) <= 1.0                      # never coarser than the Psat limit
     assert set(steps) <= {0.4, 0.8}               # the bare grid's two steps, unchanged
-    # The whole top of the sweep -- where P1dB and Psat land -- is on the 0.4 dB step.
-    assert set(steps[len(gdb.drive_grid_dbm()) - 47:]) == {0.4}
-
-
-def test_the_matched_grid_shift_tracks_the_network_rather_than_a_literal():
-    """A different load line must move the grid, not leave it at today's +14 dB."""
-    far = dict(_LL_CELL, vswing_v=0.04)           # 10x lower Ropt -> 10 dB more drive
-    net = gdb.match_network(text=_array(14, 10), cell=far)
-    grid = gdb.drive_grid_match_dbm(net)
-    assert grid[0] > gdb.drive_grid_match_dbm()[0] + 9.0
+    # Everything from -16.4 dBm up -- the whole compressing and saturating half, where
+    # P1dB and Psat land -- is on the 0.4 dB step.
+    fine = [s for g, s in zip(grid, steps) if g >= -16.4]
+    assert set(fine) == {0.4}
 
 
 def test_batch_hosts_keeps_every_shard_inside_the_fleet_ceiling():

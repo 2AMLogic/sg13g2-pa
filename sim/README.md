@@ -70,7 +70,7 @@ cold. Cold start, after `scripts/setup-env.sh` and with `python3` + `numpy` avai
 | Spec rows | Bench | Cold-start command | Where it runs |
 |---|---|---|---|
 | Psat, P1dB, peak PAE, large-signal S11, device stress (peak `V_CE`/`V_CB`/`V_BE`/`I_C`/T_j per device, window labelling), harmonics and back-off PAE reported | `psat-sweep/` | `sim/psat-sweep/run_psat_sweep.sh` | one `klt sim` request, 72 drive points: the batch fleet; a submit refused for capacity is waited out by `klt` (`batch.capacity_wait_s` 600 in the request), never run locally |
-| The same rows, **through an ideal off-chip output match** (study variant, see "The off-chip output match" below) | `psat-sweep/` (`--match`) | `sim/psat-sweep/run_psat_sweep.sh --match` | one `klt sim` request, 87 drive points, `remote.hosts` 8: the batch fleet, same capacity wait |
+| The same rows, **through an ideal off-chip output match** (study variant, see "The off-chip output match" below) | `psat-sweep/` (`--match`) | `sim/psat-sweep/run_psat_sweep.sh --match` | one `klt sim` request, 92 drive points, `remote.hosts` 9: the batch fleet, same capacity wait |
 | Power gain, small-signal S11 (S22, S12) over the band | `ac-gain/` | `sim/ac-gain/run_ac_gain.sh` | single unit, `--backend local` |
 | Small-signal stability: mu, mu', k, abs(delta), negative-resistance check, 10 MHz-30 GHz at 50 pts/decade | `ac-stability/` | `sim/ac-stability/run_ac_stability.sh` | single unit, `--backend local` |
 
@@ -140,6 +140,20 @@ in `psat_bench(variant)` and read from there by `psat_record.py` rather than ass
 Its record is suffixed `-match` (`sim_begin_record --suffix`, as
 `known-answer/run.sh --wrong-load` does), so it cannot be confused with or overwrite a
 bare-deck record.
+
+**The drive grid extends the bare grid upward; it does not shift it.** Saturation sits
+~14 dB further up in drive once the load drops, so the top has to move -- but the
+*bottom* must not. `reduce_sweep` takes its reference gain from the three lowest-drive
+points, so translating the whole grid up carries them into compression and the reduction
+is refused (`LINEAR_REGION_NOT_FOUND`). Both ends come from the first matched run,
+`records/20261114-032358-651c0cf-match.*`, which is kept as the evidence for them: it
+*was* a +14 dB translation, was refused for exactly that reason (0.391 dB of spread),
+and showed that above roughly +17 dBm available this deck stops solving at all -- its
+top 12 points aborted with ngspice's `timestep_too_small`, flagged on the bias-reference
+device `XQref`, and the two below them came back `UNSETTLED`. (Those levels are also at
+collector peaks near 6 V against a BVCEO(min) of 1.4 V.) The grid therefore keeps the
+bare low end and stops at +10.0 dBm: past the measured peak, below the region that does
+not solve.
 
 ## Running grids
 
