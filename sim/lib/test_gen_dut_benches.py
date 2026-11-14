@@ -113,7 +113,8 @@ def test_match_network_reproduces_the_committed_derivation():
     assert net["q"] == pytest.approx(5.0249, abs=1e-4)
     assert net["cp_f"] == pytest.approx(6.5506e-12, rel=1e-5)
     assert net["ls_h"] == pytest.approx(0.6663e-9, rel=1e-4)
-    # The ceiling that goes with this load line, and the gain the drop costs.
+    # The ceiling that goes with this load line, and the ropt/RL_OHM load ratio
+    # (hand arithmetic -- the measured gain difference is only ~2.97 dB).
     assert net["pout_ceiling_w"] == pytest.approx(0.042, rel=1e-9)
     assert net["gain_drop_db"] == pytest.approx(-14.19, abs=0.01)
 
@@ -334,12 +335,13 @@ def test_the_matched_grid_starts_where_the_bare_one_does():
 
 
 def test_the_matched_grid_reaches_above_the_bare_grids_top():
-    """Saturation sits ~14 dB further up in drive, so the top has to move."""
+    """Saturation sits ~11 dB further up in available drive -- measured, Psat at
+    Pavail -5.6 -> +5.2 dBm through the ideal lossless off-chip match -- so the
+    top has to move. The top is set by ``PSAT_MATCH_TOP_DBM`` from those runs,
+    not derived from the load ratio."""
     bare, match = gdb.drive_grid_dbm(), gdb.drive_grid_match_dbm()
     assert match[-1] == pytest.approx(gdb.PSAT_MATCH_TOP_DBM, abs=1e-9)
     assert match[-1] > bare[-1]
-    # the gain drop is what makes that necessary, and it is derived, not assumed
-    assert gdb.match_network()["gain_drop_db"] < -10.0
 
 
 def test_the_matched_grid_fine_steps_the_whole_compressing_range():

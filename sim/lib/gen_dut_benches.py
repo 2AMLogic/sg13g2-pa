@@ -148,11 +148,12 @@ def drive_grid_match_dbm():
     settled by real runs rather than argued from the bare grid, because translating or
     reusing the bare grid does not work and the two failures are instructive:
 
-    * **The bottom must not move.** A grid shifted up by the ~14.2 dB of gain the load
-      drop costs starts at -22.0 dBm, where this deck is already compressing, so the
-      three lowest-drive points ``reduce_sweep`` takes its reference gain from disagree
-      (0.391 dB against a 0.1 dB limit) and the whole reduction is refused
-      ``LINEAR_REGION_NOT_FOUND``. First matched run, ``…-651c0cf-match``.
+    * **The bottom must not move.** A grid shifted up by the ~14.2 dB the load-drop
+      estimate had predicted starts at -22.0 dBm, where this deck is already
+      compressing, so the three lowest-drive points ``reduce_sweep`` takes its
+      reference gain from disagree (0.391 dB against a 0.1 dB limit) and the whole
+      reduction is refused ``LINEAR_REGION_NOT_FOUND``. First matched run,
+      ``…-651c0cf-match``.
     * **The coarse tail must stop early.** With the bare grid's boundary (-16.8 dBm) the
       1 dB compression point lands inside the 0.8 dB region: measured P_in steps 0.912 dB
       across the bracket against a 0.5 dB limit, refused ``SWEEP_STEP_TOO_COARSE``.
@@ -344,8 +345,14 @@ def match_network(text=None, cell=None):
         # The analytic ceiling this load line goes with: the cell's per-Nx fundamental
         # power times the array. Hand arithmetic over the record, not a simulated result.
         "pout_ceiling_w": pout["pout_per_nx_w"] * nx_total,
-        # Power gain lost by dropping the collector load from RL_OHM to ropt, which is
-        # how far up the drive grid has to move for the same output swing.
+        # Hand arithmetic (10*log10), not a simulated gain: the power ratio a fixed
+        # collector current delivers into ropt vs RL_OHM (-14.19 dB here). It is NOT
+        # the gain this bench loses -- the matched run measures ~2.97 dB of linear-gain
+        # difference (records/20261114-034225-54cb27b-match.json against the bare
+        # 20261107-125209-93cf5ae.json) -- and it is not, by itself, how far up the
+        # drive grid had to move either, which measured +10.8 dB (Psat at Pavail
+        # -5.6 -> +5.2 dBm, through the ideal lossless off-chip match). Same
+        # direction as each measurement, a different number from both.
         "gain_drop_db": 10.0 * math.log10(ropt / RL_OHM),
         "loadline_record": LOADLINE_RECORD.relative_to(REPO).as_posix(),
         "loadline_cell": {"supply_nominal_v": cell["supply_nominal_v"],
