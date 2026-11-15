@@ -5,6 +5,12 @@ triage role. Newest first.
 
 ### 2026-11-15
 
+- **PR #136**: attest: inventory the three unlisted benches in T1 item 9 and re-attest
+- **Issue #131** (closed): attest: add sim/known-answer-thermal/ to the T1 item-9 testbench inventory
+- **PR #129**: sim(psat-sweep): relabel gain_drop_db as the load-ratio estimate it is
+- **Issue #121** (closed): sim: `gain_drop_db` is labelled as the gain the load drop costs, and the matched run measures ~3 dB, not 14.2 dB
+- **PR #127**: fix: collapse generate.sh onto one temp dir and one EXIT trap
+- **Issue #123** (closed): Collapse layout/pa/generate.sh onto one temp dir and one EXIT trap: the second trap replaces the first, so --check leaks its tree
 - **PR #126**: refactor(sim): take the record provenance bullet and watts-to-dBm from sim/lib
 - **Issue #119** (closed): Single-source the sim record provenance bullet and the watts-to-dBm conversion: ac_record.py and psat_record.py bypass sim/lib helpers that already exist
 
