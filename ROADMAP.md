@@ -64,12 +64,13 @@ stale; the record is current).
   has its known-answer check (#115, PR #130): `sim/known-answer-thermal/`
   grades the thermal-node rise against the card's `P * rth` at rel 0.01 %
   with a negative control, and PASSes; `sim/psat-sweep/psat_record.py` now
-  cites it in the `Tj max C` labelling paragraph (`df89f7e`), so records
-  rendered from here on carry the citation — the already-committed records
-  keep their original "no known-answer check yet" text, which is append-only.
+  cites it in the `Tj max C` labelling paragraph (`df89f7e`), so
+  matched-bench records rendered from here on carry the citation —
+  the already-committed records keep their original
+  "no known-answer check yet" text, which is append-only.
   The check is single-corner (`hbt_typ`, 27 C —
   the card's `rth` carries no process or temperature coefficient). Recording
-  the discharge in the spec (#132, parked on merged #130) and adding the
+  the discharge in the spec (#132) and adding the
   bench to the item-9 inventory (#131) are open.
 - The README's stale status lines ("Nothing is designed yet", "ratification
   pending PR approval") were refreshed by #117 (PR #124); the stale
@@ -88,13 +89,13 @@ refresh (#117, PR #124) — are merged with their done-criteria met, and #96
 (PR #103) and #106 (PR #109) are closed. What the pinned tree leaves open:
 
 - **#121** — the matched record's `gain_drop_db` labelling: it reads ~3 dB
-  where the label implies 14.2 dB (`loom:building`).
+  where the label implies 14.2 dB.
 - **#128** — the README's "Built agent-native" paragraph still claims every
-  claim traces to a PVT-corner result (no labels yet).
+  claim traces to a PVT-corner result.
 - **#131** — add `sim/known-answer-thermal/` to the T1 item-9 testbench
-  inventory (`loom:triage`).
-- **#132** — record DR 0001 Q4's discharge in the spec; parked on #130,
-  which has merged.
+  inventory.
+- **#132** — record DR 0001 Q4's discharge in the spec; #130 has merged,
+  so nothing holds it.
 
 ## Next
 
@@ -145,8 +146,6 @@ refresh (#117, PR #124) — are merged with their done-criteria met, and #96
 - **Simplification proposals #77, #85, #87, #93, #104** are held for operator
   approval. **#100** is no longer blocked on #95 (`loom:hermit`, in the
   backlog); its body is baselined on `74baa8e`.
-
-No open issue is labelled ready for implementation today.
 
 ## Not planned
 
