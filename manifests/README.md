@@ -38,10 +38,26 @@ output, the machine-readable form of the T1 checklist in
   `sim/device-npn13g2`, `sim/psat-sweep`, `sim/ac-gain`, `sim/ac-stability`),
   each primary bench with its cold-start argv (`local_only`: they need the
   pinned PDK, ngspice, numpy and, for the grid benches, the batch fleet), plus
-  the PDK and tool pins.
+  the PDK and tool pins. The tool pins are a **minimum-version floor**, not an
+  exact record of the host that produced the evidence: a pin is satisfied by
+  any later version of the same tool, so a worker-image bump does not falsify
+  it — `pins.tools.ngspice: "46"` is satisfied by the ngspice-47 the committed
+  evidence actually ran on (verified 2026-11-15; see the envelope bullet
+  below). The floor is a documented claim, not an enforced one: `klt` does not
+  compare `pins.tools` against the host — its pin check records the declared
+  value only (upstream gap:
+  [`2AMLogic/klayout-tools#5563`](https://github.com/2AMLogic/klayout-tools/issues/5563)).
+  The semantics live here rather than in the inventory because editing that
+  file at all changes its sha256 and forces a full re-attest (item 9's
+  manifest hash is the inventory hash).
 - **`../evidence/item9.json`**: the envelope `klt signoff --attest 9` produced from
   it. Generated, never hand-edited. The manifest's `content_hash` for item 9 is
-  `sha256sum attest/item9.json`.
+  `sha256sum attest/item9.json`. The committed evidence was produced on
+  **ngspice-47** (verified 2026-11-15); the simulator that actually ran each
+  bench is stated per bench in the append-only `sim/*/records/` — e.g. the
+  captured batch-worker banner in
+  `sim/psat-sweep/records/20261115-051641-e0a560f.md` — which is the provenance
+  of record, not this envelope's pins.
 - **`../attest/item10.json`**: the item-10 attestation inventory (hygiene
   files plus the PDK-free checks run on a stock CI runner).
 - **`../evidence/item10.json`**: the envelope `klt signoff --attest 10`
