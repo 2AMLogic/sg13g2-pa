@@ -177,6 +177,8 @@ def main(argv):
     # units.py is in the graded path too: the measured P_out row renders through
     # rx.dbm -> units.dbm, so its digest belongs in the inventory beside rf_extract's.
     out.append(f"- `sim/lib/units.py` `{sha(os.path.join(HERE, '..', 'lib', 'units.py'))}`")
+    # provenance.py renders the Commit bullet above, so its digest belongs here too.
+    out.append(f"- `sim/lib/provenance.py` `{sha(os.path.join(HERE, '..', 'lib', 'provenance.py'))}`")
     print("\n".join(out))
     return 0 if ok else 1
 
