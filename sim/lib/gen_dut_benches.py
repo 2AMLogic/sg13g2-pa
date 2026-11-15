@@ -54,6 +54,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # once in sim/lib/bench_gen.py, shared with sim/device-npn13g2/gen_bench.py; never
 # retype the corner-library path or the capacity wait here.
 import bench_gen  # noqa: E402
+from units import dbm  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 NETLIST = REPO / "design" / "netlist" / "sg13g2-pa.spice"
@@ -588,7 +589,7 @@ Rl outl 0 {RL_OHM:g}
             "",
             f"Analytic ceiling for this load line: {net['nx_total']} Nx x "
             f"{net['loadline_cell']['pout_per_nx_w']:g} W = {net['pout_ceiling_w']:g} W = "
-            f"{10 * math.log10(net['pout_ceiling_w'] / 1e-3):.2f} dBm",
+            f"{dbm(net['pout_ceiling_w']):.2f} dBm",
             "  (hand arithmetic over the load-line record, NOT a simulated result).",
             "P_DC = full supply Vcc power, bias reference included (Iref is an ideal source from Vcc).",
             "Supply current through Vcc (delivered = -i(vcc)); input current is -i(bs).",

@@ -313,8 +313,11 @@ or a thermal time constant (an `op` solve cannot time-resolve them).
   the whole shared body of the two AC runners, which differ only in the bench
   name.
 - `tools/` - `build-osdi.sh`, `pdk_identity.py`.
-- `lib/` - `rf_extract.py` (including `dbm`, the one watts-to-dBm conversion every
-  record and the sweep reducer share), `device_limits.py` (the npn13G2 breakdown
+- `lib/` - `units.py` (`dbm`, the one watts-to-dBm conversion every record and
+  the sweep reducer share, defined here once -- `rf_extract` re-exports it as
+  `rx.dbm`, so both names are the same function),
+  `rf_extract.py` (extraction from transient waveforms and the Psat/P1dB
+  sweep reducer), `device_limits.py` (the npn13G2 breakdown
   minima, model window and Rth model, defined once for every bench that grades
   against them), `bench_gen.py` (the pinned PDK name and corner-library path, the
   capacity wait, the `klt sim` request skeleton and the strict write/`--check`
