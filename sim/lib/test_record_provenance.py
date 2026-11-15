@@ -1,7 +1,7 @@
 """Every sim/ record states its provenance in one format, from one place.
 
-`sim/lib/provenance.py` holds the record's `- Commit:` bullet so that all five
-record renderers emit the same text for the same two CLI arguments. Two of them
+`sim/lib/provenance.py` holds the record's `- Commit:` bullet so that every
+record renderer emits the same text for the same two CLI arguments. Two of them
 (`sim/lib/ac_record.py`, `sim/psat-sweep/psat_record.py`) landed after that
 helper and retyped their own differently-formatted bullet instead (issue #119),
 so for a while the repo's own append-only evidence did not state its provenance
@@ -9,7 +9,7 @@ the same way twice.
 
 Nothing raises when that drifts -- a retyped bullet renders perfectly happily --
 so these tests are what catch it, and they catch it for a renderer that does not
-exist yet as readily as for the five that do: the check is "no module under sim/
+exist yet as readily as for the ones that do: the check is "no module under sim/
 but provenance.py writes a provenance bullet literal", not a list of filenames.
 No simulator or PDK is needed.
 """
@@ -26,11 +26,12 @@ import provenance  # noqa: E402
 # provenance.commit_line emits, and the retyped one issue #119 removed.
 BULLET_LITERALS = ("- Commit:", "- Repo `")
 
-# The five renderers that turn a `klt sim` report into a record under sim/*/records/.
+# The record renderers that turn a `klt sim` report into a record under sim/*/records/.
 RENDERERS = (
     "sim/lib/ac_record.py",
     "sim/psat-sweep/psat_record.py",
     "sim/known-answer/check_known_answer.py",
+    "sim/known-answer-thermal/thermal_record.py",
     "sim/smoke/summarize.py",
     "sim/device-npn13g2/summarize.py",
 )
@@ -68,6 +69,23 @@ def test_every_record_renderer_imports_the_shared_commit_bullet():
     missing = [rel for rel in RENDERERS
                if "commit_line" not in open(os.path.join(REPO, rel)).read()]
     assert not missing, f"renderers not using provenance.commit_line: {missing}"
+
+
+def test_the_renderer_roster_names_every_module_that_imports_provenance():
+    """A new renderer cannot join sim/ without joining RENDERERS (issue #133).
+
+    A source-substring check, like the rest of this file -- not an import graph.
+    """
+    unlisted = []
+    for rel in _sim_modules():
+        with open(os.path.join(REPO, rel)) as fh:
+            src = fh.read()
+        if ("import provenance" in src or "from provenance import" in src) \
+                and rel not in RENDERERS:
+            unlisted.append(rel)
+    assert not unlisted, (
+        "these modules use sim/lib/provenance.py but are missing from RENDERERS; "
+        f"add them so the positive half covers them: {unlisted}")
 
 
 def test_commit_line_marks_a_dirty_tree_and_only_a_dirty_tree():

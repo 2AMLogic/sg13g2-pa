@@ -20,7 +20,7 @@ from provenance import commit_line  # noqa: E402
 # sim/psat-sweep/psat_record.py; see gen_dut_benches.py's module docstring).
 # The same rule covers the record's own provenance bullet: its commit half is
 # provenance.commit_line, the one place every sim/ renderer gets it from -- never
-# retyped here, so all five records state their provenance identically.
+# retyped here, so every record states its provenance identically.
 
 SPEC = "spec/target-spec.md (RATIFIED rows: Power gain, Input match, Stability small-signal)"
 
