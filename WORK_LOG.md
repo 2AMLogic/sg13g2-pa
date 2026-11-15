@@ -5,6 +5,12 @@ triage role. Newest first.
 
 ### 2026-11-15
 
+- **PR #137**: refactor: single-source the watts-to-dBm conversion in sim/lib/units.py
+- **Issue #125** (closed): Three more copies of the watts-to-dBm conversion remain outside sim/lib/rf_extract.py
+- **PR #141**: docs: reword README verification sentence to route PVT coverage to item 5
+- **Issue #128** (closed): README: the 'Built agent-native' paragraph still claims every claim traces to a PVT-corner result
+- **PR #140**: refactor: route the thermal known-answer generator through bench_gen
+- **Issue #138** (closed): Route the thermal known-answer generator through sim/lib/bench_gen.py: a third copy of the request skeleton, with a --check driver that writes on unknown arguments
 - **PR #136**: attest: inventory the three unlisted benches in T1 item 9 and re-attest
 - **Issue #131** (closed): attest: add sim/known-answer-thermal/ to the T1 item-9 testbench inventory
 - **PR #129**: sim(psat-sweep): relabel gain_drop_db as the load-ratio estimate it is
