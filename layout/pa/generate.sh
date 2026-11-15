@@ -41,16 +41,15 @@ fi
 rows=2
 cols=$(( n_dev / 2 ))
 
+tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+report="$tmp/klt_report.json"
 out="$ROOT/${GDS}"
 prov_out="$ROOT/${PROV}"
 if [[ $mode == check ]]; then
-  tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
   out="$tmp/sg13g2_pa.gds"; prov_out="$tmp/provenance.json"
 fi
 
 klt() { uvx --from "klayout-tools==${KLT_PIN}" klt "$@"; }
-
-report="$(mktemp)"; trap 'rm -f "$report"' EXIT
 klt gen bjt_array --params "{\"rows\": ${rows}, \"cols\": ${cols}}" \
     --cell-name sg13g2_pa -o "$out" --format json > "$report"
 
