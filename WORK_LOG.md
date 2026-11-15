@@ -5,6 +5,8 @@ triage role. Newest first.
 
 ### 2026-11-15
 
+- **PR #149**: test: follow spec_from_file_location sibling hops through bare and aliased imports
+- **Issue #148** (closed): Inventory closure walk fails open on a bare-name spec_from_file_location call
 - **PR #147**: test: guard that every record inventory pins its full sim/lib closure
 - **Issue #144** (closed): Guard test: every record renderer's digest inventory pins every sim/lib module in its graded path
 - **PR #145**: test: complete the provenance renderer roster and make it self-policing

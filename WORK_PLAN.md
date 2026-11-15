@@ -8,32 +8,31 @@ Only the region between the markers is machine-generated.
 
 Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
 
-_None._
+- **#134**: spec: record that DR 0001 Q4 (thermal-node known-answer check) is discharged
 
 ## Very Important
 
 `loom:very-important` (one counts per workspace); every stage takes these first.
 
-_None._
+- **#39**: T1 item 4 (LVS clean): klt lvs of the PA against its schematic netlist, every npn13G2 recognised
 
 ## Important
 
 `loom:important`; taken before unlabelled work.
 
-- **#39**: T1 item 4 (LVS clean): klt lvs of the PA against its schematic netlist, every npn13G2 recognised
 - **#42**: T1 item 11 (Power delivery): PA klt erc supply spec plus LVS supply pairing
 
 ## Ready
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-- **#111**: Single-source the klt sim request skeleton: gen_bench.py and gen_dut_benches.py duplicate the PDK constants and the --check driver
+_None._
 
 ## In Progress
 
 Issues currently being built (`loom:building`).
 
-_None._
+- **#132**: spec: record that DR 0001 Q4/D-2 (thermal-node known-answer check) is discharged
 
 ## PRs Awaiting Review
 
@@ -45,7 +44,7 @@ _None._
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-_None._
+- **#134**: spec: record that DR 0001 Q4 (thermal-node known-answer check) is discharged
 
 ## Proposed
 
@@ -54,6 +53,7 @@ Issues carrying `loom:curated`.
 - **#5**: Track the gap to T1 (klayout-tools design-evidence-tiers.md) *(curated)*
 - **#39**: T1 item 4 (LVS clean): klt lvs of the PA against its schematic netlist, every npn13G2 recognised *(curated)*
 - **#42**: T1 item 11 (Power delivery): PA klt erc supply spec plus LVS supply pairing *(curated)*
+- **#132**: spec: record that DR 0001 Q4/D-2 (thermal-node known-answer check) is discharged *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -64,6 +64,7 @@ Issues carrying `loom:curated`.
 - **#100**: Use klt's capture_only and complex_vectors request options: drop the --allow-not-checked exit-4 waiver and the hand-written ASCII rawfile parser *(hermit)*
 - **#104**: Trim sim/toolchain.json and sim/pdk.json to the keys tooling reads: unread fact-sheet fields restate pins held elsewhere and have gone stale *(hermit)*
 - **#112**: Declare the smoke benches' capacity wait in their requests: run_smoke.sh's KLT_SIM_BACKEND guard re-forks klt's backend resolution *(hermit)*
+- **#122**: Trim the smoke bench's OSDI preflight and preload to the one object its decks can reach: three of four are unreachable from cornerMOSlv.lib *(hermit)*
 
 ## Epics
 
@@ -73,14 +74,14 @@ _None._
 
 | Bucket | Count |
 |------|-------|
-| Operator merge-risk holds | 0 |
-| Very important | 0 |
-| Important | 2 |
-| Ready (`loom:issue`) | 1 |
-| In Progress (`loom:building`) | 0 |
+| Operator merge-risk holds | 1 |
+| Very important | 1 |
+| Important | 1 |
+| Ready (`loom:issue`) | 0 |
+| In Progress (`loom:building`) | 1 |
 | PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 0 |
-| Curated | 3 |
-| Architect / Hermit proposals | 7 |
+| Approved PRs awaiting merge | 1 |
+| Curated | 4 |
+| Architect / Hermit proposals | 8 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
