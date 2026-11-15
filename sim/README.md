@@ -315,7 +315,8 @@ or a thermal time constant (an `op` solve cannot time-resolve them).
 - `tools/` - `build-osdi.sh`, `pdk_identity.py`.
 - `lib/` - `units.py` (`dbm`, the one watts-to-dBm conversion every record and
   the sweep reducer share, defined here once -- `rf_extract` re-exports it as
-  `rx.dbm`, so both names are the same function),
+  `rx.dbm`, so both names are the same function; `db10` is defined here once
+  too and re-exported the same way, public as `rf_extract.db10`),
   `rf_extract.py` (extraction from transient waveforms and the Psat/P1dB
   sweep reducer), `device_limits.py` (the npn13G2 breakdown
   minima, model window and Rth model, defined once for every bench that grades

@@ -174,6 +174,9 @@ def main(argv):
         if fn.endswith((".spice", ".request.json")) and fn.rsplit(".", 2)[0].split(".")[0] in cases:
             out.append(f"- `sim/known-answer/{fn}` `{sha(os.path.join(HERE, fn))}`")
     out.append(f"- `sim/lib/rf_extract.py` `{sha(os.path.join(HERE, '..', 'lib', 'rf_extract.py'))}`")
+    # units.py is in the graded path too: the measured P_out row renders through
+    # rx.dbm -> units.dbm, so its digest belongs in the inventory beside rf_extract's.
+    out.append(f"- `sim/lib/units.py` `{sha(os.path.join(HERE, '..', 'lib', 'units.py'))}`")
     print("\n".join(out))
     return 0 if ok else 1
 
