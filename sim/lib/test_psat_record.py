@@ -87,12 +87,12 @@ def _waveform(path):
     return traces
 
 
-def _render(tmp_path, variant):
+def _render(tmp_path, variant, remote="n/a"):
     """Run psat_record.main for one variant; returns (markdown, json)."""
     wav = os.path.join(tmp_path, "waveform.raw.json")
     _waveform(wav)
     report = {
-        "environment": {"backend": "test", "remote": "n/a"},
+        "environment": {"backend": "test", "remote": remote},
         "corners": [{
             "corner_id": "hbt_typ/vamp=1.000_vcc=0.800V/27C", "status": "pass",
             "supply_v": {"vamp": 1.0, "vcc": VCC}, "temperature_c": 27,
@@ -275,9 +275,21 @@ def test_a_sharded_remote_block_is_summarized_not_dumped():
 
 
 def test_the_matched_record_summarizes_its_sharded_backend(tmp_path):
-    md, _doc = _render(str(tmp_path), "match")
-    # the synthetic report uses a plain string, which must pass through untouched
-    assert "remote job: `n/a`" in md
+    """The matched bench shards on the batch fleet (`request.remote.hosts`); its
+    record's Conditions bullet must carry the one-line summary, not the full
+    per-shard environment captures."""
+    fleet = [{"provider": "aws-batch-fleet", "job_id": f"klt-sim-{k:04x}",
+              "region": "us-east-1", "instance_type": "m7i.4xlarge",
+              "lifecycle": "spot", "runner_klt_version": "0.9.0",
+              "elapsed_seconds": 30 + k} for k in range(3)]
+    md, _doc = _render(str(tmp_path), "match", remote={"fleet": fleet})
+    assert "3 fleet shards" in md
+    assert "elapsed 30-32 s" in md
+    assert "klt-sim-0000" in md and "klt-sim-0002" in md
+    # the point: the worker captures are NOT inlined into the markdown, and the
+    # summary says where the full capture lives
+    assert "{'provider'" not in md and "'job_id'" not in md
+    assert "full per-shard environment capture" in md
 
 
 # --- the two facts this record used to retype (issue #119) -----------------
