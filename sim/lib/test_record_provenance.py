@@ -122,11 +122,9 @@ def test_commit_line_marks_a_dirty_tree_and_only_a_dirty_tree():
 LIB_DIR = os.path.join(SIM, "lib")
 
 # Renderers that render a `### ... (sha256)` inventory section today.
-# sim/known-answer-thermal/thermal_record.py renders one too but is not in
-# RENDERERS yet -- PR #145 (issue #133) adds it to the roster; when that
-# lands, add it here as well (its pins are already in place).
 INVENTORY_RENDERERS = (
     "sim/known-answer/check_known_answer.py",
+    "sim/known-answer-thermal/thermal_record.py",
     "sim/smoke/summarize.py",
     "sim/device-npn13g2/summarize.py",
 )
@@ -322,6 +320,17 @@ def test_inventory_and_no_inventory_buckets_partition_the_renderer_roster():
     problems = _partition_problems(
         RENDERERS, INVENTORY_RENDERERS, [p for p, _reason in NO_INVENTORY_BY_DECISION])
     assert not problems, "; ".join(problems)
+
+
+def test_no_inventory_by_decision_entries_render_no_inventory():
+    """The no-inventory bucket is a verified decision, not a trusted one."""
+    for rel, _reason in NO_INVENTORY_BY_DECISION:
+        pinned = _pinned_sim_lib_modules(_read_source(os.path.join(REPO, rel)))
+        assert not pinned, (
+            f"{rel} is declared in NO_INVENTORY_BY_DECISION but renders "
+            f"`sim/lib` pin bullets: {sorted(pinned)}. Move it to "
+            "INVENTORY_RENDERERS so the closure guard covers it, or drop "
+            "the bullets.")
 
 
 # Fixture source shaped like check_known_answer.py before #137: it pins
