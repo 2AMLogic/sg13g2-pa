@@ -5,6 +5,12 @@ triage role. Newest first.
 
 ### 2026-11-15
 
+- **PR #147**: test: guard that every record inventory pins its full sim/lib closure
+- **Issue #144** (closed): Guard test: every record renderer's digest inventory pins every sim/lib module in its graded path
+- **PR #145**: test: complete the provenance renderer roster and make it self-policing
+- **Issue #133** (closed): sim/lib/test_record_provenance.py's RENDERERS list misses the sixth record renderer (thermal_record.py)
+- **Issue #143** (closed): Thermal known-answer gen_bench re-implements bench_gen request/process_block
+- **PR #114**: docs: roadmap as of 2026-11-13
 - **PR #137**: refactor: single-source the watts-to-dBm conversion in sim/lib/units.py
 - **Issue #125** (closed): Three more copies of the watts-to-dBm conversion remain outside sim/lib/rf_extract.py
 - **PR #141**: docs: reword README verification sentence to route PVT coverage to item 5
