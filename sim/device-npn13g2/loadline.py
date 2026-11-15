@@ -34,16 +34,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "lib"))
 from device_limits import (BVCEO_MIN, BVCBO_MIN, IC_WIN_PER_NX, LIMITS_NOTE,  # noqa: E402
                            TJ_MAX, VBE_WIN, VCE_WIN, rth)
+from units import dbm  # noqa: E402
 
 AMBIENTS = (-40.0, 27.0, 125.0)
 P_TARGET_DBM = 15.0
 EPS = 1e-9
 
 DEFAULT_SUPPLIES = (0.5, 0.6, 0.7, 0.8, 1.0, 1.2, 1.4)
-
-
-def dbm(p_w):
-    return 10.0 * math.log10(p_w / 1e-3)
 
 
 def frac_above(mean, amp, level):
