@@ -12,11 +12,15 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_dut_benches as gdb  # noqa: E402
 import sparams as sp  # noqa: E402
+from provenance import commit_line  # noqa: E402
 # Every bench fact this record restates -- the nominal cell, the port impedances and the
 # S-parameter reference -- lives once in gen_dut_benches.py, which generates both AC
 # decks; the swept band is read back from the data. Nothing below is a retyped bench
 # number, so a record cannot fall behind the deck that produced it (same rule as
 # sim/psat-sweep/psat_record.py; see gen_dut_benches.py's module docstring).
+# The same rule covers the record's own provenance bullet: its commit half is
+# provenance.commit_line, the one place every sim/ renderer gets it from -- never
+# retyped here, so all five records state their provenance identically.
 
 SPEC = "spec/target-spec.md (RATIFIED rows: Power gain, Input match, Stability small-signal)"
 
@@ -39,7 +43,7 @@ def _port_z():
 
 
 def main(argv):
-    kind, rid, sha, dirty, klt_v, ng_v, report_path = argv[1:8]
+    kind, rid, git_sha, dirty, klt_v, ng_v, report_path = argv[1:8]
     rep = json.load(open(report_path))
     corner = rep["corners"][0]
     if corner.get("status") != "pass":
@@ -67,7 +71,8 @@ def main(argv):
       f"(`Iref`/`Rb` of `{NETLIST_REL}`).")
     w(f"- Source and load: {_port_z()}, S-parameter reference {gdb.RS_OHM:g} ohm; "
       "two independent DUT copies (forward and reverse excitation) in one analysis.")
-    w(f"- Repo `{sha}` (dirty={dirty}); klt {klt_v}; {ng_v}; PDK per `sim/pdk.json`.")
+    w(commit_line(git_sha, dirty))
+    w(f"- klt {klt_v}; {ng_v}; PDK per `sim/pdk.json`.")
     w("")
     if kind == "gain":
         w(f"## Band results ({len(freq)} points, {freq[0] / 1e6:g}-{freq[-1] / 1e6:g} MHz)")
