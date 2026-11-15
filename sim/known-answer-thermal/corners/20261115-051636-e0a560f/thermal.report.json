@@ -1,0 +1,354 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "sim/known-answer-thermal/thermal.spice",
+    "scope": "repo"
+  },
+  "status": "pass",
+  "corner_count": 1,
+  "passed": 1,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 1,
+    "sim__corner__passed_count": 1,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "47",
+    "ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "engine_build": {
+      "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******",
+      "binary_sha256": "39ca1adb826660324c3626f72bd946ec40704f0f3fc8e243c623f76e24b3eee2",
+      "probe": "ok",
+      "reason": null
+    },
+    "models_lib": {
+      "path": null,
+      "scope": "absent"
+    },
+    "models_lib_sha256": null,
+    "models_lib_sha256_scope": "local",
+    "netlist_sha256": "d8933c708cdddb559602c68042992f137f0f8b725706fc79537f1cbeb488884b",
+    "netlist_closure": [
+      {
+        "path": "sim/known-answer-thermal/thermal.spice",
+        "scope": "repo",
+        "sha256": "d8933c708cdddb559602c68042992f137f0f8b725706fc79537f1cbeb488884b"
+      }
+    ],
+    "netlist_identity": "sha256:1d1cf390e700e798fde90f988e9e2b18597dc80608d7aaa11397a1e0011379e5",
+    "corner_section_libs": [
+      {
+        "name": "cornerHBT.lib",
+        "path": null,
+        "scope": "external",
+        "sha256": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462"
+      }
+    ],
+    "engine_host": "local",
+    "backend": {
+      "resolved": "local",
+      "source": "flag",
+      "requested": "local"
+    }
+  },
+  "coverage": {
+    "corners_simulated": 1,
+    "measurements_declared": 10,
+    "measurements_with_limits": 6,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "limit:[0,\"hbt_typ/novdd/27C\",\"rth_meas\",\"max\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"rth_meas\",\"min\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt4_minus_vt5\",\"max\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt4_minus_vt5\",\"min\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n1_10m\",\"max\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n1_10m\",\"min\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n1_1m\",\"max\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n1_1m\",\"min\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n4_10m\",\"max\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n4_10m\",\"min\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n4_1m\",\"max\"]",
+      "limit:[0,\"hbt_typ/novdd/27C\",\"vt5_n4_1m\",\"min\"]",
+      "measurement:[0,\"hbt_typ/novdd/27C\",\"ic_bias\"]/observation",
+      "measurement:[0,\"hbt_typ/novdd/27C\",\"p_bias\"]/observation",
+      "measurement:[0,\"hbt_typ/novdd/27C\",\"vt4_bias\"]/observation",
+      "measurement:[0,\"hbt_typ/novdd/27C\",\"vt5_bias\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"hbt_typ/novdd/27C\",\"ic_bias\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"hbt_typ/novdd/27C\",\"p_bias\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"hbt_typ/novdd/27C\",\"vt4_bias\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"hbt_typ/novdd/27C\",\"vt5_bias\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.9.0",
+    "klt_git_commit": "5dbbad05ff42265c92a6f3d2f20d1bbcd2957d49",
+    "klt_reinstall_spec": "klayout-tools==0.9.0",
+    "klayout_version": "0.30.13",
+    "pdk": {
+      "name": "ihp-sg13g2",
+      "source": "PDK_ROOT environment variable",
+      "version": "fetched:0.3.0",
+      "ambiguous_sources": [
+        "search root: ~/share/pdk"
+      ]
+    },
+    "deck": null,
+    "input": {
+      "content_hash": "sha256:d8933c708cdddb559602c68042992f137f0f8b725706fc79537f1cbeb488884b",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "vt5_n1_1m",
+      "unit": "V",
+      "limits": {
+        "min": 11.35084414744692,
+        "max": 11.353114543315996
+      },
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 11.3518505,
+        "margin": 0.001006352553078571
+      }
+    },
+    {
+      "name": "vt5_n1_10m",
+      "unit": "V",
+      "limits": {
+        "min": 113.50844147446921,
+        "max": 113.53114543315996
+      },
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 113.518505,
+        "margin": 0.010063525530796369
+      }
+    },
+    {
+      "name": "vt5_n4_1m",
+      "unit": "V",
+      "limits": {
+        "min": 3.2596740000000004,
+        "max": 3.260326
+      },
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 3.25998937,
+        "margin": 0.0003153699999995929
+      }
+    },
+    {
+      "name": "vt5_n4_10m",
+      "unit": "V",
+      "limits": {
+        "min": 32.596740000000004,
+        "max": 32.60326
+      },
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 32.5998937,
+        "margin": 0.0031536999999985937
+      }
+    },
+    {
+      "name": "ic_bias",
+      "unit": "A",
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 0.00235143526,
+        "margin": null
+      }
+    },
+    {
+      "name": "p_bias",
+      "unit": "W",
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 0.00235429179,
+        "margin": null
+      }
+    },
+    {
+      "name": "vt5_bias",
+      "unit": "V",
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 7.67496581,
+        "margin": null
+      }
+    },
+    {
+      "name": "rth_meas",
+      "unit": "K/W",
+      "limits": {
+        "min": 3256.74,
+        "max": 3263.2599999999998
+      },
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 3259.9892,
+        "margin": 3.249200000000201
+      }
+    },
+    {
+      "name": "vt4_bias",
+      "unit": "V",
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 7.67496581,
+        "margin": null
+      }
+    },
+    {
+      "name": "vt4_minus_vt5",
+      "unit": "V",
+      "limits": {
+        "min": -1e-06,
+        "max": 1e-06
+      },
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "hbt_typ/novdd/27C",
+        "value": 1.0658141e-14,
+        "margin": 9.99999989341859e-07
+      }
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "hbt_typ/novdd/27C",
+      "process": "hbt_typ",
+      "supply_v": {},
+      "temperature_c": 27,
+      "status": "pass",
+      "runtime_s": 0.019,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vt5_n1_1m",
+          "value": 11.3518505,
+          "unit": "V",
+          "status": "pass",
+          "margin": 0.001006352553078571
+        },
+        {
+          "name": "vt5_n1_10m",
+          "value": 113.518505,
+          "unit": "V",
+          "status": "pass",
+          "margin": 0.010063525530796369
+        },
+        {
+          "name": "vt5_n4_1m",
+          "value": 3.25998937,
+          "unit": "V",
+          "status": "pass",
+          "margin": 0.0003153699999995929
+        },
+        {
+          "name": "vt5_n4_10m",
+          "value": 32.5998937,
+          "unit": "V",
+          "status": "pass",
+          "margin": 0.0031536999999985937
+        },
+        {
+          "name": "ic_bias",
+          "value": 0.00235143526,
+          "unit": "A",
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "p_bias",
+          "value": 0.00235429179,
+          "unit": "W",
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "vt5_bias",
+          "value": 7.67496581,
+          "unit": "V",
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "rth_meas",
+          "value": 3259.9892,
+          "unit": "K/W",
+          "status": "pass",
+          "margin": 3.249200000000201
+        },
+        {
+          "name": "vt4_bias",
+          "value": 7.67496581,
+          "unit": "V",
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "vt4_minus_vt5",
+          "value": 1.0658141e-14,
+          "unit": "V",
+          "status": "pass",
+          "margin": 9.99999989341859e-07
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-131/sim/known-answer-thermal/corners/20261115-051636-e0a560f/thermal/hbt_typ_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-131/sim/known-answer-thermal/corners/20261115-051636-e0a560f/thermal/hbt_typ_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}

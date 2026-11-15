@@ -10,12 +10,15 @@
     {"path": "sim/psat-sweep/psat_sweep.request.json", "cold_start": {"argv": ["sim/psat-sweep/run_psat_sweep.sh"], "local_only": true, "timeout_s": 3600}},
     {"path": "sim/ac-gain/ac_gain.request.json", "cold_start": {"argv": ["sim/ac-gain/run_ac_gain.sh"], "local_only": true, "timeout_s": 1800}},
     {"path": "sim/ac-stability/ac_stability.request.json", "cold_start": {"argv": ["sim/ac-stability/run_ac_stability.sh"], "local_only": true, "timeout_s": 1800}},
+    {"path": "sim/known-answer-thermal/thermal.request.json", "cold_start": {"argv": ["sim/known-answer-thermal/run.sh"], "local_only": true, "timeout_s": 1800}},
     "sim/smoke/inverter_tran.request.json",
     "sim/smoke/npn_op.request.json",
     "sim/known-answer/dc_load.request.json",
     "sim/known-answer/sine_h3.request.json",
     "sim/known-answer/sine_75.request.json",
-    "sim/device-npn13g2/ft.request.json"
+    "sim/device-npn13g2/ft.request.json",
+    "sim/psat-sweep/psat_sweep_match.request.json",
+    "sim/known-answer-thermal/thermal_neg.request.json"
   ],
   "cold_start": {"argv": ["scripts/setup-env.sh", "--check"], "local_only": true, "timeout_s": 600},
   "pins": {
