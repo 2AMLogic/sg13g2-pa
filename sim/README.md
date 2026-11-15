@@ -52,12 +52,17 @@ compiles the PDK's own sources with a checksum-pinned OpenVAF-Reloaded
 committed). `npn13G2` is a native VBIC card and needs none.
 
 **ngspice floor.** OpenVAF-Reloaded emits OSDI 0.4; ngspice-43 and earlier
-accept only 0.3. A MOS deck therefore needs ngspice >= 44 (the fleet workers
-run 46). A host with an older ngspice (the dispatch workers have 42) can fetch
+accept only 0.3. A MOS deck therefore needs ngspice >= 44 (enforced as
+`NGSPICE_OSDI_MIN_MAJOR=44` in `sim/tools/build-osdi.sh`). Every host on this
+fleet clears that floor today (batch and dispatch workers both run ngspice-47,
+verified 2026-11-15 from the `sim/*/records/` worker banners and this dispatch
+worker's `ngspice --version`); the floor is a requirement on the host, not a
+version this repo pins. A host below it can still fetch
 the PDK, build the objects and run the HBT, but cannot load the MOS devices
 locally: `setup-env.sh` then exits `NGSPICE_TOO_OLD_FOR_OSDI`, downgraded to a
 warning only when `KLT_SIM_BACKEND=batch`, because `klt sim` runs the MOS decks
-on the fleet.
+on the fleet. No current fleet host takes that path; the sentence describes
+what such a host would hit, not the hosts that exist today.
 
 ## DUT benches (one per ratified electrical row)
 
