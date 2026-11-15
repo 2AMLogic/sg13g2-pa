@@ -7,8 +7,8 @@ argv` by membership: any *other* argument fell through to the write branch, so a
 typo'd flag (`--chek`) rewrote the decks that `evidence/item9.json` and
 `attest/item9.json` content-hash -- a staleness gate that passes by overwriting
 the attested evidence. The tests below pin the strict behaviour, for the driver
-and for both generators that now route through it, rather than restating it in
-a comment.
+and for all three generators that now route through it, rather than restating
+it in a comment.
 
 The request-skeleton tests pin the serialised key order, because the committed
 `*.request.json` files are content-hashed evidence: a reordered dict is a
@@ -32,8 +32,13 @@ _spec = importlib.util.spec_from_file_location("gen_bench", GEN_BENCH_PY)
 gen_bench = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(gen_bench)   # the device generator lives outside sim/lib/
 
-GENERATORS = [gen_bench, gdb]
-GENERATOR_IDS = ["gen_bench", "gen_dut_benches"]
+THERMAL_BENCH_PY = os.path.join(REPO, "sim", "known-answer-thermal", "gen_bench.py")
+_tspec = importlib.util.spec_from_file_location("thermal_gen_bench", THERMAL_BENCH_PY)
+thermal_gen_bench = importlib.util.module_from_spec(_tspec)
+_tspec.loader.exec_module(thermal_gen_bench)   # the thermal generator lives outside sim/lib/
+
+GENERATORS = [gen_bench, gdb, thermal_gen_bench]
+GENERATOR_IDS = ["gen_bench", "gen_dut_benches", "thermal_gen_bench"]
 
 # Anything that is not exactly ["--check"]: a typo, a near-miss, a repeat, an
 # extra argument beside a valid one, a bare word, and the empty string.
@@ -100,7 +105,7 @@ def test_a_bad_argument_leaves_an_already_written_tree_untouched(args, tmp_path)
     assert (tmp_path / "a.txt").read_text() == "stale\n"
 
 
-# --- both generators route through that one driver ------------------------
+# --- every generator routes through that one driver -----------------------
 
 
 def _gen_bench_paths():
@@ -112,11 +117,16 @@ def _gdb_paths():
     return [os.path.join(REPO, rel) for rel in gdb.outputs()]
 
 
-GENERATOR_PATHS = [_gen_bench_paths, _gdb_paths]
+def _thermal_paths():
+    here = os.path.dirname(THERMAL_BENCH_PY)
+    return [os.path.join(here, name) for name in thermal_gen_bench.files()]
+
+
+GENERATOR_PATHS = [_gen_bench_paths, _gdb_paths, _thermal_paths]
 
 
 @pytest.mark.parametrize("gen", GENERATORS, ids=GENERATOR_IDS)
-def test_both_generators_share_the_one_driver(gen):
+def test_every_generator_shares_the_one_driver(gen):
     """Neither generator may grow a second copy of it."""
     assert gen.bench_gen is bg
 
@@ -124,7 +134,7 @@ def test_both_generators_share_the_one_driver(gen):
 @pytest.mark.parametrize("args", BAD_ARGS + [[], ["--check"]],
                          ids=BAD_IDS + ["no-args", "--check"])
 @pytest.mark.parametrize("gen", GENERATORS, ids=GENERATOR_IDS)
-def test_both_generators_hand_their_arguments_to_the_driver_verbatim(gen, args, monkeypatch):
+def test_every_generator_hands_its_arguments_to_the_driver_verbatim(gen, args, monkeypatch):
     """No generator does its own argv parsing, so there is one rule to reason about.
 
     The driver's own tests above cover what each argument then *means*; this
@@ -198,8 +208,10 @@ def test_the_temperature_axis_is_a_list_even_when_given_a_tuple():
 
 @pytest.mark.parametrize("build", [
     gen_bench.dc_request, gen_bench.ft_request,
-    gdb.psat_request, gdb.ac_gain_request, gdb.ac_stability_request],
-    ids=["dc_family", "ft", "psat", "ac_gain", "ac_stability"])
+    gdb.psat_request, gdb.ac_gain_request, gdb.ac_stability_request,
+    thermal_gen_bench.thermal_request, thermal_gen_bench.thermal_neg_request],
+    ids=["dc_family", "ft", "psat", "ac_gain", "ac_stability",
+         "thermal", "thermal_neg"])
 def test_every_generated_request_carries_the_shared_pdk_facts(build):
     req = build()
     assert req["models"] == {"pdk": bg.PDK_NAME}
@@ -210,7 +222,8 @@ def test_every_generated_request_carries_the_shared_pdk_facts(build):
 
 
 @pytest.mark.parametrize("src", ["sim/lib/gen_dut_benches.py",
-                                 "sim/device-npn13g2/gen_bench.py"])
+                                 "sim/device-npn13g2/gen_bench.py",
+                                 "sim/known-answer-thermal/gen_bench.py"])
 def test_neither_generator_retypes_a_constant_bench_gen_owns(src):
     """A PDK release that moves the corner library is one edit, in bench_gen.py."""
     text = open(os.path.join(REPO, src)).read()
