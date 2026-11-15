@@ -33,6 +33,10 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "lib"))
 from device_limits import rth  # noqa: E402
+# The PDK constants, the request skeleton and the strict write/--check driver live
+# once in sim/lib/bench_gen.py, shared with the other bench generators; never
+# retype the corner-library path or the PDK name here.
+import bench_gen  # noqa: E402
 
 NX_INJ = (1, 4)          # the two array sizes the injection cases check
 I_INJ_A = (1e-3, 10e-3)  # the two injected power levels, W (current in amperes)
@@ -65,9 +69,43 @@ def p_bias_expr():
     return "-(v(c5b)*i(vc5b) + v(b5b)*i(vb5b))"
 
 
-def process_block():
-    return [{"name": PROCESS,
-             "sections": [{"lib": "libs.tech/ngspice/models/cornerHBT.lib", "section": PROCESS}]}]
+def injection_measurements():
+    """The graded v(t) cases the two requests share (positive and negative)."""
+    meas = []
+    for nx in NX_INJ:
+        for i in I_INJ_A:
+            meas.append({"name": inj_name(nx, i), "expr": "v(%s)" % inj_node(nx, i),
+                         "unit": "V", "limits": limits(i * rth(nx), TOL_INJ_REL)})
+    return meas
+
+
+def thermal_request():
+    meas = injection_measurements() + [
+        {"name": "ic_bias", "expr": "-i(vc5b)", "unit": "A"},
+        {"name": "p_bias", "expr": p_bias_expr(), "unit": "W"},
+        {"name": "vt5_bias", "expr": "v(t5b)", "unit": "V"},
+        # The biased known answer, graded as a ratio so its limits are computable
+        # from rth() alone: V(t) per watt of reconstructed power, expected rth(4).
+        {"name": "rth_meas", "expr": "v(t5b)/(%s)" % p_bias_expr(), "unit": "K/W",
+         "limits": limits(rth(BIAS_NX), TOL_BIAS_REL)},
+        {"name": "vt4_bias", "expr": "v(x4t.t)", "unit": "V"},
+        {"name": "vt4_minus_vt5", "expr": "v(x4t.t) - v(t5b)", "unit": "V",
+         "limits": {"min": -TOL_4T_ABS_V, "max": TOL_4T_ABS_V}},
+    ]
+    return bench_gen.request(
+        netlist="thermal.spice",
+        analysis={"kind": "op", "args": ""},
+        options={"timeout_s": 60, "keep_artifacts": True, "ngspice_init": ["set numdgt=8"]},
+        process=[PROCESS], temperature_c=[TEMPERATURE_C], measurements=meas)
+
+
+def thermal_neg_request():
+    return bench_gen.request(
+        netlist="thermal_neg.spice",
+        analysis={"kind": "op", "args": ""},
+        options={"timeout_s": 60, "keep_artifacts": True, "ngspice_init": ["set numdgt=8"]},
+        process=[PROCESS], temperature_c=[TEMPERATURE_C],
+        measurements=injection_measurements())
 
 
 def injection_lines(neg=False):
@@ -127,52 +165,6 @@ def thermal_neg_deck():
     return "\n".join(out) + "\n"
 
 
-def thermal_request():
-    meas = []
-    for nx in NX_INJ:
-        for i in I_INJ_A:
-            name = inj_name(nx, i)
-            meas.append({"name": name, "expr": "v(%s)" % inj_node(nx, i), "unit": "V",
-                         "limits": limits(i * rth(nx), TOL_INJ_REL)})
-    meas += [
-        {"name": "ic_bias", "expr": "-i(vc5b)", "unit": "A"},
-        {"name": "p_bias", "expr": p_bias_expr(), "unit": "W"},
-        {"name": "vt5_bias", "expr": "v(t5b)", "unit": "V"},
-        # The biased known answer, graded as a ratio so its limits are computable
-        # from rth() alone: V(t) per watt of reconstructed power, expected rth(4).
-        {"name": "rth_meas", "expr": "v(t5b)/(%s)" % p_bias_expr(), "unit": "K/W",
-         "limits": limits(rth(BIAS_NX), TOL_BIAS_REL)},
-        {"name": "vt4_bias", "expr": "v(x4t.t)", "unit": "V"},
-        {"name": "vt4_minus_vt5", "expr": "v(x4t.t) - v(t5b)", "unit": "V",
-         "limits": {"min": -TOL_4T_ABS_V, "max": TOL_4T_ABS_V}},
-    ]
-    return {
-        "netlist": "thermal.spice",
-        "models": {"pdk": "ihp-sg13g2"},
-        "corners": {"process": process_block(), "temperature_c": [TEMPERATURE_C]},
-        "analysis": {"kind": "op", "args": ""},
-        "measurements": meas,
-        "options": {"timeout_s": 60, "keep_artifacts": True, "ngspice_init": ["set numdgt=8"]},
-    }
-
-
-def thermal_neg_request():
-    meas = []
-    for nx in NX_INJ:
-        for i in I_INJ_A:
-            name = inj_name(nx, i)
-            meas.append({"name": name, "expr": "v(%s)" % inj_node(nx, i), "unit": "V",
-                         "limits": limits(i * rth(nx), TOL_INJ_REL)})
-    return {
-        "netlist": "thermal_neg.spice",
-        "models": {"pdk": "ihp-sg13g2"},
-        "corners": {"process": process_block(), "temperature_c": [TEMPERATURE_C]},
-        "analysis": {"kind": "op", "args": ""},
-        "measurements": meas,
-        "options": {"timeout_s": 60, "keep_artifacts": True, "ngspice_init": ["set numdgt=8"]},
-    }
-
-
 def files():
     return {"thermal.spice": thermal_deck(),
             "thermal.request.json": json.dumps(thermal_request(), indent=2) + "\n",
@@ -180,18 +172,10 @@ def files():
             "thermal_neg.request.json": json.dumps(thermal_neg_request(), indent=2) + "\n"}
 
 
-def main(argv):
-    bad = 0
-    for name, text in files().items():
-        path = os.path.join(HERE, name)
-        if "--check" in argv:
-            if not os.path.isfile(path) or open(path).read() != text:
-                print("gen_bench.py: %s differs from the generator" % name, file=sys.stderr)
-                bad = 1
-        else:
-            with open(path, "w") as fh:
-                fh.write(text)
-    return bad
+def main(args):
+    return bench_gen.write_or_check(
+        files(), args, "gen_bench.py", HERE,
+        "python3 -I sim/known-answer-thermal/gen_bench.py")
 
 
 if __name__ == "__main__":
