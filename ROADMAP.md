@@ -63,8 +63,11 @@ stale; the record is current).
 - DR 0001 Q4 (does ngspice solve the HBT thermal node as the PDK intends) now
   has its known-answer check (#115, PR #130): `sim/known-answer-thermal/`
   grades the thermal-node rise against the card's `P * rth` at rel 0.01 %
-  with a negative control, and PASSes; the DUT records cite it where they
-  report junction temperature. The check is single-corner (`hbt_typ`, 27 C —
+  with a negative control, and PASSes; `sim/psat-sweep/psat_record.py` now
+  cites it in the `Tj max C` labelling paragraph (`df89f7e`), so records
+  rendered from here on carry the citation — the already-committed records
+  keep their original "no known-answer check yet" text, which is append-only.
+  The check is single-corner (`hbt_typ`, 27 C —
   the card's `rth` carries no process or temperature coefficient). Recording
   the discharge in the spec (#132, parked on merged #130) and adding the
   bench to the item-9 inventory (#131) are open.
@@ -74,7 +77,7 @@ stale; the record is current).
 
 Merged work since 2026-11-07 (PRs #82 to #110, then #118, #120, #124 and
 #130) simplified `sim/` and the CI gate and landed the three seeded Now
-benches (#115, #116, #117); it moved no checklist item.
+items (#115, #116, #117); it moved no checklist item.
 
 ## Now
 
@@ -140,8 +143,8 @@ refresh (#117, PR #124) — are merged with their done-criteria met, and #96
   `consumes` edge to `sg13g2-vco`'s inductor model (DR 0001 D-1).
 - **#5** needs its tracker marker added and its checklist table refreshed.
 - **Simplification proposals #77, #85, #87, #93, #104** are held for operator
-  approval. **#100** is no longer blocked on #95: it is curated and in work
-  (`loom:hermit`), with its body revised to read against `ad46d16`.
+  approval. **#100** is no longer blocked on #95 (`loom:hermit`, in the
+  backlog); its body is baselined on `74baa8e`.
 
 No open issue is labelled ready for implementation today.
 
