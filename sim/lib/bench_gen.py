@@ -1,11 +1,13 @@
 """The `klt sim` request skeleton and the write/`--check` driver, declared once.
 
-Both bench generators in this repo -- `sim/lib/gen_dut_benches.py` (the DUT
-benches) and `sim/device-npn13g2/gen_bench.py` (the single-device benches) --
-emit `klt sim` requests against the same pinned PDK and gate their committed
-output the same way. The parts that are *not* bench-specific live here so a PDK
-pin bump that moves the corner library, or a change to the host's capacity-wait
-rule, is made in one place instead of in whichever generator happens to be run:
+The three bench generators in this repo -- `sim/lib/gen_dut_benches.py` (the
+DUT benches), `sim/device-npn13g2/gen_bench.py` (the single-device benches)
+and `sim/known-answer-thermal/gen_bench.py` (the thermal known-answer
+benches) -- emit `klt sim` requests against the same pinned PDK and gate
+their committed output the same way. The parts that are *not* bench-specific
+live here so a PDK pin bump that moves the corner library, or a change to the
+host's capacity-wait rule, is made in one place instead of in whichever
+generator happens to be run:
 
 * ``PDK_NAME``, ``CORNER_LIB``, ``CAPACITY_WAIT_S`` -- the pinned PDK facts
 * ``process_block(names)`` -- the ``corners.process`` entries for those sections

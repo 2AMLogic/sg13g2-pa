@@ -1,0 +1,18 @@
+* klt sim -- generated corner deck, do not edit
+.lib /home/ubuntu/.cache/sg13g2-pa/pdk-root/ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib hbt_typ
+.include /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-131/sim/known-answer-thermal/thermal_neg.spice
+.temp 27
+.control
+save all
+op 
+let vt5_n1_1m = v(t_n1_1m)
+print vt5_n1_1m
+let vt5_n1_10m = v(t_n1_10m)
+print vt5_n1_10m
+let vt5_n4_1m = v(t_n4_1m)
+print vt5_n4_1m
+let vt5_n4_10m = v(t_n4_10m)
+print vt5_n4_10m
+quit
+.endc
+.end

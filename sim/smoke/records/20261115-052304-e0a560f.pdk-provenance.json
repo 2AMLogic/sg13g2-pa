@@ -1,0 +1,69 @@
+{
+  "schema": "sg13g2-pa/pdk-provenance/1",
+  "pin_file": "sim/pdk.json",
+  "pinned_release_tag": "v0.3.0",
+  "pinned_variant": "ihp-sg13g2",
+  "verified": true,
+  "identity_route": "tarball-marker",
+  "installed_release_raw": "0.3.0",
+  "pdk_dir": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2",
+  "model_input_boundary": "textual .lib/.include closure from cornerHBT.lib plus the listed extra files; not a proof of completeness",
+  "model_inputs": [
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib",
+      "sha256": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/models/cornerMOSlv.lib",
+      "sha256": "03d505847c880d233b341be115a1e5460edf4d8e9b3e8a7df791a52fa4455d67"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/osdi/psp103.osdi",
+      "sha256": "2e4299c4683997e26469410dc1ab36b02ced924b1ac0972d6c4eae360e1fc796"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/osdi/psp103_nqs.osdi",
+      "sha256": "839b164483205601c09032951f6c41d3580f15e506dc40a7202950d3afbdfc7d"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/osdi/r3_cmc.osdi",
+      "sha256": "4fead17bc2e9cbfe3df6f106e9dbd6f2cdcd48c002af9c56c2ca0b0712fce350"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/osdi/mosvar.osdi",
+      "sha256": "25e64a374ab523dbfeb7ffed75dcb8b086ee10f06120a9074bd68b92d7b0fb41"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_hbt_mod.lib",
+      "sha256": "ae9288f885dd30fab24b07ed1e7e02e69eac9154022a0a6da576985183b0bd79"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_hbt_mod_mismatch.lib",
+      "sha256": "1e493f25150b25b64985acd3f1e7ed2eb2e6ca4b712adf45b2de2ce2ba1a0eb2"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_hbt_stat.lib",
+      "sha256": "80d1893eb06a3417d05400335d8e58c8309b9c80061ca96ceff8f8fd68c9a7db"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_mod.lib",
+      "sha256": "124c48af28aee8f4788170b50dbb4d798e7d830c6bb37516f749e16f676fa9db"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_mismatch.lib",
+      "sha256": "2d3251e2d42eadb0f8af152a4915fdc60a68bceb95a2d17a52f90cfb34b7e63e"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_mod_mismatch.lib",
+      "sha256": "67672ffa1f224294a90270f687d11b804a24dbf268071c5cd98923ab1b3e2f84"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_stat.lib",
+      "sha256": "7f4cf8df714e327348ba3975a2630e9d7dd7ae1a7a88817df4890e82745f0f52"
+    },
+    {
+      "path": "/home/ubuntu/.cache/sg13g2-pa/klayout-tools-e88f211fa485/pdks/ihp-open-pdk/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_parm.lib",
+      "sha256": "cbf10b8453a18bb70b8ad0d6e40faa0937338e699b5460947a94900db6c92a6e"
+    }
+  ]
+}
