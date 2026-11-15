@@ -65,6 +65,13 @@ def main(argv):
             L.append(f"- `sim/device-npn13g2/{fn}` `{sha(os.path.join(HERE, fn))}`")
     for f in prov["model_inputs"]:
         L.append(f"- `{f['path']}` `{f['sha256']}`")
+    # gen_bench.py is exec'd above via spec_from_file_location; bench_gen.py and
+    # the model-window constants it and this renderer grade against live in
+    # sim/lib, and provenance.py renders the Commit bullet.
+    L.append(f"- `sim/device-npn13g2/gen_bench.py` `{sha(os.path.join(HERE, 'gen_bench.py'))}`")
+    L.append(f"- `sim/lib/device_limits.py` `{sha(os.path.join(HERE, '..', 'lib', 'device_limits.py'))}`")
+    L.append(f"- `sim/lib/provenance.py` `{sha(os.path.join(HERE, '..', 'lib', 'provenance.py'))}`")
+    L.append(f"- `sim/lib/bench_gen.py` `{sha(os.path.join(HERE, '..', 'lib', 'bench_gen.py'))}`")
 
     dc_cells = []
     ic = {}   # (process, T, nx, vbe, vce) -> A
