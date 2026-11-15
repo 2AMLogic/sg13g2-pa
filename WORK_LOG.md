@@ -3,8 +3,21 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-15
+
+- **PR #126**: refactor(sim): take the record provenance bullet and watts-to-dBm from sim/lib
+- **Issue #119** (closed): Single-source the sim record provenance bullet and the watts-to-dBm conversion: ac_record.py and psat_record.py bypass sim/lib helpers that already exist
+
 ### 2026-11-14
 
+- **PR #130**: sim(known-answer-thermal): known-answer-check the npn13G2 VBIC thermal node
+- **Issue #115** (closed): sim: thermal-node known-answer check for npn13G2 self-heating (DR 0001 Q4)
+- **PR #124**: docs(readme): state the design's actual state and add the PA reproduce rows
+- **Issue #117** (closed): README: status lines are stale against the signoff record; refresh and re-attest item 10
+- **PR #120**: sim(psat-sweep): bench the PA through an ideal off-chip output match at the stated chip boundary
+- **Issue #116** (closed): sim(psat-sweep): bench-side ideal off-chip output match, with the chip boundary stated
+- **PR #118**: refactor(sim): share one klt sim request skeleton and strict --check driver
+- **Issue #111** (closed): Single-source the klt sim request skeleton: gen_bench.py and gen_dut_benches.py duplicate the PDK constants and the --check driver
 - **PR #103**: fix(sim): derive the smoke record's model-input lines from each bench's report
 - **Issue #96** (closed): Derive the smoke record's OSDI provenance from the run: summarize.py hard-codes a 'too old' claim and lists client OSDI hashes the fleet did not load
 - **PR #109**: refactor(sim): route known-answer through sim_run_one and gate its ngspice logs
