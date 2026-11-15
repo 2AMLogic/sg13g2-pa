@@ -34,10 +34,11 @@ output, the machine-readable form of the T1 checklist in
   produced from `layout/pa/sg13g2_pa.gds`. Generated, never hand-edited. The
   manifest's `content_hash` for item 2 is `sha256sum layout/pa/sg13g2_pa.gds`.
 - **`../attest/item9.json`**: the item-9 attestation inventory: every committed
-  bench (`sim/smoke`, `sim/known-answer`, `sim/device-npn13g2`, `sim/psat-sweep`,
-  `sim/ac-gain`, `sim/ac-stability`), each primary bench with its cold-start argv
-  (`local_only`: they need the pinned PDK, ngspice, numpy and, for the grid benches,
-  the batch fleet), plus the PDK and tool pins.
+  bench (`sim/smoke`, `sim/known-answer`, `sim/known-answer-thermal`,
+  `sim/device-npn13g2`, `sim/psat-sweep`, `sim/ac-gain`, `sim/ac-stability`),
+  each primary bench with its cold-start argv (`local_only`: they need the
+  pinned PDK, ngspice, numpy and, for the grid benches, the batch fleet), plus
+  the PDK and tool pins.
 - **`../evidence/item9.json`**: the envelope `klt signoff --attest 9` produced from
   it. Generated, never hand-edited. The manifest's `content_hash` for item 9 is
   `sha256sum attest/item9.json`.

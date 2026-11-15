@@ -3,14 +3,14 @@
   "kind": "generic",
   "status": "pass",
   "t1_item": 9,
-  "summary": "T1 item 9 (Testbenches shipped): 21/21 attestation checks passed (klt signoff --attest)",
+  "summary": "T1 item 9 (Testbenches shipped): 25/25 attestation checks passed (klt signoff --attest)",
   "source": "attest/item9.json",
   "attestation": {
     "producer": "klt signoff --attest",
     "inventory_schema_version": 1,
     "hash_algorithm": "sha256-raw-bytes",
-    "check_count": 21,
-    "passed_count": 21,
+    "check_count": 25,
+    "passed_count": 25,
     "checks": [
       {
         "check": "present",
@@ -39,6 +39,20 @@
         "path": "sim/device-npn13g2/ft.request.json",
         "passed": true,
         "content_hash": "sha256:eec111ee6adf6493e735196085e47552c1c7cd6d73805db87833cd2335ff9617"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/known-answer-thermal/thermal.request.json",
+        "passed": true,
+        "content_hash": "sha256:d99940640d4feae683d9cb8b789585d2579c9f4c71b777b67b9faae028486c60"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/known-answer-thermal/thermal_neg.request.json",
+        "passed": true,
+        "content_hash": "sha256:eacf45f41dd611aea8894e41d3a384a56dd0900a72e17b6f6797e6655cd5e4d4"
       },
       {
         "check": "present",
@@ -74,6 +88,13 @@
         "path": "sim/psat-sweep/psat_sweep.request.json",
         "passed": true,
         "content_hash": "sha256:3b7c1ee4c3caaa2d8b721621c98da3c9067787b2e01b2a0931b5338b0f173aea"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/psat-sweep/psat_sweep_match.request.json",
+        "passed": true,
+        "content_hash": "sha256:c1ae17b8deebab7b41be5b05812a04e91ae2ef5e7b64b094f09b9c8820228df8"
       },
       {
         "check": "present",
@@ -147,6 +168,18 @@
       {
         "check": "command",
         "role": "cold_start",
+        "testbench": "sim/known-answer-thermal/thermal.request.json",
+        "argv": [
+          "sim/known-answer-thermal/run.sh"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
         "testbench": "sim/known-answer/sine_50.request.json",
         "argv": [
           "sim/known-answer/run.sh"
@@ -211,7 +244,7 @@
         "path": "attest/item9.json",
         "scope": "repo"
       },
-      "content_hash": "sha256:003433da69bae501430ca58910ca785aeb7820078605035a0b3d738eb1a6b77f"
+      "content_hash": "sha256:c5ee0ffb9a575add61f4b0ca92ffb574b01ae2e485395944c488cef253bff920"
     }
   }
 }
