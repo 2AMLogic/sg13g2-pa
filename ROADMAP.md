@@ -3,7 +3,7 @@
 `sg13g2-pa` is a 2.4 GHz SiGe HBT power amplifier on IHP SG13G2, built to
 exercise the open PDK and `klt` on a large-signal, breakdown-limited block.
 
-Status as of 2026-11-14, `main` @ `355dfbf`.
+Status as of 2026-11-15, `main` @ `9f429fb`.
 
 [`WORK_PLAN.md`](WORK_PLAN.md) is the generated label snapshot and
 [`WORK_LOG.md`](WORK_LOG.md) the merge history. The verdict of record is
@@ -76,14 +76,15 @@ stale; the record is current).
   pending PR approval") were refreshed by #117 (PR #124); the stale
   "Built agent-native" paragraph that remains is filed as #128.
 
-Merged work since 2026-11-07 (PRs #82 to #110, then #118, #120, #124 and
-#130) simplified `sim/` and the CI gate and landed the three seeded Now
-items (#115, #116, #117); it moved no checklist item.
+Merged work since 2026-11-07 (PRs #82 to #110, then #113, #118, #120, #124
+and #130) simplified `sim/` and the CI gate, landed the three seeded Now
+items (#115, #116, #117) and refreshed the generated guide snapshots
+(#113); it moved no checklist item.
 
 ## Now
 
 All five items the 2026-11-13 list carried are delivered as of `main` @
-`355dfbf`: the three seeds — thermal-node known-answer check (#115, PR #130),
+`9f429fb`: the three seeds — thermal-node known-answer check (#115, PR #130),
 bench-side off-chip output match (#116, PR #120) and the README status
 refresh (#117, PR #124) — are merged with their done-criteria met, and #96
 (PR #103) and #106 (PR #109) are closed. What the pinned tree leaves open:
