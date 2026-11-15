@@ -219,20 +219,44 @@ def _fold_path(node, filename, bindings):
                      f"{type(node).__name__} expression")
 
 
+def _spec_from_file_location_names(tree):
+    """Every local name a call in the module can reach the dynamic loader by.
+
+    The literal name covers the attribute form -- `importlib.util
+    .spec_from_file_location(...)` however the module itself was imported,
+    including `import importlib.util as iu`. The `ast.ImportFrom` walk adds the
+    local names `from importlib.util import spec_from_file_location [as alias]`
+    binds, so the bare-name and aliased call shapes match too (issue #148).
+    """
+    names = {"spec_from_file_location"}
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.ImportFrom) and node.level == 0
+                and node.module == "importlib.util"):
+            names.update(alias.asname or alias.name for alias in node.names
+                         if alias.name == "spec_from_file_location")
+    return names
+
+
 def _dynamic_siblings(src, filename):
     """Files the module exec()s via `spec_from_file_location`, as absolute paths.
 
-    Mirrors the tree's only dynamic-load form (both call sites pass a literal
-    `os.path.join(HERE, "gen_bench.py")`). A path argument that cannot be
-    folded to a literal raises: a dynamic load the scan cannot resolve must
-    fail the guard, never pass silently.
+    Matches the attribute form (`importlib.util.spec_from_file_location(...)`)
+    and any call through a local name bound by `from importlib.util import
+    spec_from_file_location [as alias]`, so the hop cannot be dodged by import
+    style. A path argument that cannot be folded to a literal raises: a
+    dynamic load the scan cannot resolve must fail the guard, never pass
+    silently.
     """
     tree = ast.parse(src, filename=filename)
     bindings = _top_level_bindings(tree)
+    spec_names = _spec_from_file_location_names(tree)
     siblings = []
     for node in ast.walk(tree):
-        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-                and node.func.attr == "spec_from_file_location"):
+        if not isinstance(node, ast.Call):
+            continue
+        fname = (node.func.attr if isinstance(node.func, ast.Attribute)
+                 else getattr(node.func, "id", None))
+        if fname not in spec_names:
             continue
         if len(node.args) < 2:
             raise ValueError("spec_from_file_location call without a path argument")
@@ -425,6 +449,31 @@ gb = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(gb)
 '''
 
+# Issue #148: the same dynamic load written through a bare imported name and
+# through an aliased import -- both silently skipped by the attribute-only
+# predicate the fixture above predates.
+_DYNAMIC_LOAD_BARE_NAME_FIXTURE = '''\
+import os
+import importlib.util
+from importlib.util import spec_from_file_location
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+_spec = spec_from_file_location("gen_bench", os.path.join(HERE, "gen_bench.py"))
+gb = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(gb)
+'''
+
+_DYNAMIC_LOAD_ALIASED_FIXTURE = '''\
+import os
+import importlib.util
+from importlib.util import spec_from_file_location as sffl
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+_spec = sffl("gen_bench", os.path.join(HERE, "gen_bench.py"))
+gb = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(gb)
+'''
+
 
 def test_the_spec_from_file_location_sibling_hop_is_followed():
     """The exec'd sibling's own sim/lib closure belongs to the renderer's."""
@@ -443,6 +492,49 @@ def test_the_spec_from_file_location_sibling_hop_is_followed():
     assert "zz_fix_helper" in closure
 
 
+def _dynamic_load_closure(fixture):
+    """Closure of a renderer fixture that dynamic-loads `gen_bench.py`, whose
+    own sim/lib import (`zz_fix_helper`) is injected -- the same wiring the
+    sibling-hop test above spells out inline."""
+    sources = {
+        "/fixtures/dir/renderer.py": fixture,
+        "/fixtures/dir/gen_bench.py": "from zz_fix_helper import X\n",
+        "/fixtures/lib/zz_fix_helper.py": "",
+    }
+
+    def module_path(name):
+        return ("/fixtures/lib/zz_fix_helper.py" if name == "zz_fix_helper"
+                else _sim_lib_module_path(name))
+
+    return _sim_lib_closure("/fixtures/dir/renderer.py",
+                            read=_fixture_read(sources), module_path=module_path)
+
+
+def test_the_bare_name_import_shape_of_the_sibling_hop_is_followed():
+    """`from importlib.util import spec_from_file_location` then a bare call:
+    the hop must not depend on which import style the author chose (#148)."""
+    assert "zz_fix_helper" in _dynamic_load_closure(_DYNAMIC_LOAD_BARE_NAME_FIXTURE)
+
+
+def test_the_aliased_import_shape_of_the_sibling_hop_is_followed():
+    """`from importlib.util import spec_from_file_location as sffl` then
+    `sffl(...)`: renaming the symbol must not hide the hop either (#148)."""
+    assert "zz_fix_helper" in _dynamic_load_closure(_DYNAMIC_LOAD_ALIASED_FIXTURE)
+
+
+def test_a_module_alias_of_the_attribute_call_is_still_followed():
+    """`import importlib.util as iu` then `iu.spec_from_file_location(...)` is
+    still the attribute form; aliasing the module must not hide it either."""
+    fixture = (_DYNAMIC_LOAD_FIXTURE
+               .replace("import importlib.util\n",
+                        "import importlib.util as iu\n")
+               .replace("importlib.util.spec_from_file_location",
+                        "iu.spec_from_file_location")
+               .replace("importlib.util.module_from_spec",
+                        "iu.module_from_spec"))
+    assert "zz_fix_helper" in _dynamic_load_closure(fixture)
+
+
 def test_a_dynamic_load_that_cannot_be_resolved_fails_rather_than_being_skipped():
     """A non-literal spec_from_file_location path must fail the guard, not
     quietly contribute nothing."""
@@ -450,6 +542,16 @@ def test_a_dynamic_load_that_cannot_be_resolved_fails_rather_than_being_skipped(
         'os.path.join(HERE, "gen_bench.py")', 'os.environ["BENCH_PATH"]')
     with pytest.raises(ValueError, match="unresolvable dynamic-load path"):
         _sim_lib_closure("/fixtures/dir/renderer.py", read=lambda p: src)
+
+
+def test_a_local_name_merely_spelled_like_the_symbol_still_fails_closed():
+    """A call through a Name that merely shares the symbol's spelling, with no
+    matching import and an unfoldable path, raises rather than being skipped:
+    the literal name is always in the match set, and the fail-closed fold keeps
+    the outcome safe -- never silently skipped (#148)."""
+    src = "spec_from_file_location('x', unresolvable_path_name)\n"
+    with pytest.raises(ValueError, match="unresolvable dynamic-load path"):
+        _dynamic_siblings(src, "/fixtures/shadow.py")
 
 
 def test_a_pin_for_a_module_the_renderer_does_not_import_fails_as_stale():
