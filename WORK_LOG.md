@@ -5,6 +5,8 @@ triage role. Newest first.
 
 ### 2026-11-15
 
+- **PR #152**: docs: document attest tool pins as floors, correct stale ngspice prose
+- **Issue #139** (closed): attest: item 9 pins ngspice 46 but its evidence was produced on ngspice-47
 - **PR #149**: test: follow spec_from_file_location sibling hops through bare and aliased imports
 - **Issue #148** (closed): Inventory closure walk fails open on a bare-name spec_from_file_location call
 - **PR #147**: test: guard that every record inventory pins its full sim/lib closure
