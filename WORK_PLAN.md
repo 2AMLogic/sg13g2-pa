@@ -9,6 +9,7 @@ Only the region between the markers is machine-generated.
 Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
 
 - **#134**: spec: record that DR 0001 Q4 (thermal-node known-answer check) is discharged
+- **#154**: chore(loom): resync installed Loom to v0.19.1302
 
 ## Very Important
 
@@ -45,6 +46,7 @@ _None._
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
 - **#134**: spec: record that DR 0001 Q4 (thermal-node known-answer check) is discharged
+- **#154**: chore(loom): resync installed Loom to v0.19.1302
 
 ## Proposed
 
@@ -74,13 +76,13 @@ _None._
 
 | Bucket | Count |
 |------|-------|
-| Operator merge-risk holds | 1 |
+| Operator merge-risk holds | 2 |
 | Very important | 1 |
 | Important | 1 |
 | Ready (`loom:issue`) | 0 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 1 |
+| Approved PRs awaiting merge | 2 |
 | Curated | 4 |
 | Architect / Hermit proposals | 8 |
 | Active epics | 0 |
