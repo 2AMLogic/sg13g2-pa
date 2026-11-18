@@ -93,22 +93,18 @@ _AC_NODES = {"v(s1)": 1.0, "v(in1)": 0.6, "v(out1)": 1.5,
 
 
 def _ac_report(tmp_path, freqs_hz):
-    """Write a minimal passing klt report + ASCII AC raw file; return the report path."""
-    names = ["frequency"] + list(_AC_NODES)
-    lines = ["Title: synthetic", "Plotname: AC Analysis", "Flags: complex",
-             f"No. Variables: {len(names)}", f"No. Points: {len(freqs_hz)}", "Variables:"]
-    lines += [f"\t{k}\t{n}\t{'frequency' if k == 0 else 'voltage'}"
-              for k, n in enumerate(names)]
-    lines.append("Values:")
-    for i, f in enumerate(freqs_hz):
-        vals = [f"{f:.8e},0.0e+00"] + [f"{v:.8e},0.0e+00" for v in _AC_NODES.values()]
-        lines.append(f" {i}\t{vals[0]}")
-        lines += [f"\t{v}" for v in vals[1:]] + [""]
-    raw = tmp_path / "ac.raw"
-    raw.write_text("\n".join(lines) + "\n")
+    """Write a minimal passing klt report + complex_vectors.json sidecar; return the report path.
+
+    The sidecar has the shape klt 0.9.0 writes (frequency_hz plus real/imag arrays per vector).
+    """
+    sidecar = tmp_path / "complex_vectors.json"
+    sidecar.write_text(json.dumps({
+        "frequency_hz": list(freqs_hz), "points": len(freqs_hz), "vectors": list(_AC_NODES),
+        "data": {n: {"real": [v] * len(freqs_hz), "imag": [0.0] * len(freqs_hz)}
+                 for n, v in _AC_NODES.items()}}))
     rep = tmp_path / "report.json"
     rep.write_text(json.dumps({"corners": [{"status": "pass", "corner_id": "synthetic/corner",
-                                            "artifacts": {"raw": str(raw)}}]}))
+                                            "artifacts": {"complex_vectors": str(sidecar)}}]}))
     return str(rep)
 
 

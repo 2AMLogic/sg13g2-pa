@@ -46,14 +46,12 @@ SIM_SCRIPT_NAME=run.sh
 sim_begin_record --suffix "${suffix}" --pathspec sim \
   --pathspec ':!sim/known-answer/records' --pathspec ':!sim/known-answer/corners'
 failed=0
-# --allow-not-checked: a waveform-only request declares no measurements, so klt
-# grades the run `not_checked` and exits 4 even with every corner `pass`; the
-# per-corner status in the report is what gates (sim_gate_logs below, and
+# The per-corner status in the report is what gates (sim_gate_logs below, and
 # check_known_answer.py). sim_run_one submits once, never reruns locally, and
 # sets failed=1 rather than exiting, so the test at the end is what stops the
 # run. --backend local: one corner per deck, so no grid goes to the fleet.
 for name in "${cases[@]}"; do
-  sim_run_one "${name}" --allow-not-checked --backend local
+  sim_run_one "${name}" --backend local
 done
 sim_gate_logs
 

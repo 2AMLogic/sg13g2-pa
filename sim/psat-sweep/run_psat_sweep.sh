@@ -54,12 +54,11 @@ python3 -I "${SCRIPT_DIR}/../lib/gen_dut_benches.py" --check
 
 sim_begin_record --suffix "${SUFFIX}" --pathspec sim --pathspec design --pathspec ':!sim/psat-sweep/records' --pathspec ':!sim/psat-sweep/corners'
 failed=0
-# --allow-not-checked: a waveform-only request declares no measurements, so klt
-# exits 4 (not_checked) with every corner `pass`; the corner statuses gate
-# (psat_record.py, sim_gate_logs). sim_run_one submits once -- the capacity wait
-# is the request's batch.capacity_wait_s -- never reruns locally, and sets
-# failed=1 rather than exiting, so the gate below is what stops the record.
-sim_run_one "${BENCH}" --allow-not-checked
+# The corner statuses gate (psat_record.py, sim_gate_logs). sim_run_one submits
+# once -- the capacity wait is the request's batch.capacity_wait_s -- never
+# reruns locally, and sets failed=1 rather than exiting, so the gate below is
+# what stops the record.
+sim_run_one "${BENCH}"
 sim_gate_logs
 (( failed == 0 )) || exit 1
 

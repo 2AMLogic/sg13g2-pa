@@ -27,6 +27,22 @@
     "timeout_s": 300,
     "keep_artifacts": true,
     "waveforms": true,
-    "save_mode": "netlist"
+    "capture_only": true,
+    "complex_vectors": [
+      "v(s1)",
+      "v(in1)",
+      "v(out1)",
+      "v(in2)",
+      "v(out2)",
+      "v(s2)"
+    ],
+    "save_vectors": [
+      "v(s1)",
+      "v(in1)",
+      "v(out1)",
+      "v(in2)",
+      "v(out2)",
+      "v(s2)"
+    ]
   }
 }

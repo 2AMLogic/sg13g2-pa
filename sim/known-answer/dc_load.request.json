@@ -10,6 +10,7 @@
   "options": {
     "timeout_s": 300,
     "keep_artifacts": true,
-    "waveforms": true
+    "waveforms": true,
+    "capture_only": true
   }
 }
