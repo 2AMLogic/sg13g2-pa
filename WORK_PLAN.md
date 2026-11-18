@@ -32,7 +32,7 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-_None._
+- **#100**: Use klt's capture_only and complex_vectors request options: drop the --allow-not-checked exit-4 waiver and the hand-written ASCII rawfile parser
 
 ## PRs Awaiting Review
 
@@ -45,6 +45,7 @@ _None._
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
 - **#134**: spec: record that DR 0001 Q4 (thermal-node known-answer check) is discharged — closes #132
+- **#166**: sim: use klt capture_only and complex_vectors instead of the exit-4 waiver and rawfile parser — closes #100
 
 ## Proposed
 
@@ -61,7 +62,7 @@ Issues carrying `loom:curated`.
 - **#85**: Collapse the layout and design klt pins onto 0.9.1: four klt releases are pinned across the repo *(hermit)* *(held)*
 - **#87**: Simplify the npn13G2 device bench: read currents from the captured sweep, drop 108 probe elements and 216 .meas cards *(hermit)* *(held)*
 - **#93**: Make loadline.py purely analytic: its simulated-DC input feeds an unread field and a Vbe check that cannot fire *(hermit)* *(held)*
-- **#100**: Use klt's capture_only and complex_vectors request options: drop the --allow-not-checked exit-4 waiver and the hand-written ASCII rawfile parser *(hermit)* *(held)*
+- **#100**: Use klt's capture_only and complex_vectors request options: drop the --allow-not-checked exit-4 waiver and the hand-written ASCII rawfile parser *(hermit)*
 - **#104**: Trim sim/toolchain.json and sim/pdk.json to the keys tooling reads: unread fact-sheet fields restate pins held elsewhere and have gone stale *(hermit)* *(held)*
 - **#112**: Declare the smoke benches' capacity wait in their requests: run_smoke.sh's KLT_SIM_BACKEND guard re-forks klt's backend resolution *(hermit)* *(held)*
 - **#122**: Trim the smoke bench's OSDI preflight and preload to the one object its decks can reach: three of four are unreachable from cornerMOSlv.lib *(hermit)* *(held)*
@@ -78,9 +79,9 @@ _None._
 | Very important | 1 |
 | Important | 1 |
 | Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 0 |
+| In Progress (`loom:building`) | 1 |
 | PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 1 |
+| Approved PRs awaiting merge | 2 |
 | Curated | 4 |
 | Architect / Hermit proposals | 8 |
 | Active epics | 0 |
