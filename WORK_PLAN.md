@@ -20,11 +20,11 @@ Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a h
 
 `loom:important`; taken before unlabelled work.
 
-- **#42**: T1 item 11 (Power delivery): PA klt erc supply spec plus LVS supply pairing
+- **#42**: T1 item 11 (Power delivery): PA klt erc supply spec plus LVS supply pairing *(held)*
 
 ## Ready
 
-Human-approved issues ready for implementation (`loom:issue`).
+Human-approved issues (`loom:issue`) ready for implementation — excluding held (`loom:blocked`/`loom:operator`/`loom:frozen`), `loom:building`, and issues closed by an open `loom:pr` PR (listed under Approved).
 
 _None._
 
@@ -44,7 +44,7 @@ _None._
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-- **#134**: spec: record that DR 0001 Q4 (thermal-node known-answer check) is discharged
+- **#134**: spec: record that DR 0001 Q4 (thermal-node known-answer check) is discharged — closes #132
 
 ## Proposed
 
@@ -52,7 +52,7 @@ Issues carrying `loom:curated`.
 
 - **#5**: Track the gap to T1 (klayout-tools design-evidence-tiers.md) *(curated)*
 - **#39**: T1 item 4 (LVS clean): klt lvs of the PA against its schematic netlist, every npn13G2 recognised *(curated)*
-- **#42**: T1 item 11 (Power delivery): PA klt erc supply spec plus LVS supply pairing *(curated)*
+- **#42**: T1 item 11 (Power delivery): PA klt erc supply spec plus LVS supply pairing *(curated)* *(held)*
 - **#132**: spec: record that DR 0001 Q4/D-2 (thermal-node known-answer check) is discharged *(curated)*
 
 ## Proposed (Architect / Hermit)
@@ -63,7 +63,7 @@ Issues carrying `loom:curated`.
 - **#93**: Make loadline.py purely analytic: its simulated-DC input feeds an unread field and a Vbe check that cannot fire *(hermit)*
 - **#100**: Use klt's capture_only and complex_vectors request options: drop the --allow-not-checked exit-4 waiver and the hand-written ASCII rawfile parser *(hermit)*
 - **#104**: Trim sim/toolchain.json and sim/pdk.json to the keys tooling reads: unread fact-sheet fields restate pins held elsewhere and have gone stale *(hermit)*
-- **#112**: Declare the smoke benches' capacity wait in their requests: run_smoke.sh's KLT_SIM_BACKEND guard re-forks klt's backend resolution *(hermit)*
+- **#112**: Declare the smoke benches' capacity wait in their requests: run_smoke.sh's KLT_SIM_BACKEND guard re-forks klt's backend resolution *(hermit)* *(held)*
 - **#122**: Trim the smoke bench's OSDI preflight and preload to the one object its decks can reach: three of four are unreachable from cornerMOSlv.lib *(hermit)*
 
 ## Epics
