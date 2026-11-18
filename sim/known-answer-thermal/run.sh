@@ -53,10 +53,10 @@ sim_begin_record --suffix "${suffix}" --pathspec sim \
   --pathspec ':!sim/known-answer-thermal/records' --pathspec ':!sim/known-answer-thermal/corners'
 failed=0
 # The request declares graded measurements, so klt grades the check itself and
-# exits non-zero on any out-of-tolerance value: no --allow-not-checked here, and
-# no waveform post-processing (an op run has no waveform). sim_run_one submits
-# once, never reruns locally, and sets failed=1 rather than exiting, so the
-# test at the end is what stops the run. --neg reaches here too: its klt
+# exits non-zero on any out-of-tolerance value, with no waiver, and no waveform
+# post-processing (an op run has no waveform). sim_run_one submits once,
+# never reruns locally, and sets failed=1 rather than exiting, so the test at
+# the end is what stops the run. --neg reaches here too: its klt
 # failure is the EXPECTED one, and its record is still written below.
 sim_run_one "${case_}" --backend local
 # No --tolerate-recovered-gmin, deliberately: the injection decks' NaN

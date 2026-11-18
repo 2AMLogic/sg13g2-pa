@@ -245,6 +245,7 @@
     "timeout_s": 300,
     "keep_artifacts": true,
     "waveforms": true,
+    "capture_only": true,
     "save_mode": "netlist"
   },
   "batch": {

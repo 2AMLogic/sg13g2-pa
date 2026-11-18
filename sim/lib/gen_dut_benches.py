@@ -687,7 +687,7 @@ def psat_request(variant="bare"):
         f"{b['name']}.spice",
         {"kind": "tran", "args": f"{TRAN_STEP_S * 1e12:.6g}p {TRAN_STOP_S * 1e9:.6g}n"},
         {"timeout_s": timeout_s, "keep_artifacts": True, "waveforms": True,
-         "save_mode": "netlist"},
+         "capture_only": True, "save_mode": "netlist"},
         corners_extra={"supply_v": {
             "vamp": [round(amp_v(p), 9) for p in grid],
             "vcc": [VCC_NOM_V] * len(grid),
@@ -699,11 +699,24 @@ def psat_request(variant="bare"):
     return req
 
 
+# The six port vectors `sparams.s_from_nodes` reads. Declared once, as both
+# `complex_vectors` (klt writes them to the complex_vectors.json sidecar) and
+# `save_vectors` (the saved set stays these six, not `save all`); both need the
+# request to omit `save_mode`.
+AC_PORT_VECTORS = ["v(s1)", "v(in1)", "v(out1)", "v(in2)", "v(out2)", "v(s2)"]
+
+
+def _ac_options():
+    return {"timeout_s": 300, "keep_artifacts": True, "waveforms": True,
+            "capture_only": True, "complex_vectors": list(AC_PORT_VECTORS),
+            "save_vectors": list(AC_PORT_VECTORS)}
+
+
 def ac_gain_request():
     return _request(
         "ac_gain.spice",
         {"kind": "ac", "args": f"lin 11 {BAND_LO_HZ:g} {BAND_HI_HZ:g}"},
-        {"timeout_s": 300, "keep_artifacts": True, "waveforms": True, "save_mode": "netlist"},
+        _ac_options(),
     )
 
 
@@ -711,7 +724,7 @@ def ac_stability_request():
     return _request(
         "ac_stability.spice",
         {"kind": "ac", "args": "dec 50 10Meg 30G"},
-        {"timeout_s": 300, "keep_artifacts": True, "waveforms": True, "save_mode": "netlist"},
+        _ac_options(),
     )
 
 

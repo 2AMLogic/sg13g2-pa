@@ -74,29 +74,21 @@ def test_clean_run_is_a_success():
     assert out.count("klt sim bench") == 1
 
 
-def test_exit_4_fails_a_bench_that_did_not_opt_in():
-    # A request that declares `measurements` must never record an unchecked
-    # run silently: without the flag, `not_checked` is a failure.
+def test_exit_4_is_always_a_failure():
+    # No bench is waived: a waveform-only request sets `options.capture_only`,
+    # so klt exits 0 for it; any exit 4 (`not_checked`) is a real failure.
     failed, _, _ = run_one("bench", rc=4)
     assert failed == 1
 
 
-def test_exit_4_is_accepted_with_allow_not_checked():
-    # The waveform-only benches (psat-sweep, ac-gain, ac-stability) declare no
-    # measurements, so a clean run exits 4; the per-corner status gates instead.
-    failed, _, _ = run_one("bench --allow-not-checked", rc=4)
-    assert failed == 0
+def test_every_non_zero_exit_is_a_failure():
+    for rc in (1, 2, 3, 4, 5):
+        failed, _, _ = run_one("bench", rc=rc)
+        assert failed == 1, f"exit {rc} must be a failure"
 
 
-def test_allow_not_checked_waives_only_exit_4():
-    for rc in (1, 2, 3, 5):
-        failed, _, _ = run_one("bench --allow-not-checked", rc=rc)
-        assert failed == 1, f"exit {rc} must stay a failure"
-
-
-def test_allow_not_checked_is_not_passed_through_to_klt():
-    _, _, argv = run_one("bench --allow-not-checked --backend local", rc=4)
-    assert "--allow-not-checked" not in argv
+def test_extra_args_are_passed_through_to_klt():
+    _, _, argv = run_one("bench --backend local", rc=0)
     assert "--backend" in argv and "local" in argv
     assert "bench.request.json" in argv
 
@@ -343,11 +335,11 @@ class AcRun:
         return self._corners[kind]
 
 
-def run_ac(args, dir_kind="gain", rc=4, log=None, stale=False, record_rc=0):
+def run_ac(args, dir_kind="gain", rc=0, log=None, stale=False, record_rc=0):
     """Run `sim_run_ac_bench <args>` from sim/ac-<dir_kind>/ against the stubs.
 
-    rc is the klt stub's exit status (4 = `not_checked`, what a clean
-    waveform-only run really exits); log is the ngspice log it writes.
+    rc is the klt stub's exit status (0, what a clean `capture_only` run exits);
+    log is the ngspice log it writes.
     """
     if log is None:
         log = CLEAN_LOG
@@ -395,7 +387,7 @@ def run_ac(args, dir_kind="gain", rc=4, log=None, stale=False, record_rc=0):
 
 
 def test_a_clean_ac_run_writes_one_record():
-    # A waveform-only request grades `not_checked`, so a good run exits 4; the
+    # A waveform-only request sets `capture_only`, so a good run exits 0; the
     # corner log is what gates, and the record is written.
     r = run_ac("gain")
     assert r.returncode == 0, (r.stdout, r.stderr)
@@ -414,12 +406,10 @@ def test_the_kind_selects_the_request_the_report_and_the_renderer_argument():
         assert r.record_argv[-1].endswith(f"ac_{kind}.report.json"), r.record_argv
 
 
-def test_the_ac_submit_is_one_local_run_that_tolerates_not_checked():
+def test_the_ac_submit_is_one_local_run():
     r = run_ac("gain")
     assert r.argv.count("sim") == 1, f"re-submitted: {r.argv}"
     assert "--backend" in r.argv and "local" in r.argv
-    # --allow-not-checked is the runner's own flag, never passed to klt.
-    assert "--allow-not-checked" not in r.argv
 
 
 def test_a_failing_corner_log_stops_the_record():

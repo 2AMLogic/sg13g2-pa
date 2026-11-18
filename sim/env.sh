@@ -256,7 +256,7 @@ sim_resolve_klt() {
 }
 
 sim_run_one() {
-  # sim_run_one <name> [--allow-not-checked] [extra klt args]
+  # sim_run_one <name> [extra klt args]
   #
   # Runs `klt sim` on <name>.request.json (in the caller's SCRIPT_DIR) into
   # ${OUT}/<name>, with the report and stderr beside it. One invocation: a batch
@@ -267,26 +267,18 @@ sim_run_one() {
   # including a capacity refusal that outlasts that wait, is reported and sets
   # the caller's `failed=1`; nothing is ever retried locally.
   #
-  # --allow-not-checked: treat klt exit 4 (`not_checked`) as a successful run.
-  # A waveform-only request declares no `measurements`, so klt grades it
-  # `not_checked` and exits 4 even when every corner passed -- the bench's
-  # numbers are computed from the waveform afterwards, and the per-corner
-  # status is what gates (sim_gate_logs and the bench's record script). Opt-in,
-  # so a bench whose request DOES declare measurements still fails on exit 4
-  # rather than silently recording an unchecked run. Must precede the klt args.
+  # Any non-zero klt exit is a failure, for every bench. A waveform-only request
+  # sets `options.capture_only: true`, so klt itself grades a run whose corners
+  # all passed `pass` and exits 0 (and refuses the option on a request that
+  # declares measurements); the wrapper carries no per-bench exception.
   #
   # Needs, from the caller: SCRIPT_DIR, OUT, KLT_CMD (sim_resolve_klt), SIM_SCRIPT_NAME.
-  local name="$1" rc=0 allow_not_checked=0
+  local name="$1" rc=0
   shift
-  while [[ "${1:-}" == "--allow-not-checked" ]]; do
-    allow_not_checked=1
-    shift
-  done
   echo "${SIM_SCRIPT_NAME}: klt sim ${name} $*"
   ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --format json -o "${OUT}/${name}" "$@" \
       "${name}.request.json" > "${OUT}/${name}.report.json" 2> "${OUT}/${name}.stderr" ) || rc=$?
   (( rc == 0 )) && return 0
-  (( allow_not_checked && rc == 4 )) && return 0
   echo "${SIM_SCRIPT_NAME}: ${name}: klt sim exited ${rc} (see ${OUT}/${name}.stderr); no local fallback is attempted." >&2
   # shellcheck disable=SC2034  # read by the sourcing runner
   failed=1
@@ -330,11 +322,9 @@ sim_run_ac_bench() {
   sim_begin_record --pathspec sim --pathspec design \
     --pathspec ":!sim/${dir}/records" --pathspec ":!sim/${dir}/corners"
   local failed=0
-  # A single unit, so --backend local. --allow-not-checked: a waveform-only
-  # request declares no measurements, so klt exits 4 (not_checked); the corner
-  # status gates. sim_run_one sets failed=1 rather than exiting, so the gate
-  # below is what stops the record.
-  sim_run_one "${bench}" --allow-not-checked --backend local
+  # A single unit, so --backend local. sim_run_one sets failed=1 rather than
+  # exiting, so the gate below is what stops the record.
+  sim_run_one "${bench}" --backend local
   # shellcheck disable=SC2119  # no --tolerate-recovered-gmin: an AC corner that
   # needed gmin stepping is not evidence these benches record.
   sim_gate_logs

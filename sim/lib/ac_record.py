@@ -42,6 +42,16 @@ def _port_z():
     return f"{gdb.RS_OHM:g} ohm source, {gdb.RL_OHM:g} ohm load"
 
 
+def _load_complex_vectors(path):
+    """-> (freq_hz ndarray, {name: complex ndarray}) from klt's complex_vectors.json sidecar."""
+    with open(path) as fh:
+        side = json.load(fh)
+    freq = np.array(side["frequency_hz"], dtype=float)
+    data = {name: np.array(v["real"], dtype=float) + 1j * np.array(v["imag"], dtype=float)
+            for name, v in side["data"].items()}
+    return freq, data
+
+
 def main(argv):
     kind, rid, git_sha, dirty, klt_v, ng_v, report_path = argv[1:8]
     rep = json.load(open(report_path))
@@ -49,7 +59,7 @@ def main(argv):
     if corner.get("status") != "pass":
         print(f"ac_record.py: corner status {corner.get('status')!r}", file=sys.stderr)
         return 1
-    freq, d = sp.read_ascii_raw(corner["artifacts"]["raw"])
+    freq, d = _load_complex_vectors(corner["artifacts"]["complex_vectors"])
     s = sp.s_from_nodes(d)
     st = sp.stability(s)
     out = []
