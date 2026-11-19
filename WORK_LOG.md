@@ -3,6 +3,11 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-19
+
+- **PR #170**: chore: grade the signoff record against the klt wheel's bundled checklist
+- **Issue #77** (closed): Remove vendored manifests/design-evidence-tiers.md: stale against the checklist the pinned klt wheel ships
+
 ### 2026-11-18
 
 - **PR #166**: sim: use klt capture_only and complex_vectors instead of the exit-4 waiver and rawfile parser
