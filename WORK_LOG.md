@@ -5,6 +5,8 @@ triage role. Newest first.
 
 ### 2026-11-18
 
+- **PR #166**: sim: use klt capture_only and complex_vectors instead of the exit-4 waiver and rawfile parser
+- **Issue #100** (closed): Use klt's capture_only and complex_vectors request options: drop the --allow-not-checked exit-4 waiver and the hand-written ASCII rawfile parser
 - **PR #164**: ci: add merge_group trigger to the signoff workflow
 - **Issue #163** (closed): Merge queue: add the merge_group trigger to the required-check workflow(s)
 
