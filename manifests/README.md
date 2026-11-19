@@ -1,8 +1,9 @@
 # Block manifest and tier-verdict record
 
 This directory holds this block's `klt signoff` input and its committed
-output, the machine-readable form of the T1 checklist in
-[`design-evidence-tiers.md`](design-evidence-tiers.md).
+output, the machine-readable form of [the T1 checklist shipped with the
+pinned `klayout-tools` wheel](https://github.com/2AMLogic/klayout-tools/blob/v0.9.1/docs/design-evidence-tiers.md)
+(the checklist is not vendored in this repo; see the file list below).
 
 ## Files
 
@@ -62,13 +63,11 @@ output, the machine-readable form of the T1 checklist in
   files plus the PDK-free checks run on a stock CI runner).
 - **`../evidence/item10.json`**: the envelope `klt signoff --attest 10`
   produced from it. Generated, never hand-edited.
-- **`design-evidence-tiers.md`**: the T1-T4 checklist the grader parses.
-  Vendored **byte-identical** from
-  [`2AMLogic/klayout-tools@44cc42323184`](https://github.com/2AMLogic/klayout-tools/blob/44cc42323184/docs/design-evidence-tiers.md)
-  `docs/design-evidence-tiers.md` (git blob `2f7f69825f8c`). Upstream is
-  MIT-licensed; this repo's Apache-2.0 `LICENSE` does not relicense the
-  vendored copy. When upstream moves, re-vendor the file, update the commit
-  above, and regenerate the record in the same PR.
+- **The T1-T4 checklist** (not a file here): the grader parses the copy
+  bundled with the pinned `klayout-tools` wheel, so the pin fixes its bytes;
+  read it at [the v0.9.1 release tag](https://github.com/2AMLogic/klayout-tools/blob/v0.9.1/docs/design-evidence-tiers.md).
+  The record's `source_doc_content_hash` identifies the exact checklist bytes
+  that were parsed.
 - **`sg13g2-pa.signoff.json`**: **the verdict of record**, the committed
   output of the command below. Never hand-edit it.
 
@@ -181,16 +180,15 @@ If `attest/item10.json` changed, update its `content_hash` in
 ```console
 uvx --from "klayout-tools==0.9.1" klt signoff \
     --manifest manifests/sg13g2-pa.json \
-    --tiers-doc manifests/design-evidence-tiers.md \
     --format json > manifests/sg13g2-pa.signoff.json
 ```
 
 `klt signoff --manifest` exits `3` when at least one item is `unmet` (a valid
 run: `unmet` with a per-item `reason` is the honest statement of the gap) and
 `0` when every T1 item is `met`; the redirect still writes the record on `3`.
-Any change that affects the verdict (new evidence, a manifest edit, a
-vendored-doc bump, a `klt` pin bump) regenerates and commits the record in the
-same PR. **Any later edit to `README.md`, `LICENSE` or the workflow drifts
+Any change that affects the verdict (new evidence, a manifest edit, a `klt`
+pin bump — which also changes the bundled checklist) regenerates and commits
+the record in the same PR. **Any later edit to `README.md`, `LICENSE` or the workflow drifts
 the envelope and fails CI**; re-run the attest command above and regenerate
 the record in the same PR. Check locally with
 `./scripts/check-ci.sh` (below), or on its own with
