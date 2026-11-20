@@ -104,12 +104,17 @@ def run_summary(report, stderr_path):
     if isinstance(backend, dict):
         backend = backend.get("resolved") or backend.get("requested")
     remote = report.get("environment", {}).get("remote") or {}
-    job = remote.get("job_id") or remote.get("job") or ""
+    # A sharded batch submit reports one entry per shard under remote.fleet[].
+    fleet = remote.get("fleet") or []
+    jobs = [e.get("job_id") for e in fleet if e.get("job_id")]
+    if not jobs and remote.get("job_id"):
+        jobs = [remote["job_id"]]
+    job_desc = ", ".join(f"`{j}`" for j in jobs)
     status = report.get("status")
     line = f"`{status}`, {n_done}/{len(corners)} corners pass" if corners else f"`{status}`"
     if n_req is not None:
         line += f" (requested n={n_req})"
-    return (line, n_req, n_done, (f"job `{job}`" if job else None), report)
+    return (line, n_req, n_done, (f"jobs {job_desc}" if job_desc else None), report)
 
 
 def dc_draws(report):
@@ -243,6 +248,27 @@ def main(argv):
     if isinstance(backend, dict):
         backend = backend.get("resolved") or backend.get("requested")
     mc_env = env.get("monte_carlo") or {}
+    fleet = (env.get("remote") or {}).get("fleet") or []
+    workers = set()
+    runner_klt = set()
+    runner_feat = set()
+    for e in fleet:
+        workers.add(f"{e.get('instance_type', '?')} / {e.get('ami_id', '?')} "
+                    f"(spot)" if e.get("spot") else
+                    f"{e.get('instance_type', '?')} / {e.get('ami_id', '?')}")
+        if e.get("runner_klt_version"):
+            runner_klt.add(e["runner_klt_version"])
+        feats = e.get("runner_request_features") or {}
+        if feats.get("status"):
+            runner_feat.add(f"{feats['status']} "
+                            f"({', '.join(feats.get('required', [])) or 'none required'})")
+    worker_ng = None
+    for e in fleet:
+        sim = (e.get("worker_environment") or {}).get("simulator") or {}
+        if sim.get("version_banner"):
+            worker_ng = next((ln.strip("* ") for ln in sim["version_banner"].splitlines()
+                              if "ngspice-" in ln), None)
+            break
     model_hashes = {name: _sha256(os.path.join(args.models_dir, name))
                     for name in MODEL_FILES
                     if os.path.isfile(os.path.join(args.models_dir, name))}
@@ -272,6 +298,18 @@ def main(argv):
     w(f"- {args.klt_version}; {args.ngspice_version}; PDK per `sim/pdk.json`; backend "
       f"`{backend or '?'}`"
       + (" (batch fleet)." if backend == "batch" else " (NOT the batch fleet)."))
+    if fleet:
+        w(f"- Fleet workers ({len(fleet)} shard jobs of the first report read): "
+          + "; ".join(sorted(workers))
+          + (f"; runner klt {', '.join(sorted(runner_klt))} (client 0.9.0, compatibility "
+             f"{'match' if any(e.get('runner_compatibility') == 'match' for e in fleet) else '?'})"
+             if runner_klt else "")
+          + (f"; request features {', '.join(sorted(runner_feat))}" if runner_feat else "")
+          + (f"; worker {worker_ng}, PDK staged at "
+             f"`{(fleet[0].get('worker_environment') or {}).get('pdk', {}).get('root', '?')}`"
+             if worker_ng else "")
+          + ". The model-file digests above are the submitting host's; the report's "
+          "`models_lib_sha256_scope` says which side hashed them.")
     w("- Model-file sha256 (submitting host's PDK install; the report's "
       f"`models_lib_sha256_scope` is `{env.get('models_lib_sha256_scope', '?')}`):")
     for name, digest in model_hashes.items():

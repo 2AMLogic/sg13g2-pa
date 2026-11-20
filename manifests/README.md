@@ -228,6 +228,14 @@ hygiene); the other six are `unmet` with a `reason` in the record
 (`no_evidence` for items 4-8 and 11). The record is the source of truth,
 not this paragraph.
 
+**Item 6 (Monte Carlo evidence) waits on ratification.** The mc-pilot
+([`sim/mc-pilot/`](../sim/mc-pilot/), #174) established feasibility and
+[DR 0004](../spec/decision-records/0004-statistical-rows.md) (PROPOSED)
+classifies every ratified row and proposes the statistical rows; the item
+stays `unmet` / `no_evidence` with a null citation until the operator
+ratifies those rows (then a `klt yield` campaign supplies the citation) or
+declares the item a gap. Nothing in the manifest cites item 6 today.
+
 ## T1 item 3 (DRC clean)
 
 ### The claim
