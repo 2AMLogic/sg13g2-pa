@@ -45,6 +45,7 @@ RENDERERS = (
     "sim/known-answer-thermal/thermal_record.py",
     "sim/smoke/summarize.py",
     "sim/device-npn13g2/summarize.py",
+    "sim/mc-pilot/mc_pilot_record.py",
 )
 
 
@@ -139,6 +140,10 @@ NO_INVENTORY_BY_DECISION = (
     ("sim/psat-sweep/psat_record.py",
      "renders no sha256 inventory section; recording the decision, not an "
      "accidental exemption (issue #144)"),
+    ("sim/mc-pilot/mc_pilot_record.py",
+     "renders the PDK model files' sha256 (the pilot's evidence is which model "
+     "sections ran), not a sim/lib inventory; the graded figures come from the "
+     "klt report's own measurements and sidecars (issue #174)"),
 )
 
 # The pin bullet's rendered shape: ``- `sim/lib/<name>.py` `<sha>` ``. The

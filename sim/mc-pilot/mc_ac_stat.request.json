@@ -1,0 +1,59 @@
+{
+  "netlist": "mc_ac_gain.spice",
+  "models": {
+    "pdk": "ihp-sg13g2"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "hbt_typ_stat",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_typ_stat"
+          }
+        ]
+      }
+    ],
+    "temperature_c": [
+      27
+    ]
+  },
+  "analysis": {
+    "kind": "ac",
+    "args": "lin 11 2.4e+09 2.4835e+09"
+  },
+  "monte_carlo": {
+    "n": 100,
+    "seed": 174,
+    "vary": "process"
+  },
+  "options": {
+    "timeout_s": 120,
+    "keep_artifacts": true,
+    "waveforms": true,
+    "capture_only": true,
+    "complex_vectors": [
+      "v(s1)",
+      "v(in1)",
+      "v(out1)",
+      "v(in2)",
+      "v(out2)",
+      "v(s2)"
+    ],
+    "save_vectors": [
+      "v(s1)",
+      "v(in1)",
+      "v(out1)",
+      "v(in2)",
+      "v(out2)",
+      "v(s2)"
+    ]
+  },
+  "batch": {
+    "capacity_wait_s": 600
+  },
+  "remote": {
+    "hosts": 4
+  }
+}
