@@ -14,6 +14,7 @@ itself -- from the request's `batch.capacity_wait_s`, or a
 resubmit to exercise here.
 """
 
+import json
 import os
 import subprocess
 import tempfile
@@ -75,10 +76,24 @@ def test_clean_run_is_a_success():
 
 
 def test_exit_4_is_always_a_failure():
-    # No bench is waived: a waveform-only request sets `options.capture_only`,
-    # so klt exits 0 for it; any exit 4 (`not_checked`) is a real failure.
+    # Without --allow-errored-corners no bench is waived: a waveform-only
+    # request sets `options.capture_only`, so klt exits 0 when every corner
+    # simulated; exit 4 means corners errored and the strict default refuses.
     failed, _, _ = run_one("bench", rc=4)
     assert failed == 1
+
+
+def test_exit_4_is_tolerated_only_when_the_bench_allows_errored_corners():
+    # The characterization-matrix waiver (issue #173): a corner that errored is
+    # a cell the record must show as "did not simulate", so the matrix benches
+    # pass --allow-errored-corners and exit 4 alone does not set failed. The
+    # waiver is exit-4 only: every other non-zero exit still fails, waived or
+    # not.
+    failed, _, _ = run_one("bench --allow-errored-corners", rc=4)
+    assert failed == 0
+    for rc in (1, 2, 3, 5):
+        failed, _, _ = run_one("bench --allow-errored-corners", rc=rc)
+        assert failed == 1, f"exit {rc} must still be a failure"
 
 
 def test_every_non_zero_exit_is_a_failure():
@@ -244,6 +259,227 @@ def test_a_gate_over_no_logs_is_not_a_failure():
     # log gate must not invent a second failure from an unmatched glob.
     failed, err = gate({})
     assert failed == 0, err
+
+
+# --- sim_gate_logs --skip-errored-from --------------------------------------
+#
+# The characterization-matrix waiver (issue #173): exactly the logs of corners
+# the REPORT grades `status: "error"` skip the gate -- their diagnostics are
+# the record's "did not simulate" cells. The statuses come from klt's report,
+# never from re-parsing the log text, and nothing else is waived.
+
+
+def gate_with_report(logs, corners, args=""):
+    """Run `sim_gate_logs <args> --skip-errored-from <report>` over {point: text}.
+
+    corners is the report's corner list: (corner_id, status, point) with the
+    point naming the same directory the log was written to, so the fixture
+    report references the very logs the test wrote -- one tree, like a real
+    collect.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        for point, text in logs.items():
+            log = tmp / "out" / point / "ngspice.log"
+            log.parent.mkdir(parents=True)
+            log.write_text(text)
+        report = tmp / "report.json"
+        report.write_text(json.dumps({
+            "corners": [
+                {"corner_id": cid, "status": st,
+                 "artifacts": {"log": str(tmp / "out" / point / "ngspice.log")}}
+                for cid, st, point in corners
+            ],
+        }))
+        script = (
+            GATE_HARNESS.replace("__ENV_SH__", str(ENV_SH))
+            .replace("__TMP__", str(tmp))
+            .replace("__ARGS__", f"{args} --skip-errored-from {report}".strip())
+        )
+        proc = subprocess.run(["bash", "-c", script], capture_output=True,
+                              text=True, timeout=120)
+        if "RESULT failed=" not in proc.stdout:
+            return proc.returncode, proc.stderr
+        failed = int(proc.stdout.rsplit("RESULT failed=", 1)[1].strip())
+        return failed, proc.stderr
+
+
+BAD_LOG = CLEAN_LOG + "Warning: singular matrix:  check nodes net3 and net3\n"
+
+
+def test_skip_errored_from_skips_exactly_the_errored_corners_log():
+    failed, err = gate_with_report(
+        {"hot/125c": BAD_LOG, "tt/27c": CLEAN_LOG},
+        [("hbt_wcs/0.800V/125C", "error", "hot/125c"),
+         ("hbt_typ/0.800V/27C", "pass", "tt/27c")])
+    assert failed == 0, err
+    assert "errored corner" in err and "hot/125c" in err
+
+
+def test_skip_errored_from_waives_nothing_else():
+    # A pass-status corner's bad log still fails the gate, and the errored
+    # corner's log is not skipped when the report grades it pass.
+    failed, err = gate_with_report(
+        {"hot/125c": BAD_LOG, "tt/27c": BAD_LOG},
+        [("hbt_wcs/0.800V/125C", "pass", "hot/125c"),
+         ("hbt_typ/0.800V/27C", "pass", "tt/27c")])
+    assert failed == 1, err
+    assert "FAILED hot/125c" in err and "FAILED tt/27c" in err
+
+
+def test_skip_errored_from_with_an_unreadable_report_waives_nothing():
+    # A report that cannot be read gates everything: the strict default.
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        log = tmp / "out" / "hot" / "ngspice.log"
+        log.parent.mkdir(parents=True)
+        log.write_text(BAD_LOG)
+        broken = tmp / "report.json"
+        broken.write_text("{not json")
+        failed, err = gate({"hot": BAD_LOG},
+                           f"--skip-errored-from {broken}")
+    assert failed == 1, err
+
+
+def test_skip_errored_from_needs_a_value():
+    rc, err = gate({}, "--skip-errored-from")
+    assert rc == 2, err
+    assert "needs a value" in err
+
+
+# --- sim_corner_matrix_check -----------------------------------------------
+#
+# The `klt corner-matrix` gate: the stub IS klt (its argv is recorded, its
+# stdout is the verdict the test chooses), so what is under test is the gate's
+# own reading of the verdict -- and, for the errored-cells case, its
+# cross-check of the verdict against the report klt graded (issue #173,
+# 2AMLogic/klayout-tools#7008).
+
+CM_HARNESS = """
+set -uo pipefail
+source "__ENV_SH__" >/dev/null 2>&1 || true
+OUT="__TMP__/out"
+SIM_SCRIPT_NAME=test_env_sh
+KLT_CMD=("__TMP__/klt-stub")
+failed=0
+sim_corner_matrix_check __TMP__/matrix.json __MODE__ __SRC__ bench || failed=1
+echo "RESULT failed=${failed}"
+"""
+
+CM_KLT_STUB = """#!/usr/bin/env bash
+printf '%s\\n' "$@" >> "${ARGV_LOG}"
+cat "${VERDICT_JSON}"
+exit "${VERDICT_RC:-0}"
+"""
+
+
+def cm_check(mode, verdict, report=None, verdict_rc=0):
+    """Run the gate in <mode> with a chosen verdict; return (failed, stdout)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        (tmp / "out").mkdir()
+        (tmp / "matrix.json").write_text("{}\n")
+        verdict_json = tmp / "verdict.json"
+        verdict_json.write_text(json.dumps(verdict))
+        src = tmp / ("report.json" if report is not None else "request.json")
+        if report is not None:
+            src.write_text(json.dumps(report))
+        else:
+            src.write_text("{}\n")
+        stub = tmp / "klt-stub"
+        stub.write_text(CM_KLT_STUB)
+        stub.chmod(0o755)
+        argv_log = tmp / "argv.log"
+        argv_log.touch()
+        script = (
+            CM_HARNESS.replace("__ENV_SH__", str(ENV_SH))
+            .replace("__TMP__", str(tmp))
+            .replace("__MODE__", mode)
+            .replace("__SRC__", str(src))
+        )
+        env = dict(os.environ, ARGV_LOG=str(argv_log),
+                   VERDICT_JSON=str(verdict_json), VERDICT_RC=str(verdict_rc))
+        proc = subprocess.run(["bash", "-c", script], capture_output=True,
+                              text=True, env=env, timeout=120)
+        assert "RESULT failed=" in proc.stdout, (proc.stdout, proc.stderr)
+        return int(proc.stdout.rsplit("RESULT failed=", 1)[1].strip()), proc.stdout
+
+
+def _report(corners):
+    return {"corners": corners}
+
+
+ERRORED_CELL = {"corner_id": "hbt_wcs/0.800V/125C", "status": "error"}
+PASS_CELL = {"corner_id": "hbt_typ/0.800V/27C", "status": "pass"}
+
+
+def test_a_complete_verdict_passes():
+    failed, out = cm_check("report", {"mode": "report", "matrix_size": 2,
+                                      "coverage_complete": True, "complete": True,
+                                      "missing": [], "extra": [], "duplicate": []},
+                           report=_report([PASS_CELL, ERRORED_CELL]))
+    assert failed == 0, out
+    assert "covers all 2 declared tuples" in out
+
+
+def test_the_errored_cells_case_passes_and_cites_the_upstream_gap():
+    # klt cannot check a matrix whose cells legitimately fail clean
+    # (klayout-tools#7008): not_simulated conflates never-ran with
+    # ran-and-errored. The gate accepts the errored-cells case -- missing /
+    # extra / duplicate empty AND every not_simulated tuple a corner the
+    # report itself grades non-pass -- and says so.
+    failed, out = cm_check(
+        "report",
+        {"mode": "report", "matrix_size": 2, "coverage_complete": False,
+         "complete": False, "missing": [], "extra": [], "duplicate": [],
+         "not_simulated": ["hbt_wcs/0.800V/125C"]},
+        report=_report([PASS_CELL, ERRORED_CELL]),
+        verdict_rc=3)
+    assert failed == 0, out
+    assert "2 declared tuples observed once" in out
+    assert "1 errored" in out and "klayout-tools#7008" in out
+
+
+def test_a_not_simulated_tuple_that_never_ran_still_fails():
+    # The cross-check is the whole waiver: a not_simulated entry with no
+    # matching non-pass corner in the report is a coverage hole, not an
+    # errored cell.
+    failed, out = cm_check(
+        "report",
+        {"mode": "report", "matrix_size": 2, "coverage_complete": False,
+         "complete": False, "missing": [], "extra": [], "duplicate": [],
+         "not_simulated": ["hbt_wcs/0.800V/125C", "hbt_typ/0.720V/-40C"]},
+        report=_report([PASS_CELL, ERRORED_CELL]),
+        verdict_rc=3)
+    assert failed == 1, out
+    assert "CORNER_MATRIX_INCOMPLETE" not in out  # the failure is on stderr
+
+
+def test_a_missing_or_duplicated_tuple_fails_even_with_errored_cells():
+    for verdict in (
+        {"mode": "report", "matrix_size": 3, "coverage_complete": False,
+         "complete": False, "missing": ["hbt_typ/0.720V/-40C"], "extra": [],
+         "duplicate": [], "not_simulated": ["hbt_wcs/0.800V/125C"]},
+        {"mode": "report", "matrix_size": 2, "coverage_complete": False,
+         "complete": False, "missing": [], "extra": [],
+         "duplicate": ["hbt_typ/0.800V/27C"], "not_simulated": []},
+    ):
+        failed, _ = cm_check("report", verdict,
+                             report=_report([PASS_CELL, ERRORED_CELL]),
+                             verdict_rc=3)
+        assert failed == 1, verdict
+
+
+def test_request_mode_has_no_errored_cells_waiver():
+    # A not-complete request verdict fails; the waiver reads the REPORT's own
+    # corner statuses and a request has none.
+    failed, _ = cm_check(
+        "request",
+        {"mode": "request", "matrix_size": 2, "coverage_complete": None,
+         "complete": False, "missing": [], "extra": [], "duplicate": [],
+         "not_simulated": ["hbt_wcs/0.800V/125C"]},
+        verdict_rc=3)
+    assert failed == 1
 
 
 # --- sim_run_ac_bench -----------------------------------------------------

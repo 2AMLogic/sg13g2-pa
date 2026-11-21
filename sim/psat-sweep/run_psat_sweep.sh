@@ -69,9 +69,18 @@ fi
 # reruns locally, and sets failed=1 rather than exiting, so the gate below is
 # what stops the record. (--capacity-retries is a --batch-set-only flag at the
 # pinned klt 0.9.0; the single-request wait above is the mechanism this repo
-# pins, see sim/README.md "Running grids".)
-sim_run_one "${BENCH}"
-sim_gate_logs
+# pins, see sim/README.md "Running grids".) The matched variant is the PVT
+# characterization bench (issue #173): corners that errored are RECORDED as
+# cells that did not simulate (a finding, not a reason to narrow the box), so
+# its klt exit 4 is waived and exactly the report's errored-corner logs skip
+# the log gate; the bare variant stays strict.
+if [[ "${VARIANT}" == match ]]; then
+  sim_run_one "${BENCH}" --allow-errored-corners
+  sim_gate_logs --skip-errored-from "${OUT}/${BENCH}.report.json"
+else
+  sim_run_one "${BENCH}"
+  sim_gate_logs
+fi
 if [[ "${VARIANT}" == match ]]; then
   sim_corner_matrix_check "${SCRIPT_DIR}/psat_sweep_match.pvt-matrix.json" report \
       "${OUT}/${BENCH}.report.json" "${BENCH}" || failed=1
