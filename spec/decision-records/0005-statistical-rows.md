@@ -1,4 +1,4 @@
-# 0004: Statistical specification rows — which ratified rows are statistical, and the evidence they will need (PROPOSED)
+# 0005 — Statistical specification rows — which ratified rows are statistical, and the evidence they will need (PROPOSED)
 
 - **Status**: **PROPOSED. Not ratified.** No row of
   [`spec/target-spec.md`](../target-spec.md) is edited by this record. Adding
@@ -46,12 +46,10 @@ client (all 400 corners passed):
   across draws. So the tool **can** measure device mismatch separately from
   common process/bias movement on this design.
 - The per-instance mechanism answers question 1 of the issue: **yes**, the
-  campaign samples non-zero variation on `npn13G2` per instance (the 14 array
-  devices and the mirror reference draw independently — the reference's
-  near-constant current under `hbt_typ_stat` while the array moves shows the
-  shared-bias and process paths apart).
-- **No deterministic negative control is declarable for this family at the
-  pinned client**: `monte_carlo.mismatch_scale` and `monte_carlo.instances`
+  campaign samples non-zero variation on `npn13G2` per instance (the 14 identically biased
+  outputs differ within a draw and the pair difference varies between draws.
+  Reference current is reported separately because its operating point differs).
+- **Both HBT mismatch-switch probes were refused**. `monte_carlo.mismatch_scale` and `monte_carlo.instances`
   are both refused before any draw (verbatim refusals in the pilot record),
   curated to sky130/gf180mcu —
   [2AMLogic/klayout-tools#5486](https://github.com/2AMLogic/klayout-tools/issues/5486);
@@ -115,20 +113,36 @@ What each will need (the checklist's evidence contract, made concrete):
   ([2AMLogic/klayout-tools#5490](https://github.com/2AMLogic/klayout-tools/issues/5490)).
   Ratifying a row without a yield target would produce evidence item 6 still
   cannot count.
-- **A deterministic negative control** (sigma exactly 0 with variation
-  elsewhere unchanged). At the pinned client this is refused for sg13g2
-  (#5486/#5487 above), so **no yield claim is possible until the client pin
-  reaches the sg13g2 `instances`/`mismatch_scale` work** (or the operator
-  accepts a deck-level `mm_ok=0` control, which the tool does not declare).
-  The pilot's structural zero (the stat section's within-draw spread) is a
-  mechanism check, not a declared control.
-- **A sample size stated with its rule**, both for sigma estimation and for
-  the yield fraction: with zero observed failures, demonstrating yield y at
-  confidence c needs n ≥ ln(1−c)/ln(y) draws per population (29 draws for
-  90 % @ 95 % confidence; 59 for 95 % @ 95 %); a sigma estimate within ±10 %
-  needs ~50 draws (the pilot's n=100 gives ~7 %). The campaign runs the
-  statistical sections at each PVT cell of the ratified box, so the per-cell
-  draw count is the operator's cost/coverage dial.
+- **A seeded degradation for each cited metric.** Run a second simulation
+  with the same seed, sections, PVT cell, extraction, draw count and limits.
+  Record the deliberate change and supply its measured samples under that
+  measurement's `negative_control`. For S1, raise the mirror reference
+  current to drive per-device current above the ratified operating window,
+  or above the eventual upper array-current bound. The final S1 control
+  must cross the particular bound the operator ratifies. For S2, reduce the
+  mirror bias to push minimum in-band gain below the selected gain floor.
+  If citing S11, detune the input network so worst in-band S11 exceeds its
+  ceiling. For S3, introduce a documented dissipative output loss and run the
+  same drive sweep through the same load. Expect lower delivered Psat,
+  output P1dB and PAE to cross their respective floors. Check detection for
+  each cited metric. Record any unmeasurable compression event as such.
+  Set the perturbations before the campaign and keep the row limits fixed.
+  Require `negative_control.verdict: detected` and
+  `sample_size.verdict: sufficient` from the pinned grader. An all-passing
+  control with zero spread can still grade `not_detected`. The two refused
+  model-switch probes and the process-section structural zero test only how
+  the device model generates variation.
+- **Size each population against both yield and precision.** Use the
+  empirical two-sided 95% Clopper–Pearson interval from `klt 0.9.1 yield`
+  with `--confidence 0.95 --target-ci-halfwidth 0.01`. Require the lower
+  bound to reach the operator's target and the interval half-width to be at
+  most one percentage point. With zero failures the lower bound is
+  `0.025^(1/n)`. The target alone needs 36 draws for 90% or 72 for 95%.
+  The precision rule needs 183 in either example, so budget at least 183
+  per cell and population. Failures can require more draws. Report the
+  actual interval and verdict for the predeclared campaign. For planning
+  sigma estimation, the approximate relative standard error under normal
+  sampling is `1/sqrt(2(n−1))`, about 7% at the pilot's n=100.
 - **The population stated** on every figure: section(s) (`_stat`,
   `_mismatch`), PVT cell, seed, n — the pilot's record format is the template.
 
@@ -149,12 +163,13 @@ What each will need (the checklist's evidence contract, made concrete):
 
 ## Consequences
 
-- If the operator ratifies S1–S3: the campaign needs a klt pin that can
-  declare the negative control for sg13g2, a target yield per row, and the
-  design to close its rows at the nominal cell first (a yield fraction on a
-  design that fails nominally is meaningless).
+- If the operator ratifies S1–S3: record the limits and target yield for each
+  row, establish nominal performance, and run the sized populations and
+  seeded degradation controls. The proposed circuit-level controls can be
+  simulated with ordinary deck changes at the pilot client pin.
 - If the operator declares the gap instead: item 6 grades `unmet` permanently
   for this block, and `ROADMAP.md` / `manifests/README.md` record that choice.
 - Either way the pilot's record stands as the feasibility evidence: the two
   HBT mechanisms are separable and measurable on the fleet at the pinned
-  client; the negative control is the one thing the tool will not yet declare.
+  client. The runner refused both HBT mismatch-switch requests. Detection of
+  the proposed row-level degradations remains for the ratified campaign.

@@ -36,7 +36,8 @@ pinned `klayout-tools` wheel](https://github.com/2AMLogic/klayout-tools/blob/v0.
   manifest's `content_hash` for item 2 is `sha256sum layout/pa/sg13g2_pa.gds`.
 - **`../attest/item9.json`**: the item-9 attestation inventory: every committed
   bench (`sim/smoke`, `sim/known-answer`, `sim/known-answer-thermal`,
-  `sim/device-npn13g2`, `sim/psat-sweep`, `sim/ac-gain`, `sim/ac-stability`),
+  `sim/device-npn13g2`, `sim/psat-sweep`, `sim/ac-gain`, `sim/ac-stability`,
+  `sim/mc-pilot`),
   each primary bench with its cold-start argv (`local_only`: they need the
   pinned PDK, ngspice, numpy and, for the grid benches, the batch fleet), plus
   the PDK and tool pins. The tool pins are a **minimum-version floor**, not an
@@ -230,7 +231,7 @@ not this paragraph.
 
 **Item 6 (Monte Carlo evidence) waits on ratification.** The mc-pilot
 ([`sim/mc-pilot/`](../sim/mc-pilot/), #174) established feasibility and
-[DR 0004](../spec/decision-records/0004-statistical-rows.md) (PROPOSED)
+[DR 0005](../spec/decision-records/0005-statistical-rows.md) (PROPOSED)
 classifies every ratified row and proposes the statistical rows; the item
 stays `unmet` / `no_evidence` with a null citation until the operator
 ratifies those rows (then a `klt yield` campaign supplies the citation) or

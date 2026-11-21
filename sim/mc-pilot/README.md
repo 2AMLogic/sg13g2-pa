@@ -1,11 +1,11 @@
 # mc-pilot — Monte Carlo pilot (issue #174)
 
-A **pilot**, not a T1 item-9 bench: what variation the pinned PDK's HBT
+This **pilot** measures the variation the pinned PDK's HBT
 statistical model sections and the batch runner can actually measure on this
 design, at the nominal cell (`hbt_*` statistical sections, 27 C, Vcc 0.8 V),
 on a design that **does not yet meet its ratified rows** (`ROADMAP.md`). Its
 record is the evidence the PROPOSED decision record
-[`spec/decision-records/0004-statistical-rows.md`](../../spec/decision-records/0004-statistical-rows.md)
+[`spec/decision-records/0005-statistical-rows.md`](../../spec/decision-records/0005-statistical-rows.md)
 draws its feasibility findings from; it is never a yield claim and never a
 pass/fail claim.
 
@@ -37,21 +37,21 @@ sweep's 11 points.
 scripts/setup-env.sh && sim/mc-pilot/run_mc_pilot.sh
 ```
 
-Needs python3 + numpy. On the dispatch worker (`KLT_SIM_BACKEND=batch`) the
+Requires Python 3, NumPy and a configured batch submitter. The
 four runs go to the Spot batch fleet (the requests carry
 `batch.capacity_wait_s: 600`); a submit that still fails is reported and its
 refusal is committed as the record — never rerun locally, never a hand loop.
 The record lands in `records/<timestamp>-<sha>.{md,json}` (append-only) with
 the klt artifacts under `corners/<id>/`.
 
-## Why this is outside the item-9 inventory
+## Item 9 cold start
 
-`attest/item9.json` covers "every committed bench" whose cold start is the
-benching contract; folding a one-shot pilot in would force a full item-9
-re-attestation (re-running every bench) for no benching benefit — the same
-reason the matched psat deck (`psat_sweep_match.*`) is deliberately outside it
-(`sim/README.md`). It is to be added when item 9 is next re-attested for its
-own reasons, not before.
+The inventory includes all six requests and invokes `run_mc_pilot.sh` once.
+Each baseline request must complete on batch for the cold start to pass.
+A refused baseline is recorded and returns a failure. A simulator error in a
+corner log stops the runner before it publishes measurement conclusions.
+The original feasibility record remains the basis for proposed statistical
+rows pending operator ratification. [Item 9 inventory](../../attest/item9.json)
 
 ## Known tool limits this pilot records (not works around)
 

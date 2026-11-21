@@ -11,7 +11,7 @@ gain bench, each against both statistical HBT sections of ``cornerHBT.lib``
 two negative-control probes. Every number is **simulated**, at the nominal
 cell, through ideal passives and an ideal bias source, on a design that does
 not yet meet its ratified rows: the record is a pilot's feasibility evidence
-for the PROPOSED decision record ``0004-statistical-rows.md``, never a yield
+for the PROPOSED decision record ``0005-statistical-rows.md``, never a yield
 claim and never a pass/fail claim.
 
 Bench facts (sample count, seed, section names, the 15 device vector names)
@@ -26,6 +26,7 @@ import argparse
 import hashlib
 import json
 import os
+from pathlib import Path
 import sys
 
 import numpy as np
@@ -56,14 +57,14 @@ MODEL_FILES = (
 )
 
 ISSUE = "#174 (https://github.com/2AMLogic/sg13g2-pa/issues/174)"
-DR = "spec/decision-records/0004-statistical-rows.md (PROPOSED)"
+DR = "spec/decision-records/0005-statistical-rows.md (PROPOSED)"
 UPSTREAM_5486 = "2AMLogic/klayout-tools#5486"
 UPSTREAM_5487 = "2AMLogic/klayout-tools#5487"
 UPSTREAM_5503 = "2AMLogic/klayout-tools#5503"
 
 
 def _fmt(x, n=4):
-    return f"{x:.{n}g}"
+    return f"{x:.{n}g}" if x is not None else "unavailable"
 
 
 def _sha256(path):
@@ -79,7 +80,10 @@ def load_run(path):
     produce a parsable report (the refusal is the evidence then)."""
     try:
         with open(path) as fh:
-            return json.load(fh)
+            report = json.load(fh)
+        if not isinstance(report, dict) or "corners" not in report:
+            return {"__failed__": f"Missing simulation report: {str(report)[:500]}"}
+        return report
     except (OSError, ValueError) as exc:
         return {"__failed__": f"{type(exc).__name__}: {exc}"}
 
@@ -92,7 +96,7 @@ def stderr_tail(path, lines=8):
         return "<unreadable>"
 
 
-def run_summary(report, stderr_path):
+def run_summary(report):
     """(one-line status, n_requested, n_completed, remote_desc, report|None)."""
     if "__failed__" in report:
         return (f"**REFUSED/FAILED** (no report; stderr tail below)", None, None, None, None)
@@ -100,9 +104,6 @@ def run_summary(report, stderr_path):
     n_done = sum(1 for c in corners if c.get("status") == "pass")
     mc = report.get("environment", {}).get("monte_carlo") or {}
     n_req = mc.get("n")
-    backend = report.get("environment", {}).get("backend")
-    if isinstance(backend, dict):
-        backend = backend.get("resolved") or backend.get("requested")
     remote = report.get("environment", {}).get("remote") or {}
     # A sharded batch submit reports one entry per shard under remote.fleet[].
     fleet = remote.get("fleet") or []
@@ -135,7 +136,7 @@ def dc_draws(report):
     return draws
 
 
-def ac_draws(report):
+def ac_draws(report, report_path):
     """[(min_s21_db, worst_s11_db)] per completed draw, from X1's port vectors."""
     out = []
     for corner in report.get("corners", []):
@@ -144,7 +145,16 @@ def ac_draws(report):
         art = (corner.get("artifacts") or {}).get("complex_vectors")
         if not art:
             continue
-        with open(art) as fh:
+        # klt records absolute submit-host paths. The archive keeps the subtree
+        # named after the report, including the shard job and corner directories.
+        sidecar = Path(art)
+        if sidecar.is_absolute():
+            run_dir = report_path.name.split(".report.json")[0]
+            root = next((p for p in sidecar.parents if p.name == run_dir), None)
+            if root is None:
+                raise ValueError(f"{sidecar} is outside the {run_dir} run directory")
+            sidecar = Path(run_dir) / sidecar.relative_to(root)
+        with (report_path.parent / sidecar).open() as fh:
             side = json.load(fh)
         d = {k: np.array(v["real"], dtype=float) + 1j * np.array(v["imag"], dtype=float)
              for k, v in side["data"].items()}
@@ -160,7 +170,7 @@ def stats(values):
     return {
         "n": int(a.size),
         "mean": float(a.mean()),
-        "stddev_sample": float(a.std(ddof=1)) if a.size > 1 else 0.0,
+        "stddev_sample": float(a.std(ddof=1)) if a.size > 1 else None,
         "min": float(a.min()),
         "max": float(a.max()),
     }
@@ -221,10 +231,11 @@ def main(argv):
                     help="KEY=capture.json (KEY in scale/instances)")
     args = ap.parse_args(argv[1:])
 
-    reports, stderrs = {}, {}
+    reports, stderrs, report_paths = {}, {}, {}
     for item in args.run:
         key, _, rest = item.partition("=")
         path, _, stderr = rest.partition(":")
+        report_paths[key] = Path(path)
         reports[key] = load_run(path)
         stderrs[key] = stderr or None
     probes = {}
@@ -236,39 +247,32 @@ def main(argv):
     md = []
     w = md.append
 
-    summaries = {key: run_summary(reports.get(key, {"__failed__": "not run"}),
-                                  stderrs.get(key)) for key, *_ in RUNS}
+    summaries = {key: run_summary(reports.get(key, {"__failed__": "not run"})) for key, *_ in RUNS}
     dc = {k: dc_draws(reports[k]) for k in ("dc_stat", "dc_mismatch") if k in reports}
-    ac = {k: ac_draws(reports[k]) for k in ("ac_stat", "ac_mismatch") if k in reports}
+    ac = {k: ac_draws(reports[k], report_paths[k]) for k in ("ac_stat", "ac_mismatch") if k in reports}
 
-    env = (reports.get("dc_mismatch") or reports.get("dc_stat") or {}).get("environment", {})
-    if "__failed__" in env:
-        env = {}
-    backend = env.get("backend")
-    if isinstance(backend, dict):
-        backend = backend.get("resolved") or backend.get("requested")
+    env = reports.get("dc_mismatch", {}).get("environment", {})
     mc_env = env.get("monte_carlo") or {}
-    fleet = (env.get("remote") or {}).get("fleet") or []
-    workers = set()
-    runner_klt = set()
-    runner_feat = set()
-    for e in fleet:
-        workers.add(f"{e.get('instance_type', '?')} / {e.get('ami_id', '?')} "
-                    f"(spot)" if e.get("spot") else
-                    f"{e.get('instance_type', '?')} / {e.get('ami_id', '?')}")
-        if e.get("runner_klt_version"):
-            runner_klt.add(e["runner_klt_version"])
-        feats = e.get("runner_request_features") or {}
-        if feats.get("status"):
-            runner_feat.add(f"{feats['status']} "
-                            f"({', '.join(feats.get('required', [])) or 'none required'})")
-    worker_ng = None
-    for e in fleet:
-        sim = (e.get("worker_environment") or {}).get("simulator") or {}
-        if sim.get("version_banner"):
-            worker_ng = next((ln.strip("* ") for ln in sim["version_banner"].splitlines()
-                              if "ngspice-" in ln), None)
-            break
+    batch_completed = 0
+    fleet = []
+    for key, *_ in RUNS:
+        report = reports.get(key, {})
+        run_env = report.get("environment", {})
+        backend = run_env.get("backend")
+        if isinstance(backend, dict):
+            backend = backend.get("resolved")
+        remote = run_env.get("remote") or {}
+        fleet.extend(remote.get("fleet") or ([remote] if remote else []))
+        _, requested, completed, _, _ = summaries[key]
+        if (backend == "batch" and report.get("status") == "pass" and requested
+                and requested == completed == len(report["corners"])
+                and completed == len(dc.get(key, ac.get(key, [])))):
+            batch_completed += 1
+    with (Path(__file__).resolve().parents[1] / "toolchain.json").open() as fh:
+        pin = json.load(fh)["klt"]["pin"]
+    client = args.klt_version.split()[-1] if args.klt_version.strip() else "unreported"
+    runner_versions = sorted({str(e.get("runner_klt_version") or "unreported") for e in fleet})
+    client_versions = sorted({str(e.get("client_klt_version") or "unreported") for e in fleet})
     model_hashes = {name: _sha256(os.path.join(args.models_dir, name))
                     for name in MODEL_FILES
                     if os.path.isfile(os.path.join(args.models_dir, name))}
@@ -288,28 +292,36 @@ def main(argv):
     w("")
     w("- Bench: `sim/mc-pilot/` (generated by `gen_mc_pilot.py`; the AC deck is byte-identical "
       "to the attested `sim/ac-gain/ac_gain.spice`, the DC deck is the same DUT inlined verbatim)")
-    w(f"- Sample count n={gmp.N_SAMPLES} per run, seed {gmp.SEED} (klt derives each draw's "
+    w(f"- Requested n={gmp.N_SAMPLES} per run, seed {gmp.SEED} (klt derives each draw's "
       "seeds from it; the same requests reproduce the same draws), one corner per section")
     w("- Sections run separately: `hbt_typ_stat` (process-only: `sg13g2_hbt_stat.lib` global "
       "gauss() multipliers, one draw common to every instance) and `hbt_typ_mismatch` "
       "(`sg13g2_hbt_mod_mismatch.lib`: per-instance `qarea=agauss(1, 0.1, mm_ok ? 1 : 0)`, "
       "`mm_ok=1` at default)")
-    w(f"- {commit_line(args.git_sha, args.dirty)}")
-    w(f"- {args.klt_version}; {args.ngspice_version}; PDK per `sim/pdk.json`; backend "
-      f"`{backend or '?'}`"
-      + (" (batch fleet)." if backend == "batch" else " (NOT the batch fleet)."))
+    w(commit_line(args.git_sha, args.dirty))
+    w(f"- Submitting client {args.klt_version}, local simulator {args.ngspice_version}, "
+      "PDK per `sim/pdk.json`.")
     if fleet:
-        w(f"- Fleet workers ({len(fleet)} shard jobs of the first report read): "
-          + "; ".join(sorted(workers))
-          + (f"; runner klt {', '.join(sorted(runner_klt))} (client 0.9.0, compatibility "
-             f"{'match' if any(e.get('runner_compatibility') == 'match' for e in fleet) else '?'})"
-             if runner_klt else "")
-          + (f"; request features {', '.join(sorted(runner_feat))}" if runner_feat else "")
-          + (f"; worker {worker_ng}, PDK staged at "
-             f"`{(fleet[0].get('worker_environment') or {}).get('pdk', {}).get('root', '?')}`"
-             if worker_ng else "")
-          + ". The model-file digests above are the submitting host's; the report's "
-          "`models_lib_sha256_scope` says which side hashed them.")
+        workers = sorted({f"{e.get('instance_type', '?')} / {e.get('ami_id', '?')}" for e in fleet})
+        banners, roots, features = set(), set(), set()
+        for shard in fleet:
+            worker = shard.get("worker_environment") or {}
+            banner = (worker.get("simulator") or {}).get("version_banner", "")
+            banners.update(line.strip("* ") for line in banner.splitlines() if "ngspice-" in line)
+            if (worker.get("pdk") or {}).get("root"):
+                roots.add(worker["pdk"]["root"])
+            feature = shard.get("runner_request_features") or {}
+            if feature.get("status"):
+                features.add(f"{feature['status']} ({', '.join(feature.get('required', []))})")
+        compat = sorted({str(e.get("runner_compatibility") or "unreported") for e in fleet})
+        w(f"- {len(fleet)} fleet entries across the reports. Workers {', '.join(workers)}. "
+          f"Worker simulator {', '.join(sorted(banners)) or 'unreported'}. "
+          f"Reported client versions {', '.join(client_versions)}. "
+          f"Runner compatibility {', '.join(compat)}.")
+        if roots:
+            w(f"- Worker PDK root {', '.join(sorted(roots))}.")
+        if features:
+            w(f"- Runner request features {', '.join(sorted(features))}.")
     w("- Model-file sha256 (submitting host's PDK install; the report's "
       f"`models_lib_sha256_scope` is `{env.get('models_lib_sha256_scope', '?')}`):")
     for name, digest in model_hashes.items():
@@ -329,7 +341,7 @@ def main(argv):
         w("### Refusals / failures (committed as the record)")
         w("")
         for key in refused:
-            w(f"**{key}**: no parsable report. stderr tail:")
+            w(f"**{key}**: {reports.get(key, {}).get('__failed__', 'not run')}. stderr tail:")
             w("")
             w("```")
             w(stderr_tail(stderrs[key]) if stderrs.get(key) else "<none captured>")
@@ -348,78 +360,60 @@ def main(argv):
     spread_st = stats(per_draw_device_spread(stt)) if stt else None
     diff_mm = stats([d["ic_diff_12"] for d in mm]) if mm else None
     diff_st = stats([d["ic_diff_12"] for d in stt]) if stt else None
-    w("1. **Does the campaign sample non-zero variation on `npn13G2`, per instance?** "
-      + ("Yes, from completed draws: under `hbt_typ_mismatch` the 14 identically biased "
-         "output devices differ **within a single draw** (per-draw max-min across the array: "
-         f"mean {_fmt(spread_mm['mean'])} A, "
-         f"sample sigma {_fmt(spread_mm['stddev_sample'])} A) and the same-draw difference "
-         f"`ic1-ic2` moves across draws (sigma {_fmt(diff_mm['stddev_sample'])} A), while "
-         "under `hbt_typ_stat` the per-instance spread within a draw is exactly "
-         + (f"{_fmt(spread_st['mean'])} A (every device moves together; the process section "
-            f"draws one global multiplier set per die) and `ic1-ic2` sigma is "
-            f"{_fmt(diff_st['stddev_sample'])} A"
-            if spread_st is not None else "(no completed stat draws)")
-         + ". The diode-connected reference moves too (see below) -- common movement across "
-         "draws can be process or the shared mirror bias; the per-instance spread within a "
-         "draw is what only mismatch produces."
-         if mm else
-         "**No completed mismatch draws** -- the spread is unmeasured (refusal above)."))
-    w("")
-    scale_p = probes.get("scale", {"kind": "refusal", "message": "<not probed>"})
-    inst_p = probes.get("instances", {"kind": "refusal", "message": "<not probed>"})
-    w("2. **Can a deterministic negative control be declared for this family "
-      "(scaled or gated mismatch)?** No, not through `klt` at the pinned 0.9.0 client:")
-    for label, probe_file, probe, link in (
-            ("scaled", "probe_scale", scale_p, UPSTREAM_5486),
-            ("gated", "probe_instances", inst_p, UPSTREAM_5487)):
-        if probe["kind"] == "run":
-            rep = probe["report"]
-            draws = dc_draws(rep)
-            d12 = stats([d["ic_diff_12"] for d in draws]) if draws else None
-            verdict = ("a completed control run: sigma(ic1-ic2) = "
-                       f"{_fmt(d12['stddev_sample'])} A over {d12['n']} draws"
-                       if d12 else "no completed control draws")
-            w(f"   - **{label} control**: the probe RAN (this pin accepts it) -- {verdict}.")
+    if not mm:
+        variation = "**No completed mismatch draws**. The spread is unmeasured."
+    elif len(mm) == 1:
+        variation = "One completed mismatch draw is insufficient to establish variation across draws."
+    elif spread_mm["max"] == 0:
+        variation = "No within-array spread was observed in the completed mismatch draws."
+    else:
+        # Static device offsets alone do not demonstrate random mismatch.
+        pair_offsets = [[d[f"ic{i}"] - d["ic1"] for i in range(2, 15)] for d in mm]
+        if np.any(np.ptp(pair_offsets, axis=0) > 0):
+            variation = "Yes, from completed draws. Within-array current differences vary across draws."
         else:
-            w(f"   - **{label} control** (`{probe_file}.request.json`): "
-              + ("refused before any draw, verbatim: " if probe["kind"] == "refusal"
-                 else "capture unreadable, tail: ")
-              + f"`{probe['message']}` -- {link}.")
-    w("   The card's own gate is the subcircuit parameter `mm_ok` (default 1); the pinned "
-      "client cannot reach it (`mismatch_scale`/`instances` shadow a global `.param` switch, "
-      f"which sg13g2 does not have). The two-family curation and the `mm_ok` route are "
-      f"{UPSTREAM_5486}; the sg13g2 `instances` work landed upstream only after the 0.9.0 "
-      f"pin ({UPSTREAM_5487}, completed 2026-11-15), and the measured two-point scaling "
-      f"check that acceptance still wants is {UPSTREAM_5503}. The `vary: \"process\"` axis "
-      "is NOT a control for this deck family either: klt feeds ngspice one combined "
-      "`.options seed=`, so an agauss deck re-rolls under any axis (klt's own "
-      "`_expand_monte_carlo` docstring says the control does not extend to such decks).")
+            variation = "The array has fixed device offsets. No draw-to-draw change in them was observed."
+    w("1. **Does the campaign sample non-zero variation on `npn13G2`, per instance?** " + variation)
+    for label, spread, diff in (("mismatch", spread_mm, diff_mm), ("process", spread_st, diff_st)):
+        if spread:
+            w(f"   - {label} section, {spread['n']} draws. The mean within-array range is "
+              f"{_fmt(spread['mean'])} A (maximum {_fmt(spread['max'])} A). "
+              f"Sample sigma of `ic1-ic2` is {_fmt(diff['stddev_sample'])} A.")
     w("")
-    def _run_backend(rep):
-        if not rep or "__failed__" in rep:
-            return None
-        b = rep.get("environment", {}).get("backend")
-        if isinstance(b, dict):
-            b = b.get("resolved") or b.get("requested")
-        return b
-
-    ran_batch = all(_run_backend(reports.get(key)) == "batch" for key, *_ in RUNS)
-    any_job = any(s[3] for s in summaries.values())
-    w("3. **Does the request run on the batch fleet with the pinned client "
-      "(`sim/toolchain.json` klt 0.9.0)?** "
-      + ("Yes: every run above resolved backend `batch` through the 0.9.0 client"
-         + (" (job ids in the table; the runner is the fleet's 0.9.0)."
-            if any_job else " (no job id published in the reports).")
-         if ran_batch else
-         "No: at least one request did not run on the batch backend (a refusal, a "
-         "local run, or a failure -- see above); the refusal, where there is one, "
-         "is the committed evidence and no local fallback was used."))
+    w("2. **Can a deterministic negative control be declared for this family "
+      "(scaled or gated mismatch)?**")
+    control_stats = {}
+    for label, probe_file, key, link in (
+            ("scaled", "probe_scale", "scale", UPSTREAM_5486),
+            ("gated", "probe_instances", "instances", UPSTREAM_5487)):
+        probe = probes.get(key)
+        if probe is None:
+            w(f"   - **{label} control** was not probed.")
+        elif probe["kind"] == "run":
+            draws = dc_draws(probe["report"])
+            d12 = stats([d["ic_diff_12"] for d in draws])
+            control_stats[key] = d12
+            w(f"   - **{label} control** returned a simulation report. "
+              f"{_sigma_line('ic1-ic2', d12, 'A')}.")
+        else:
+            outcome = "refused before any draw" if probe["kind"] == "refusal" else "unreadable capture"
+            w(f"   - **{label} control** (`{probe_file}.request.json`) {outcome}. "
+              f"`{probe['message']}` ({link}).")
+    w(f"   The HBT card uses the `mm_ok` gate. The scaled and gated control requests "
+      f"are tracked in {UPSTREAM_5486} and {UPSTREAM_5487}, and the two-point scaling "
+      f"check in {UPSTREAM_5503}.")
     w("")
-    fam = json.dumps(mc_env.get("family_mismatch"), indent=2) if mc_env.get("family_mismatch") else None
+    w(f"3. **Does the request run on the batch fleet with the pinned client (klt {pin})?** "
+      + ("Yes. " if batch_completed == len(RUNS) and client == pin
+         and all(v in (pin, "unreported") for v in client_versions) else "Not established. ")
+      + f"{batch_completed}/{len(RUNS)} baseline requests completed all requested draws "
+      f"on batch. Submitting client {args.klt_version}. Fleet runner versions "
+      f"{', '.join(runner_versions) or 'unreported'}.")
+    w("")
+    fam = json.dumps(mc_env["family_mismatch"], indent=2) if mc_env.get("family_mismatch") else None
     if fam:
-        w("klt's own per-family disclosure for the mismatch run (the HBT `bipolar` family is "
-          "**not independently verified** active -- this pilot's measurements are the "
-          "verification, and they show it active):")
+        w("klt's family disclosure for the mismatch run follows. "
+          f"The observed HBT currents give this result. {variation}")
         w("")
         w("```json")
         w(fam)
@@ -449,14 +443,16 @@ def main(argv):
           f"{_sigma_line('icc_vcc', vcc, 'A')}")
         spread = stats(per_draw_device_spread(draws))
         w(f"- Same-draw spread across the 14 identically biased output devices "
-          f"(max-min per draw): {_sigma_line('spread', spread, 'A')} -- the mismatch "
-          "signature; under the process-only section this is the exactly-zero row")
+          f"(max-min per draw): {_sigma_line('spread', spread, 'A')}")
         w(f"- Same-draw pair difference `ic1-ic2`: "
           f"{_sigma_line('ic_diff_12', stats([d['ic_diff_12'] for d in draws]), 'A')}")
         per_dev = {f"ic{i}": stats([d[f"ic{i}"] for d in draws]) for i in range(1, 15)}
-        w("- Per-device across draws (mean / sample sigma, mA): "
-          + ", ".join(f"`ic{i}` {per_dev[f'ic{i}']['mean']*1e3:.3f}/{per_dev[f'ic{i}']['stddev_sample']*1e3:.3f}"
-                      for i in range(1, 15)))
+        device_stats = []
+        for name, values in per_dev.items():
+            sigma = values["stddev_sample"]
+            sigma_ma = f"{sigma * 1e3:.3f}" if sigma is not None else "unavailable"
+            device_stats.append(f"`{name}` {values['mean'] * 1e3:.3f}/{sigma_ma}")
+        w("- Per-device across draws (mean / sample sigma, mA): " + ", ".join(device_stats))
         roll = {name: klt_mc_rollup(reports[key], name)
                 for name in ("ic_total", "ic_diff_12", "ic_ref")}
         w("- klt's own Monte Carlo rollup (tool-computed; p5/p50/p95):")
@@ -501,17 +497,19 @@ def main(argv):
     # --- Limitations -------------------------------------------------------
     w("## Limits of this record")
     w("")
-    w(f"- n={gmp.N_SAMPLES} per run: a sigma estimate carries roughly +/-10 % "
-      "(sigma of a sigma estimate ~ sigma/sqrt(2n)); enough to size a campaign, "
-      "not a yield statement. No quantile here is a spec limit.")
+    w("- Sample sigma requires at least two usable draws. Its approximate relative "
+      "standard error under normal sampling is 1/sqrt(2(n-1)), about 7% for 100 draws.")
     w("- The passives and the bias source are ideal: the resistor/capacitor statistical "
       "sections of the PDK reach nothing in this netlist. Only the 15 HBTs are PDK devices.")
     w("- The AC deck carries a second DUT copy (X2, reverse excitation); its devices also "
       "draw mismatch, but S21/S11 above read the forward copy X1 only.")
     w("- Self-heating is on (card default); the operating point is the DUT's own mirror.")
-    w("- No negative control completed at this pin: a zero-sigma row here would be "
-      "structural (the stat section's within-draw spread), not a declared control "
-      f"({UPSTREAM_5486}).")
+    completed_controls = [name for name, result in control_stats.items() if result]
+    if completed_controls:
+        w(f"- Completed control draws for {', '.join(completed_controls)}. Compare the "
+          "measured pair differences above with the baseline before attributing an effect.")
+    else:
+        w("- No negative control completed. The baseline sections alone test the model mechanism.")
     w("")
 
     out["runs"] = {key: {"status": summaries[key][0], "n_requested": summaries[key][1],
@@ -520,7 +518,7 @@ def main(argv):
     out["monte_carlo_environment"] = mc_env
     out["model_files_sha256"] = model_hashes
     out["probes"] = {k: ({"kind": v["kind"], "message": v["message"]}
-                         if v["kind"] in ("refusal", "unreadable") else {"kind": "run"})
+                         if v["kind"] in ("refusal", "unreadable") else {"kind": "run", "ic_diff_12": control_stats[k]})
                      for k, v in probes.items()}
     with open(args.json_out, "w") as fh:
         json.dump(out, fh, indent=1)

@@ -20,7 +20,10 @@ number rather than the same one. No simulator or PDK is needed.
 import importlib.util
 import json
 import os
+import shutil
 import sys
+
+import pytest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
@@ -73,20 +76,19 @@ def _dc_report(section, per_draw_offsets, pair_delta):
     }
 
 
-def _ac_report(section, s21_by_draw, s11_by_draw):
+def _ac_report(root, section, s21_by_draw, s11_by_draw):
     """A synthetic AC report: the complex_vectors sidecar has the six port
     vectors of the two-copy deck; S21/S11 magnitudes encode the per-draw dB
     values being fed (a flat S21 of s21 dB across the 11 points, and an S11
     whose |S11| equals the target dB)."""
-    import tempfile
     corners = []
-    tmp = tempfile.mkdtemp()
     for k, (s21, s11) in enumerate(zip(s21_by_draw, s11_by_draw)):
         # The reducer reads S21 = 2 v(out1)/v(s1) and S11 = 2 v(in1)/v(s1) - 1
         # with v(s1) = 1, so v(out1) = S21/2 and v(in1) = (S11 + 1)/2; a flat
         # magnitude per draw makes the per-draw min/worst trivially that draw's
         # target dB value.
-        side = os.path.join(tmp, f"mc{k}.json")
+        side = root / "job" / f"mc{k}" / "complex_vectors.json"
+        side.parent.mkdir(parents=True)
         mag21 = 10 ** (s21 / 20.0)
         mag11 = 10 ** (s11 / 20.0)
         with open(side, "w") as fh:
@@ -100,9 +102,10 @@ def _ac_report(section, s21_by_draw, s11_by_draw):
                            "v(s2)": {"real": [1.0] * 11, "imag": [0.0] * 11},
                        }}, fh)
         corners.append({"corner_id": f"{section}/novdd/27C/mc{k}", "status": "pass",
-                        "artifacts": {"complex_vectors": side}})
+                        "artifacts": {"complex_vectors": str(side)}})
     return {"status": "pass",
-            "environment": {"backend": "batch", "engine_version": "ngspice-47 (synthetic)"},
+            "environment": {"backend": "batch", "monte_carlo": {"n": len(corners)},
+                            "remote": {"fleet": [{"runner_klt_version": "0.9.3"}]}},
             "corners": corners}
 
 
@@ -136,9 +139,15 @@ def test_stats_reports_sample_stddev_and_range():
     assert mpr.stats([]) is None
 
 
-def test_ac_draws_reads_forward_copy_s21_s11():
-    rep = _ac_report("hbt_typ_mismatch", [17.0, 16.0], [-1.5, -2.0])
-    draws = mpr.ac_draws(rep)
+def test_ac_draws_reads_forward_copy_s21_s11_after_relocation(tmp_path):
+    original = tmp_path / "submit-host"
+    rep = _ac_report(original / "mc_ac_mismatch", "hbt_typ_mismatch", [17., 16.], [-1.5, -2.])
+    report_name = "mc_ac_mismatch.report.json"
+    _write(original / report_name, rep)
+    relocated = tmp_path / "fresh-checkout"
+    shutil.move(original, relocated)
+    path = relocated / report_name
+    draws = mpr.ac_draws(mpr.load_run(path), path)
     assert len(draws) == 2
     assert abs(draws[0][0] - 17.0) < 1e-6   # min in-band S21, dB
     assert abs(draws[0][1] - (-1.5)) < 1e-6  # worst in-band S11, dB
@@ -165,9 +174,9 @@ def test_record_renders_both_sections_and_refusals(tmp_path, capsys):
         "dc_stat": _write(tmp_path / "dc_stat.json", _dc_report("hbt_typ_stat", stat_offs, 0.0)),
         "dc_mismatch": _write(tmp_path / "dc_mm.json",
                               _dc_report("hbt_typ_mismatch", mm_offs, 1.0e-4)),
-        "ac_stat": _write(tmp_path / "ac_stat.json", _ac_report("hbt_typ_stat",
+        "ac_stat": _write(tmp_path / "ac_stat.report.json", _ac_report(tmp_path / "ac_stat", "hbt_typ_stat",
                                                                  [17.5, 17.4], [-1.2, -1.1])),
-        "ac_mismatch": _write(tmp_path / "ac_mm.json", _ac_report("hbt_typ_mismatch",
+        "ac_mismatch": _write(tmp_path / "ac_mm.report.json", _ac_report(tmp_path / "ac_mm", "hbt_typ_mismatch",
                                                                    [17.3, 17.2], [-1.3, -1.2])),
     }
     (tmp_path / "scale.json").write_text(
@@ -193,7 +202,7 @@ def test_record_renders_both_sections_and_refusals(tmp_path, capsys):
     # The two mechanisms are told apart in the tool-check answer.
     assert "Yes, from completed draws" in text
     # The process-only section's within-draw spread is reported as exactly zero.
-    assert "exactly 0" in text
+    assert "process section, 4 draws. The mean within-array range is 0 A (maximum 0 A)" in text
     # Both refusals are quoted verbatim and linked.
     assert "only gf180mcu, sky130" in text
     assert "needs a known switch" in text
@@ -204,7 +213,8 @@ def test_record_renders_both_sections_and_refusals(tmp_path, capsys):
         assert key in text
     assert "hbt_typ_stat" in text and "hbt_typ_mismatch" in text
     # The batch answer reads the summaries.
-    assert "Yes: every run above resolved backend `batch`" in text
+    assert "Yes. 4/4 baseline requests completed" in text
+    assert "Fleet runner versions 0.9.3" in text
     # The JSON side output carries the per-device distributions.
     side = json.loads(json_out.read_text())
     assert set(side["dc_mismatch"]["per_device"]) == {f"ic{i}" for i in range(1, 15)}
@@ -238,5 +248,29 @@ def test_record_renders_a_total_refusal_as_the_evidence(tmp_path, capsys):
     assert "**REFUSED/FAILED**" in text
     assert "batch_no_capacity: refused" in text
     assert "No completed mismatch draws" in text
-    assert "No: at least one request did not run on the batch backend" in text
+    assert "Not established. 0/4 baseline requests completed" in text
     assert "no local fallback" in text
+
+
+@pytest.mark.parametrize(("offsets", "conclusion"), [
+    ([[0] * 14] * 2, "No within-array spread was observed"),
+    ([[0] * 14], "One completed mismatch draw is insufficient"),
+    ([[1e-4] + [0] * 13] * 2, "No draw-to-draw change"),
+])
+def test_conclusions_follow_draws_and_accepted_probe(tmp_path, capsys, offsets, conclusion):
+    rep = _dc_report("hbt_typ_mismatch", offsets, 0)
+    rep["environment"]["monte_carlo"]["n"] = 100
+    path = _write(tmp_path / "op.json", rep)
+    side = tmp_path / "out.json"
+    mpr.main(["record", "fixture", "deadbee", "0", "klt 0.9.0", "ngspice",
+              "--models-dir", str(tmp_path), "--json-out", str(side),
+              "--run", f"dc_mismatch={path}", "--probe", f"scale={path}"])
+    md = capsys.readouterr().out
+    assert conclusion in md
+    assert "Completed control draws for scale" in md
+    assert "No negative control completed" not in md
+    assert "Not established. 0/4 baseline requests completed" in md
+    stats = json.loads(side.read_text())["probes"]["scale"]["ic_diff_12"]
+    assert stats["n"] == len(offsets)
+    if len(offsets) == 1:
+        assert stats["stddev_sample"] is None

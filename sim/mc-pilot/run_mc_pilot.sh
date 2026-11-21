@@ -4,19 +4,19 @@
 #
 #   scripts/setup-env.sh && sim/mc-pilot/run_mc_pilot.sh
 #
-# A PILOT, not a T1 item-9 bench (see sim/mc-pilot/README.md): four `klt sim`
+# The cold start in attest/item9.json runs four `klt sim`
 # monte_carlo requests (DC op + AC gain, each against hbt_typ_stat and
 # hbt_typ_mismatch) plus two negative-control probes, reduced into one append-only
-# record records/<timestamp>-<sha>.{md,json}. On the dispatch worker
-# KLT_SIM_BACKEND=batch sends the four runs to the Spot batch fleet (the requests'
+# record records/<timestamp>-<sha>.{md,json}. The four baseline runs
+# explicitly select the batch backend (the requests'
 # batch.capacity_wait_s 600 makes klt wait for capacity instead of failing); a
 # submit that still fails is reported, never rerun locally, and the refusal is
 # committed as the record. The two probes are run with --backend local on purpose:
 # at the pinned client they are refused client-side before any draw (that refusal
 # is the evidence), and a probe that someday RUNS is kept as a completed control.
 #
-# Exit codes: 0 ok; 1 a run failed so hard there is nothing to reduce, or the
-# record failed; 3 preflight failed; 4 id collision.
+# Exit codes: 0 baseline completed, 1 submit/log/render failure, 3 preflight
+# failure, 4 record id collision.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -50,11 +50,15 @@ done
 # --- The four fleet runs -----------------------------------------------------
 failed=0
 for key in stat mismatch; do
-  sim_run_one "mc_op_${key}"
-  sim_run_one "mc_ac_${key}"
+  sim_run_one "mc_op_${key}" --backend batch
+  sim_run_one "mc_ac_${key}" --backend batch
 done
+# A submit refusal belongs in the feasibility record, but fails the cold start.
+# A simulator error invalidates the measurements; stop before reducing them.
+submit_failed=${failed}
+failed=0
 sim_gate_logs
-(( failed == 0 )) || echo "${SIM_SCRIPT_NAME}: a run or log gate failed; reducing what completed" >&2
+(( failed == 0 )) || exit 1
 
 # --- The record --------------------------------------------------------------
 python3 -I "${SCRIPT_DIR}/mc_pilot_record.py" "${RECORD_ID}" "${REPO_GIT_SHA}" "${DIRTY}" \
@@ -70,3 +74,4 @@ python3 -I "${SCRIPT_DIR}/mc_pilot_record.py" "${RECORD_ID}" "${REPO_GIT_SHA}" "
   > "${RECORDS_DIR}/${RECORD_ID}.md" || exit 1
 
 echo "${SIM_SCRIPT_NAME}: record ${RECORDS_DIR}/${RECORD_ID}.md"
+exit "${submit_failed}"

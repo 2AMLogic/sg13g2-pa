@@ -7,14 +7,9 @@
 Any other argument is a usage error (exit 2) and writes nothing; the shared
 driver in ``sim/lib/bench_gen.py`` says why.
 
-This is a **pilot**, not a T1 item-9 bench: it measures what variation the
-pinned HBT statistical model sections and the batch runner can produce on this
-design, on a design that does not yet meet its ratified rows, and its evidence
-feeds the PROPOSED decision record
-``spec/decision-records/0004-statistical-rows.md``. It is deliberately outside
-the item-9 inventory (``attest/item9.json``), like the matched psat deck (see
-``sim/README.md``): folding it in would force a full item-9 re-attestation for
-a one-shot pilot.
+The item-9 pilot measures what variation the pinned HBT sections and batch
+runner produce. Its feasibility evidence feeds the PROPOSED decision record
+``spec/decision-records/0005-statistical-rows.md``.
 
 Writes, for the DUT ``design/netlist/sg13g2-pa.spice`` (inlined verbatim, the
 same way every DUT bench does):

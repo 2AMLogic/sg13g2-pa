@@ -93,14 +93,11 @@ window/breakdown labels. The raw waveforms of the sweep (tens of MB per drive po
 deleted after the record is written. `lib/sparams.py` and `lib/ac_record.py` do the
 S-parameter and stability reduction (tests: `python3 -m pytest sim/lib`).
 
-The item-9 inventory of every bench and its cold start is `../attest/item9.json`
-(envelope `../evidence/item9.json`, see `../manifests/README.md`). **The matched psat
-deck (`psat_sweep_match.{spice,request.json}`) is a study variant of the psat bench and
-is deliberately outside that inventory**, which covers "every committed bench": folding
-it in means re-running every bench to re-attest item 9, which would move
-`manifests/sg13g2-pa.signoff.json`. It is to be added when item 9 is next re-attested
-for its own reasons, not before. The Monte Carlo pilot below is outside it for the
-same reason.
+The item 9 inventory lists the primary cold starts, their companion requests
+(including the matched psat request), and the Monte Carlo pilot. The pilot runs
+four batch requests and two local control probes. See
+[`attest/item9.json`](../attest/item9.json) and the
+[re-attestation procedure](../manifests/README.md).
 
 ### The off-chip output match (`run_psat_sweep.sh --match`)
 
@@ -166,7 +163,7 @@ on the fine step with the bracket ~3 dB inside it. Neither bound is fitted to a 
 `reduce_sweep` still judges every run, and a record that reaches its own sweep end, or
 brackets P1dB too coarsely, is rerun rather than quoted.
 
-## The Monte Carlo pilot (`sim/mc-pilot/`, not an item-9 bench)
+## The Monte Carlo pilot (`sim/mc-pilot/`)
 
 `sim/mc-pilot/` (issue #174) is a **pilot**: four `klt sim` `monte_carlo` requests
 (DC operating point and AC gain, each against `hbt_typ_stat` and
@@ -175,13 +172,12 @@ separately so process-only and per-instance-mismatch movement are measured
 apart) plus two negative-control probes, reduced into one append-only record.
 It measures what variation the pinned HBT statistical sections and the batch
 runner can produce, on a design that does not meet its rows; it feeds the
-PROPOSED decision record `../spec/decision-records/0004-statistical-rows.md`
+PROPOSED decision record `../spec/decision-records/0005-statistical-rows.md`
 and is never a yield claim. Cold start: `sim/mc-pilot/run_mc_pilot.sh` (the
 four runs are batch grids like the psat sweep; the two probes are local,
 client-side refusals at the pinned client — the refusal is the evidence). See
 `sim/mc-pilot/README.md` for the tool limits it records (`mismatch_scale` /
-`instances` refusals, upstream issues #5486/#5487/#5503) and why it sits
-outside the item-9 inventory.
+`instances` refusals, upstream issues #5486/#5487/#5503).
 
 ## Running grids
 
