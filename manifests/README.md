@@ -226,10 +226,13 @@ item 3 the DRC deck, and item 9 runs the benches.
 `tier: null`, 4 of 11 T1 items met (design sources, layout stream, DRC and
 repo hygiene). Items 4–8 and 11 have `no_evidence`. Item 9 grades
 `stale_evidence` because its last passing envelope covers the pre-pilot
-inventory. Re-attesting the expanded inventory passed 28 of 32 checks.
-The device, pilot, psat and smoke cold starts require a configured batch
-submitter. The pinned attester writes its replacement envelope once all
-checks pass. [Pilot submission result](../sim/mc-pilot/records/20261121-000032-9143202.md)
+inventory. On 2026-11-21 the pinned attester passed 28 of 32 checks on the
+expanded inventory with `KLT_SIM_BACKEND=batch` and
+`KLT_BATCH_PROVISION_SCRIPT` set to the executable fleet provisioner. The
+device, pilot, psat and smoke cold starts all reached the netlist upload.
+The AWS CLI returned `The config profile (batch-runner-submit) could not be found`.
+The four pilot requests completed zero draws. Item 9 needs a new run from a
+submitter with that profile. [Attester output](../sim/mc-pilot/records/20261121-035222-1fd05f2.item9.json) · [Pilot diagnostics](../sim/mc-pilot/records/20261121-035222-1fd05f2.md)
 
 **Item 6 (Monte Carlo evidence) waits on ratification.** The mc-pilot
 ([`sim/mc-pilot/`](../sim/mc-pilot/), #174) established feasibility and
