@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "error": {
+    "command": "sim",
+    "message": "backend 'batch' requires 2am's batch-fleet-provision.sh -- set request.batch.provision_script_path or the $KLT_BATCH_PROVISION_SCRIPT environment variable (see docs/cli/sim.md's 'Batch backend')"
+  }
+}

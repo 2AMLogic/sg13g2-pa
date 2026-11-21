@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "error": {
+    "command": "sim",
+    "message": "request.monte_carlo.instances needs models.pdk naming a PDK with a known mismatch switch (gf180mcu, sky130); got 'ihp-sg13g2'"
+  }
+}

@@ -523,7 +523,7 @@ def main(argv):
     with open(args.json_out, "w") as fh:
         json.dump(out, fh, indent=1)
         fh.write("\n")
-    print("\n".join(md))
+    print("\n".join(md).rstrip())
     return 0
 
 

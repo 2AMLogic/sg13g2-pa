@@ -223,11 +223,13 @@ item 3 the DRC deck, and item 9 runs the benches.
 
 ## Current verdict
 
-`tier: null`, 5 of 11 T1 items met (item 1, design sources; item 2, layout
-stream; item 3, DRC clean; item 9, testbenches shipped; item 10, repo
-hygiene); the other six are `unmet` with a `reason` in the record
-(`no_evidence` for items 4-8 and 11). The record is the source of truth,
-not this paragraph.
+`tier: null`, 4 of 11 T1 items met (design sources, layout stream, DRC and
+repo hygiene). Items 4–8 and 11 have `no_evidence`. Item 9 grades
+`stale_evidence` because its last passing envelope covers the pre-pilot
+inventory. Re-attesting the expanded inventory passed 28 of 32 checks.
+The device, pilot, psat and smoke cold starts require a configured batch
+submitter. The pinned attester writes its replacement envelope once all
+checks pass. [Pilot submission result](../sim/mc-pilot/records/20261121-000032-9143202.md)
 
 **Item 6 (Monte Carlo evidence) waits on ratification.** The mc-pilot
 ([`sim/mc-pilot/`](../sim/mc-pilot/), #174) established feasibility and
