@@ -5,6 +5,8 @@ triage role. Newest first.
 
 ### 2026-11-21
 
+- **Issue #187** (closed): Remove hand-copied Cblock and Lchoke values from matched Psat bench commentary
+- **PR #189**: fix: stop hand-copying Cblock and Lchoke values in the matched Psat bench
 - **Issue #176** (closed): Remove the unusable manual recovery recipe for missing dpkg-deb
 - **PR #183**: fix: replace unusable missing-dpkg-deb recovery recipe with install-and-rerun
 - **Issue #177** (closed): Consolidate PDK model suffix checks so a missing .mod include fails preflight
