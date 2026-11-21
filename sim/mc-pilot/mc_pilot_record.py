@@ -351,6 +351,26 @@ def main(argv):
           "no local fallback and no hand loop was used.")
         w("")
 
+    # A lost shard still produces a valid report. The transport error lives
+    # in its corner diagnostics and can repeat once per planned draw.
+    run_errors = {}
+    for key, *_ in RUNS:
+        report = reports.get(key, {})
+        messages = dict.fromkeys(
+            diagnostic["message"]
+            for entry in (report, *report.get("corners", []))
+            for diagnostic in (entry.get("diagnostics") or [])
+            if diagnostic.get("severity") == "error" and diagnostic.get("message")
+        )
+        if messages:
+            run_errors[key] = list(messages)
+            w(f"**{key}** batch or simulator errors")
+            w("")
+            w("```")
+            w("\n".join(messages))
+            w("```")
+            w("")
+
     # --- Tool check --------------------------------------------------------
     w("## Tool check (answered from the runs)")
     w("")
@@ -374,6 +394,9 @@ def main(argv):
         else:
             variation = "The array has fixed device offsets. No draw-to-draw change in them was observed."
     w("1. **Does the campaign sample non-zero variation on `npn13G2`, per instance?** " + variation)
+    w("   The pinned card gives each instance a 10% sigma on its area multiplier "
+      "at mm_ok=1, independent of Nx. The current observations describe this model. "
+      "Quantifying silicon mismatch or its area scaling needs characterization data.")
     for label, spread, diff in (("mismatch", spread_mm, diff_mm), ("process", spread_st, diff_st)):
         if spread:
             w(f"   - {label} section, {spread['n']} draws. The mean within-array range is "
@@ -515,6 +538,8 @@ def main(argv):
     out["runs"] = {key: {"status": summaries[key][0], "n_requested": summaries[key][1],
                          "n_completed": summaries[key][2], "remote": summaries[key][3]}
                    for key, *_ in RUNS}
+    for key, errors in run_errors.items():
+        out["runs"][key]["errors"] = errors
     out["monte_carlo_environment"] = mc_env
     out["model_files_sha256"] = model_hashes
     out["probes"] = {k: ({"kind": v["kind"], "message": v["message"]}

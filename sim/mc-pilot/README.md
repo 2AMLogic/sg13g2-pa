@@ -68,8 +68,10 @@ rows pending operator ratification. [Item 9 inventory](../../attest/item9.json)
   control rows in the record are structural (the stat section's exactly-zero
   within-draw spread), and a declared control waits on the upstream work.
 - klt's own `family_mismatch` report says the HBT `bipolar` family is "not
-  independently verified" active for sg13g2; the pilot's completed draws are
-  that verification.
+  independently verified" active for sg13g2. The completed draws show
+  within-array current differences under the pinned mismatch card. Its
+  per-instance area multiplier has 10% sigma even at Nx=10. Extending the
+  simulated spread to silicon requires characterization of that scaling.
 
 Everything here is **simulated**, through the DUT's **ideal** output passives
 and an ideal bias source (`Iref`, `Rb` contribute no variation; only the 15

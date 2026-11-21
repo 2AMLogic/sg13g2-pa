@@ -132,9 +132,9 @@ refresh (#117, PR #124) — are merged with their done-criteria met, and #96
   The first question — which ratified rows are statistical — is answered in
   proposal by [DR 0005](spec/decision-records/0005-statistical-rows.md)
   (PROPOSED; #174), on the feasibility evidence of the
-  [mc-pilot](sim/mc-pilot/records/20261120-202416-725d438.md): the two HBT
-  statistical mechanisms are separable and measurable on the fleet, and the
-  pilot recorded two refusals for HBT mismatch-switch probes
+  [mc-pilot](sim/mc-pilot/records/20261120-202416-725d438.md): the simulated array
+  currents differed within a draw only under the pinned mismatch card.
+  The pilot recorded two refusals for HBT mismatch-switch probes
   ([2AMLogic/klayout-tools#5486](https://github.com/2AMLogic/klayout-tools/issues/5486)).
   Item 6 stays `unmet` until the operator ratifies statistical rows (then a
   `klt yield` campaign) or declares the gap.

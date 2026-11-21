@@ -201,6 +201,7 @@ def test_record_renders_both_sections_and_refusals(tmp_path, capsys):
     text = capsys.readouterr().out
     # The two mechanisms are told apart in the tool-check answer.
     assert "Yes, from completed draws" in text
+    assert "silicon mismatch" in text
     # The process-only section's within-draw spread is reported as exactly zero.
     assert "process section, 4 draws. The mean within-array range is 0 A (maximum 0 A)" in text
     # Both refusals are quoted verbatim and linked.
@@ -250,6 +251,29 @@ def test_record_renders_a_total_refusal_as_the_evidence(tmp_path, capsys):
     assert "No completed mismatch draws" in text
     assert "Not established. 0/4 baseline requests completed" in text
     assert "no local fallback" in text
+
+
+def test_record_keeps_verbatim_errors_from_lost_shards(tmp_path, capsys):
+    messages = ["upload rejected on shard 1", "upload rejected on shard 2"]
+    report = {
+        "status": "error",
+        "diagnostics": [{"severity": "warning", "message": "no measurement"}],
+        "corners": [
+            {"status": "error", "diagnostics": [{"severity": "error", "message": msg}]}
+            for msg in [*messages, messages[0]]
+        ],
+    }
+    path = _write(tmp_path / "op.json", report)
+    side = tmp_path / "record.json"
+    mpr.main(["record", "fixture", "deadbee", "0", "klt 0.9.0", "ngspice",
+              "--models-dir", str(tmp_path), "--json-out", str(side),
+              "--run", f"dc_mismatch={path}"])
+    text = capsys.readouterr().out
+    for msg in messages:
+        assert text.count(msg) == 1
+    run = json.loads(side.read_text())["runs"]["dc_mismatch"]
+    assert run["errors"] == messages
+    assert run["n_completed"] == 0
 
 
 @pytest.mark.parametrize(("offsets", "conclusion"), [

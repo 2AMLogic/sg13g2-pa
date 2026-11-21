@@ -36,19 +36,18 @@ At the nominal cell (`hbt_*` statistical sections, 27 C, Vcc 0.8 V), n=100
 draws per section, seed 174, through the batch fleet with the pinned klt 0.9.0
 client (all 400 corners passed):
 
-- The two statistical HBT sections of `cornerHBT.lib` were measured
-  **separately** and behave as two distinct mechanisms:
-  `hbt_typ_stat` (global `gauss()` multipliers) moves every device together
-  across draws — the within-draw spread across the 14 identically biased
-  output devices is **exactly zero**; `hbt_typ_mismatch`
-  (per-instance `qarea = agauss(1, 0.1, …)`, `mm_ok=1`) makes them differ
-  within a single draw and moves the same-draw pair difference `ic1-ic2`
-  across draws. So the tool **can** measure device mismatch separately from
-  common process/bias movement on this design.
-- The per-instance mechanism answers question 1 of the issue: **yes**, the
-  campaign samples non-zero variation on `npn13G2` per instance (the 14 identically biased
-  outputs differ within a draw and the pair difference varies between draws.
-  Reference current is reported separately because its operating point differs).
+- Under `hbt_typ_stat`, all 14 identically biased outputs moved together.
+  The within-draw current range was zero in every draw. Under
+  `hbt_typ_mismatch`, the mean within-draw range was 0.230 mA and the
+  sample standard deviation of `ic1-ic2` was 0.102 mA. This establishes
+  per-instance variation in the simulated output array. The common mirror
+  couples its currents. These measurements cannot establish statistical
+  independence of all 15 devices, including the differently biased reference.
+- In the pinned mismatch card, each `npn13G2` instance draws one Gaussian
+  `qarea` multiplier with mean 1 and sigma 0.1 when `mm_ok=1`. That sigma
+  stays at 0.1 for an `Nx=10` device. The pilot tests sampling of this
+  model. Inferring mismatch in silicon, its scaling with emitter area,
+  or a combined process-and-mismatch yield requires independent evidence.
 - **Both HBT mismatch-switch probes were refused**. `monte_carlo.mismatch_scale` and `monte_carlo.instances`
   are both refused before any draw (verbatim refusals in the pilot record),
   curated to sky130/gf180mcu —
@@ -64,44 +63,67 @@ client (all 400 corners passed):
   resistor/capacitor statistical sections reach nothing in this netlist. Only
   the 15 HBTs are PDK devices. A real passive set changes the population this
   record's proposal must be re-derived over.
-- n=100 puts roughly ±10 % on a sigma estimate — enough to size a campaign,
-  not a yield statement.
+- At n=100 the approximate relative standard error of a sample sigma is
+  7% under normal sampling. The two sections define separate populations.
 
 ## Classification: every ratified row
 
 "All ten" means the ten RATIFIED rows of `spec/target-spec.md` (Band, Psat,
 Output P1dB, Power gain, Peak PAE, Input match, Output port/match, Stability
-small-signal, Device stress, Signoff). A row is **statistical** if the
-quantity it bounds is a random variable over the statistical population
-(process + mismatch at the PVT corners); **corner-bounded** if the PVT box
-already spans the variation the row admits; **deterministic** if no simulated
-outcome enters the row's verdict.
+small-signal, Device stress, Signoff). This proposal assigns a statistical row to a
+performance quantity for which a population pass fraction would be meaningful.
+The circuit or model must supply a plausible source of variation. The table
+distinguishes measured variation from hypotheses awaiting a bench. Conditions,
+hard limits checked at every corner, and deterministic signoff keep their
+ratified forms.
 
 | Row (all RATIFIED) | Classification | Rationale |
 |---|---|---|
 | **Band** | corner-bounded (a test condition) | Defines the frequency plan every figure is evaluated on; it bounds the evaluation, not an outcome. No statistical content even for a yield campaign — "2400–2483.5 MHz" is exact by definition (source (L)/(4)). |
-| **Saturated output power (Psat)** | **statistical** | Psat follows the quiescent point and the device strength, both of which the pilot shows move under both sections. The ratified target (> +15 dBm, fallback > +10) is today corner-bounded evidence; a yield form holds the same ladder at a stated yield (proposed row S3). |
-| **Output P1dB** | **statistical** | Same mechanism as Psat (compression point tracks bias and gain); proposed as part of S3's campaign, reported per draw. |
+| **Saturated output power (Psat)** | **statistical (S3)** | Device variation can change the available output current. A voltage-swing limit can also dominate. Only a drive sweep can establish the resulting Psat distribution. |
+| **Output P1dB** | **statistical (S3)** | Device variation can shift the drive level at compression. The pilot did not sweep drive into compression. S3 grades the extracted output P1dB per draw. |
 | **Power gain** | **statistical** | Small-signal gain moves with the bias point and device globals; the pilot measured min-in-band S21 spread under both sections at the nominal cell. Proposed row S2 holds the ratified ladder (> 15 dB, fallback > 10) at a stated yield. |
-| **Peak PAE** | **statistical** | PAE is computed from P_out, P_in and P_DC, each of which carries the same spread; the row's eventual yield form is part of S3. |
-| **Input match (S11)** | **statistical** | S11 moves with the same population (the pilot measured its spread at the nominal cell); the ratified limit (< −10 dB) currently has large nominal margin the wrong way (−1.2 dB), which is a design state, not a classification. Held with S2's campaign, reported per draw. |
+| **Peak PAE** | **statistical (S3)** | Delivered RF power and DC supply current enter PAE and can both vary. The pilot contains no driven efficiency measurements. |
+| **Input match (S11)** | **statistical (S2)** | The pilot measured a spread in worst in-band S11. Every nominal draw missed the −10 dB target, with worst in-band S11 around −1.2 dB. S2 grades input match alongside gain. |
 | **Output port / match** | corner-bounded (a boundary convention) | The row fixes the port convention (single-ended 50 Ω) and the fallback's stated chip boundary; it is a condition on the testbench, not an outcome. The on-chip-match target itself waits on DR 0001 D-1 (inductor source), which is a deferred decision, not a statistical one. |
-| **Stability, small-signal** | **statistical** | μ > 1 is a pass metric over S-parameters, which move with the same population; the pilot did not measure μ (different bench), but no mechanism separates it from Power gain's classification. Yield form: μ > 1 in every draw of the campaign (a stability row is not diluted: one unstable draw is a failure, so its "yield" is a worst-case-over-draws report, not a fraction). |
-| **Device stress (breakdown / window)** | corner-bounded as written; **worst-case over draws** in any statistical campaign | The row's check is deterministic per cell (peak `V_CE`/`V_CB` against (P) minima, window labelling). A statistical campaign evaluates the same deterministic check in every draw and reports the worst draw; **no yield fraction may dilute a breakdown or window limit** — this row stays worst-case by construction. |
+| **Stability, small-signal** | corner-bounded | The ratified μ > 1 requirement applies through 10 MHz–30 GHz at quiescent bias and the bias extremes of every PVT cell. Keep that deterministic sweep. The pilot did not measure μ, and a sampled minimum would establish only the worst draw seen. A population stability claim would need its own tail criterion and evidence. |
+| **Device stress (breakdown / window)** | corner-bounded and checked in each driven draw | Record the smallest headroom to BVCEO(min) and BVCBO(min) over every device, drive point and PVT cell. A sample extremum describes the observed draws only. This proposal makes no extrapolation to the unsampled tail. A guard band for a population claim would need a validated tail model and an operator decision. The per-draw grading rule below applies. |
 | **Signoff** | deterministic | DRC + LVS clean and post-layout re-verification; no simulated statistical outcome enters the verdict. |
 
 ## Proposed statistical rows (for ratification, not in this record's power)
 
-All three are the **existing ratified ladder held over a population**, not new
-numbers. Each limit's source is the ratified row it names; each yield target
-is an explicit **open operator question** — this record derives no threshold
-from the pilot.
+S2 and S3 use the target column of the ratified ladder. The fallback and
+stretch values remain separate dispositions. S1 needs a current range
+derived from the corner load lines. All three need an operator-set yield.
 
-| # | Proposed row | Metric | Limit source | Open question |
+| # | Proposed row | Metric per draw and cell | Limit source | Open question |
 |---|---|---|---|---|
-| **S1** | Quiescent-current spread | Total output-array quiescent Ic at the nominal cell (per-device currents reported alongside; the array current is never divided by 14 — that erases the mismatch being measured) | The stress budget: every draw's per-device quiescent Ic inside the card window (`ic < 0.003·Nx` A) and the load-line study's sizing assumption | The numeric spread limit. Set by the load-line study re-run at the PVT corners (design work with no issue yet) and the operator; a defensible number does not exist in-tree today |
-| **S2** | Power gain at yield | Min in-band S21 per draw (ac-gain bench, per PVT cell); S11 reported per draw against the Input-match row | The ratified Power gain ladder (> 15 dB, fallback > 10 dB) and Input match (< −10 dB) | The yield target and confidence (see sample-size below) |
-| **S3** | Psat / P1dB / PAE at yield | Psat, output P1dB and peak PAE per draw (psat bench, per PVT cell), same load and extraction as the ratified rows | The ratified Psat/P1dB/PAE ladders | Same as S2, plus whether back-off PAE (a DRAFT row) joins the campaign |
+| **S1** | Quiescent-current spread | Sum the 14 output collector currents. Report the distribution of that sum and measure every device separately, including the reference. Grade the fraction of draws inside the agreed total-current interval with every device in its operating window. | Derive the interval from the load-line and stress budgets across PVT. Check each device against the card, including `ic < 0.003·Nx` A. | The corner load-line study must establish the current interval. The operator sets the required fraction. |
+| **S2** | In-band gain and input match at yield | Grade minimum S21 and maximum S11 over the band on the same draw. A draw passes S2 only if both limits hold. Retain each metric and the joint pass count. | Ratified Power gain > 15 dB and Input match < −10 dB. The nominal pilot misses input match. | Yield target. Closing the nominal input-match failure precedes any claim that the design meets S2. |
+| **S3** | Psat, output P1dB and peak PAE at yield | At the ratified band points, use the same drive sweep, load, terminations and power extraction as the ratified rows. Grade the three metrics on the same draw with the stress and window check below. | Ratified targets > +15 dBm, > +12 dBm and > 25%, respectively. | Yield target. Back-off PAE remains a separate draft row. |
+
+**Corner coverage.** For S1–S3, identify the HBT corner, supply and
+temperature for every population. Cover the three ratified temperatures
+(−40, 27 and 125 °C) and nominal supply ±10%, including nominal. The pinned
+PDK supplies mismatch sections at typ/bcs/wcs and a process-statistics
+section only at typ. Report each supported population separately. If a
+combined or additional population is required for ratification, its model
+and evidence are open. Pooling these runs cannot supply it.
+
+**Per-draw validity.** For S3, retain per-device `V_CE`, `V_CB`, `V_BE`,
+`I_C` and junction temperature throughout the RF cycle and drive sweep.
+For `npn13G2`, compare peaks to BVCEO(min) 1.4 V and BVCBO(min) 3.8 V.
+A breakdown violation fails the stress requirement regardless of the RF
+result. Apply the spec's **OUTSIDE MODEL WINDOW** label to any excursion
+(including `V_CE < 0.4 V` or junction temperature above 125 °C). Record
+the offending device, quantity, extreme value and fraction of the cycle.
+Such a draw contributes no RF pass. Retain it in the campaign denominator
+along with missing or unmeasurable results. For S2 and S3, report per-metric
+counts over the same draw IDs. For the joint yield, grade a per-draw flag
+(1 when all required checks pass, 0 otherwise) against a lower limit of
+1, retaining the underlying metrics and failure reasons. Apply the same
+rule to the seeded controls. A citation must account for every requested
+draw before its confidence interval can support the row.
 
 What each will need (the checklist's evidence contract, made concrete):
 
@@ -121,9 +143,10 @@ What each will need (the checklist's evidence contract, made concrete):
   or above the eventual upper array-current bound. The final S1 control
   must cross the particular bound the operator ratifies. For S2, reduce the
   mirror bias to push minimum in-band gain below the selected gain floor.
-  If citing S11, detune the input network so worst in-band S11 exceeds its
-  ceiling. For S3, introduce a documented dissipative output loss and run the
-  same drive sweep through the same load. Expect lower delivered Psat,
+  For the input-match control, detune the input network so worst in-band
+  S11 exceeds its ceiling. Run these controls against a passing baseline.
+  For S3, introduce a documented dissipative output loss and run the same
+  drive sweep through the same load. Expect lower delivered Psat,
   output P1dB and PAE to cross their respective floors. Check detection for
   each cited metric. Record any unmeasurable compression event as such.
   Set the perturbations before the campaign and keep the row limits fixed.
@@ -170,6 +193,6 @@ What each will need (the checklist's evidence contract, made concrete):
 - If the operator declares the gap instead: item 6 grades `unmet` permanently
   for this block, and `ROADMAP.md` / `manifests/README.md` record that choice.
 - Either way the pilot's record stands as the feasibility evidence: the two
-  HBT mechanisms are separable and measurable on the fleet at the pinned
-  client. The runner refused both HBT mismatch-switch requests. Detection of
-  the proposed row-level degradations remains for the ratified campaign.
+  pinned HBT sections produced distinct current patterns on the fleet. The
+  runner refused both HBT mismatch-switch requests. Detection of the proposed
+  row-level degradations remains for the ratified campaign.
