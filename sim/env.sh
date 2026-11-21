@@ -208,10 +208,17 @@ sim_begin_record() {
 sim_gate_logs() {
   # sim_gate_logs [--tolerate-recovered-gmin]
   #
-  # Per-corner log gate over ${OUT}/*/*/ngspice.log: a log carrying any
+  # Per-corner log gate over every ngspice.log under ${OUT}: a log carrying any
   # model/convergence error pattern fails its point -- the point is named on
   # stderr and the caller's `failed=1` is set. This gate reads logs only; the
   # `klt sim` exit code is gated separately, in sim_run_one.
+  #
+  # `find`, not a fixed-depth glob: the batch backend's sharded collects land
+  # per-corner logs at OUT/<bench>/<klt-sim-shard>/<corner>/ngspice.log (three
+  # levels) while local and resumed collects land them at
+  # OUT/<bench>/<corner>/ngspice.log (two); the one-level-deeper layout is the
+  # committed evidence of every fleet-grid bench (sim/psat-sweep/corners/),
+  # so a glob that matches only the shallow one gates nothing on those runs.
   #
   # --tolerate-recovered-gmin: a "singular matrix" warning that ngspice's
   # dynamic gmin stepping recovered from (klt grades the corner `pass` with a
@@ -226,7 +233,7 @@ sim_gate_logs() {
     --tolerate-recovered-gmin) tolerate=1 ;;
     *) echo "sim_gate_logs: unknown option '$1'" >&2; exit 2 ;;
   esac
-  for log in "${OUT}"/*/*/ngspice.log; do
+  while IFS= read -r log; do
     [[ -f "${log}" ]] || continue
     filtered="${log}"
     if (( tolerate )) && grep -q 'Dynamic gmin stepping completed' "${log}"; then
@@ -238,7 +245,7 @@ sim_gate_logs() {
       failed=1
     fi
     [[ "${filtered}" == "${log}" ]] || rm -f "${filtered}"
-  done
+  done < <(find "${OUT}" -name ngspice.log -type f 2>/dev/null)
 }
 
 sim_resolve_klt() {
@@ -284,16 +291,104 @@ sim_run_one() {
   failed=1
 }
 
+sim_dry_run_corner_ids() {
+  # sim_dry_run_corner_ids <name>
+  #
+  # The pre-submit unit screen for a matrix bench (issue #173): run
+  # `klt sim --dry-run` on <name>.request.json (nothing is simulated or
+  # submitted), then fail unless every expanded unit has a DISTINCT
+  # corner_id. klt names a unit and its artifact directory by that id and
+  # formats supply axis values to three decimals, so two close values
+  # collapse onto one unit (2AMLogic/klayout-tools#5870) -- silently, unless
+  # something counts. This is the authoritative screen (the generator holds a
+  # mirror of the format that fails at generation time); both run before any
+  # fleet submit. Writes ${OUT}/<name>.dry-run.json (committed evidence of
+  # the check).
+  #
+  # Needs, from the caller: SCRIPT_DIR, OUT, KLT_CMD (sim_resolve_klt), SIM_SCRIPT_NAME.
+  local name="$1" rc=0
+  ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --dry-run --format json \
+      "${name}.request.json" > "${OUT}/${name}.dry-run.json" 2> "${OUT}/${name}.dry-run.stderr" ) || rc=$?
+  if (( rc != 0 )); then
+    echo "${SIM_SCRIPT_NAME}: ${name}: klt sim --dry-run exited ${rc} (see ${OUT}/${name}.dry-run.stderr)" >&2
+    return 1
+  fi
+  python3 -I - "${OUT}/${name}.dry-run.json" "${SIM_SCRIPT_NAME}: ${name}" <<'PY' || return 1
+import collections
+import json
+import sys
+
+doc = json.load(open(sys.argv[1]))
+ids = [u.get("corner_id") for u in (doc.get("units") or [])]
+dups = sorted(i for i, n in collections.Counter(ids).items() if n > 1 or i is None)
+if not ids or dups:
+    print(f"{sys.argv[2]}: DRY_RUN_CORNER_ID_COLLISION: {dups[:5]}"
+          f" ({len(dups)} bad of {len(ids)} units) -- klt collapses close supply"
+          " axis values onto one corner id (klayout-tools#5870); not submitting.",
+          file=sys.stderr)
+    sys.exit(1)
+print(f"{sys.argv[2]}: dry run: {len(ids)} units, corner ids distinct")
+PY
+}
+
+sim_corner_matrix_check() {
+  # sim_corner_matrix_check <matrix.json> <request|report> <file> <dest-stem>
+  #
+  # The `klt corner-matrix` gate of a matrix bench (issue #173): diff the
+  # declared matrix against the request BEFORE any submit (conformance:
+  # missing/extra/duplicate tuples) and against the finished report AFTER
+  # (completeness: every tuple once, simulated). Writes the JSON verdict to
+  # ${OUT}/<dest-stem>.corner-matrix-<request|report>.json -- the committed
+  # artifact the record cites.
+  #
+  # What fails the bench is INCOMPLETE COVERAGE, not a failing corner: a
+  # characterization sweep that records a failing or errored corner is the
+  # run's honest output (the spec forbids narrowing the box to make cells
+  # pass), so the gate reads `coverage_complete` (report mode) / `complete`
+  # (request mode emits it as null at the pinned klt) and leaves outcome
+  # quality to the record.
+  #
+  # Needs, from the caller: OUT, KLT_CMD (sim_resolve_klt), SIM_SCRIPT_NAME.
+  local matrix="$1" mode="$2" src="$3" dest="$4" rc=0
+  "${KLT_CMD[@]}" corner-matrix check "${matrix}" "--${mode}" "${src}" --format json \
+      > "${OUT}/${dest}.corner-matrix-${mode}.json" 2> "${OUT}/${dest}.corner-matrix-${mode}.stderr" || rc=$?
+  if (( rc != 0 && rc != 3 )); then
+    echo "${SIM_SCRIPT_NAME}: corner-matrix ${mode} check exited ${rc} (see ${OUT}/${dest}.corner-matrix-${mode}.stderr)" >&2
+    return 1
+  fi
+  python3 -I - "${OUT}/${dest}.corner-matrix-${mode}.json" "${SIM_SCRIPT_NAME}" <<'PY' || return 1
+import json
+import sys
+
+doc = json.load(open(sys.argv[1]))
+ok = doc.get("coverage_complete")
+if ok is None:
+    ok = doc.get("complete")
+if ok is not True:
+    print(f"{sys.argv[2]}: CORNER_MATRIX_INCOMPLETE: "
+          + json.dumps({k: doc.get(k) for k in ("missing", "extra", "duplicate",
+                                                "not_simulated")})
+          + " -- the request/report does not cover the declared matrix.",
+          file=sys.stderr)
+    sys.exit(1)
+print(f"{sys.argv[2]}: corner-matrix {doc.get('mode')} check: covers all "
+      f"{doc.get('matrix_size')} declared tuples")
+PY
+}
+
 sim_run_ac_bench() {
   # sim_run_ac_bench <kind>
   #
   # The whole body of the two AC bench runners, which differ only in the bench
   # name: <kind> is `gain` or `stability`, the klt request is
   # ac_<kind>.request.json and the bench directory is sim/ac-<kind>/. Holds the
-  # deck-staleness gate, the record prelude, the single local `klt sim` submit,
-  # both gates and the ac_record.py render, so a change to any of them reaches
-  # both benches at once -- a gate applied to one runner and missed on the other
-  # would record one bench's append-only evidence through a weaker gate.
+  # deck-staleness gate, the record prelude, the pre-submit matrix screens
+  # (corner-id distinctness, `klt corner-matrix` conformance), the single
+  # `klt sim` submit (fleet work on the dispatch worker), both run gates, the
+  # post-run matrix completeness check and the ac_record.py render, so a
+  # change to any of them reaches both benches at once -- a gate applied to
+  # one runner and missed on the other would record one bench's append-only
+  # evidence through a weaker gate.
   #
   # sim/psat-sweep/run_psat_sweep.sh is deliberately NOT a caller: it submits to
   # the batch backend, renders through its own psat_record.py with a JSON
@@ -322,12 +417,22 @@ sim_run_ac_bench() {
   sim_begin_record --pathspec sim --pathspec design \
     --pathspec ":!sim/${dir}/records" --pathspec ":!sim/${dir}/corners"
   local failed=0
-  # A single unit, so --backend local. sim_run_one sets failed=1 rather than
-  # exiting, so the gate below is what stops the record.
-  sim_run_one "${bench}" --backend local
+  # A matrix bench (27 cells): screen the per-unit corner ids and check the
+  # request against the declared matrix BEFORE the submit, and the finished
+  # report against it after. sim_run_* set failed=1 rather than exiting, so
+  # the gates below are what stop the record.
+  sim_dry_run_corner_ids "${bench}" || failed=1
+  sim_corner_matrix_check "${SIM_DIR}/pvt-matrix.json" request \
+      "${SCRIPT_DIR}/${bench}.request.json" "${bench}" || failed=1
+  # The backend is the host's (KLT_SIM_BACKEND=batch on the dispatch worker:
+  # a 27-cell grid is fleet work); sim_run_one submits once -- the capacity
+  # wait is the request's batch.capacity_wait_s -- and never reruns locally.
+  sim_run_one "${bench}" --capacity-retries 3
   # shellcheck disable=SC2119  # no --tolerate-recovered-gmin: an AC corner that
   # needed gmin stepping is not evidence these benches record.
   sim_gate_logs
+  sim_corner_matrix_check "${SIM_DIR}/pvt-matrix.json" report \
+      "${OUT}/${bench}.report.json" "${bench}" || failed=1
   (( failed == 0 )) || exit 1
   local rec="${RECORDS_DIR}/${RECORD_ID}.md"
   python3 -I "${SIM_DIR}/lib/ac_record.py" "${kind}" "${RECORD_ID}" "${REPO_GIT_SHA}" "${DIRTY}" \

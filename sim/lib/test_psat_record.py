@@ -321,3 +321,89 @@ def test_the_record_shares_the_watts_to_dbm_conversion_with_the_reducer(tmp_path
     # the one drive point's P_in, as the table prints it, straight from the library
     p_in_w = _doc["points"][0]["p_in_w"]
     assert f"| {rx.dbm(p_in_w):.2f} |" in md
+
+
+# --- the PVT matrix record (issue #173) ------------------------------------
+#
+# A multi-cell report renders per cell: one reduction per cell (never one over
+# points from different cells), the provisional banner, per-cell verdict rungs
+# against the RATIFIED rows, and the 125 C window label. The same synthetic
+# waveform serves every corner -- its P_out/P_in are constant, so each cell's
+# reduction is a flat sweep (linear region found, P1dB not reached), which is
+# enough to exercise the grouping and the grading.
+
+
+def _matrix_render(tmp_path):
+    tmp = str(tmp_path)
+    wav = os.path.join(tmp, "waveform.raw.json")
+    _waveform(wav)
+    corners = []
+    for proc, temp, vcc in (("hbt_typ", 27.0, 0.8), ("hbt_wcs", 125.0, 0.72)):
+        for k in range(6):
+            vamp = 0.01 + 0.001 * k
+            corners.append({
+                "corner_id": gdb.klt_corner_id(proc, {"vamp": vamp, "vcc": vcc}, temp),
+                "process": proc, "temperature_c": temp, "status": "pass",
+                "supply_v": {"vamp": vamp, "vcc": vcc},
+                "artifacts": {"waveform": wav},
+            })
+    report = {"environment": {"backend": "test", "remote": "n/a"}, "corners": corners}
+    rep_path = os.path.join(tmp, "report.json")
+    out_json = os.path.join(tmp, "rec.json")
+    with open(rep_path, "w") as fh:
+        json.dump(report, fh)
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = PSAT.main(["psat_record.py", "match", "rid", "deadbee", "0",
+                        "klt 0.9.1", "ngspice-47", rep_path, out_json])
+    return rc, buf.getvalue(), json.load(open(out_json))
+
+
+def test_a_matrix_report_reduces_per_cell_and_labels_it_provisional(tmp_path):
+    rc, md, doc = _matrix_render(tmp_path)
+    assert rc == 0
+    assert doc["pvt_matrix"] is True
+    assert len(doc["cells"]) == 2
+    for cell in doc["cells"]:
+        assert len(cell["points"]) == 6          # the other cell's points are not in it
+        assert cell["reduction"] is not None      # one reduction PER CELL
+    assert doc["cells"][0]["cell"]["process"] == "hbt_typ"
+    assert doc["cells"][1]["cell"] == {"process": "hbt_wcs", "temperature_c": 125.0,
+                                       "vcc": 0.72}
+    assert "PROVISIONAL: Supply row DRAFT" in md
+    assert "2 of 27 declared cells" in md
+    # The 27 C cell and the 125 C cell are separate detail blocks.
+    assert "`hbt_typ` / 27 C / 0.8 V" in md
+    assert "`hbt_wcs` / 125 C / 0.72 V" in md
+
+
+def test_the_125c_cell_is_labelled_outside_the_window_not_passed(tmp_path):
+    _rc, md, doc = _matrix_render(tmp_path)
+    hot = doc["cells"][1]
+    assert hot["cell"]["temperature_c"] == 125.0
+    # Ambient alone sits at the window top, so Tj (125 + the card's rise) is
+    # outside by construction -- the label must say so.
+    assert hot["worst_stress"]["frac_tj_outside"] > 0
+    block = md.split("`hbt_wcs` / 125 C / 0.72 V", 1)[1]
+    assert "OUTSIDE MODEL WINDOW" in block
+    # The verdict table never passes an outside-window cell: the stress label
+    # column carries the label into the same row.
+    assert "OUTSIDE MODEL WINDOW" in md.split("## Per-cell figures")[1].split("## Per-cell detail")[0]
+
+
+def test_a_matrix_report_grades_ratified_rows_per_cell(tmp_path):
+    _rc, md, doc = _matrix_render(tmp_path)
+    # The synthetic load power is 1.2 V x 30 mA / 2 = 18 mW = 12.55 dBm: above
+    # the +10 dBm Fallback and below the +15 dBm Target, so every cell's Psat
+    # rung is `fallback` -- grading against sim/lib/spec_rows.py, not a retyped
+    # threshold.
+    psat = doc["cells"][0]["reduction"]["psat_dbm"]
+    assert psat == pytest.approx(10 * math.log10(0.018 * 1e3), abs=0.05)
+    assert psat > 10.0 and psat < 15.0
+    figures = md.split("## Per-cell figures")[1].split("## Per-cell detail")[0]
+    assert figures.count("| fallback |") >= 2      # the Psat column, both cells
+    for rung in ("met", "fallback", "missed"):
+        pass  # rungs are from _rung(); the fallback count above pins the grading
+    assert "worst cell over the matrix" in md.lower()

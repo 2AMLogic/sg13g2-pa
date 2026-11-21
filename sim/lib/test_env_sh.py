@@ -261,19 +261,29 @@ def test_a_gate_over_no_logs_is_not_a_failure():
 
 AC_KLT_STUB = """#!/usr/bin/env bash
 # Stands in for `klt` for the AC driver: records its argv, writes a per-corner
-# ngspice.log under its -o directory, emits a report on stdout, exits STUB_RC.
+# ngspice.log under its -o directory, answers the three call shapes the driver
+# makes (a --dry-run unit expansion, a corner-matrix verdict, a sim report),
+# exits STUB_RC.
 out=""
 prev=""
+dry=0
 for a in "$@"; do
   [[ "${prev}" == "-o" ]] && out="${a}"
+  [[ "${a}" == "--dry-run" ]] && dry=1
   prev="${a}"
 done
-printf '%s\\n' "$@" >> "${ARGV_LOG}"
+printf '%s\n' "$@" >> "${ARGV_LOG}"
 if [[ -n "${out}" && -n "${STUB_LOG:-}" ]]; then
   mkdir -p "${out}/tt"
   printf '%s' "${STUB_LOG}" > "${out}/tt/ngspice.log"
 fi
-printf '{"status": "stub"}\\n'
+if [[ "${1:-}" == "corner-matrix" ]]; then
+  printf '{"mode": "stub", "matrix_size": 2, "observed_count": 2, "coverage_complete": true, "complete": true, "missing": [], "extra": [], "duplicate": []}\n'
+elif (( dry )); then
+  printf '{"status": "valid", "units": [{"corner_id": "stub/0.800V/27C"}, {"corner_id": "stub/0.720V/-40C"}]}\n'
+else
+  printf '{"status": "stub"}\n'
+fi
 exit "${STUB_RC:-0}"
 """
 
@@ -406,10 +416,22 @@ def test_the_kind_selects_the_request_the_report_and_the_renderer_argument():
         assert r.record_argv[-1].endswith(f"ac_{kind}.report.json"), r.record_argv
 
 
-def test_the_ac_submit_is_one_local_run():
+def test_the_ac_submit_is_one_fleet_run_with_matrix_screens():
+    # One real submit (no --backend flag: the host's KLT_SIM_BACKEND decides,
+    # batch on the dispatch worker), bracketed by the pre-submit screens (a
+    # --dry-run unit expansion and a corner-matrix request check) and the
+    # post-run corner-matrix report check.
     r = run_ac("gain")
-    assert r.argv.count("sim") == 1, f"re-submitted: {r.argv}"
-    assert "--backend" in r.argv and "local" in r.argv
+    assert r.argv.count("--dry-run") == 1, r.argv
+    assert r.argv.count("corner-matrix") == 2, r.argv
+    assert "--request" in r.argv and "--report" in r.argv
+    assert sum(1 for a in r.argv if a.endswith("pvt-matrix.json")) == 2, r.argv
+    assert "--backend" not in r.argv
+    # The submit carries the capacity-retry self-healing, never a local rerun.
+    assert "--capacity-retries" in r.argv
+    # Exactly one submit of the request (the dry run expands, it does not run).
+    submits = sum(1 for a in r.argv if a == "sim") - 1  # one `sim` is the dry run
+    assert submits == 1, f"re-submitted: {r.argv}"
 
 
 def test_a_failing_corner_log_stops_the_record():

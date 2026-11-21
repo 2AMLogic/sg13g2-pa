@@ -407,16 +407,138 @@ def test_batch_hosts_refuses_a_timeout_no_sharding_can_rescue():
         gdb.batch_hosts(10, gdb.BATCH_MAX_JOB_S)
 
 
-def test_the_matched_request_shards_and_the_bare_one_does_not():
+def test_the_matched_request_carries_the_matrix_and_the_bare_one_stays_nominal():
+    """The matched bench is the PVT-matrix bench (issue #173); the bare deck's
+    figures are not comparable with it (its harmonic terminations differ), so it
+    stays a one-cell request and evidences no judged row."""
     bare, match = gdb.psat_request("bare"), gdb.psat_request("match")
     assert "remote" not in bare                   # unchanged; its run carries the warning
-    assert match["remote"]["hosts"] == gdb.batch_hosts(
-        len(gdb.drive_grid_match_dbm()), gdb.PSAT_MATCH_TIMEOUT_S)
-    # One corner per drive point, in both.
-    for req, grid in ((bare, gdb.drive_grid_dbm()), (match, gdb.drive_grid_match_dbm())):
-        assert len(req["corners"]["supply_v"]["vamp"]) == len(grid)
-        assert len(req["corners"]["supply_v"]["vcc"]) == len(grid)
-        # The host rule's capacity wait rides on every grid request.
+    n_units = gdb.pvt_cell_count() * len(gdb.drive_grid_match_dbm())
+    assert match["remote"]["hosts"] == gdb.batch_hosts(n_units, gdb.PSAT_MATCH_TIMEOUT_S)
+    # Bare: one corner per drive point, at the one nominal cell.
+    grid = gdb.drive_grid_dbm()
+    assert [p["name"] for p in bare["corners"]["process"]] == [gdb.PROCESS_NOM]
+    assert bare["corners"]["temperature_c"] == [gdb.TEMP_NOM_C]
+    assert len(bare["corners"]["supply_v"]["vamp"]) == len(grid)
+    assert set(bare["corners"]["supply_v"]["vcc"]) == {gdb.VCC_NOM_V}
+    # Match: the declared sections x temperatures, and the drive grid crossed
+    # with the supply points as parallel per-index lists (klt sweeps multiple
+    # supply keys together by index -- the crossing cannot be two keys).
+    axis = match["corners"]["supply_v"]
+    assert [p["name"] for p in match["corners"]["process"]] == list(gdb.PVT_PROCESS_SECTIONS)
+    assert match["corners"]["temperature_c"] == list(gdb.PVT_TEMP_C)
+    assert len(axis["vamp"]) == len(axis["vcc"]) == len(gdb.drive_grid_match_dbm()) * len(gdb.PVT_VCC_V)
+    # Every supply point carries the whole drive sweep exactly once.
+    for vcc in gdb.PVT_VCC_V:
+        drives = [round(p, 9) for p in (gdb.amp_v(p) for p in gdb.drive_grid_match_dbm())]
+        got = [v for v, c in zip(axis["vamp"], axis["vcc"]) if c == vcc]
+        assert got == drives
+    # The host rule's capacity wait rides on every grid request.
+    for req in (bare, match):
         assert req["batch"]["capacity_wait_s"] == 600
     assert match["netlist"] == "psat_sweep_match.spice"
     assert match["options"]["timeout_s"] == gdb.PSAT_MATCH_TIMEOUT_S
+
+
+# --- The PVT corner matrix (issue #173) -----------------------------------
+#
+# The matrix is THE declaration: the requests' axes, the two committed
+# `klt corner-matrix` files and the records' cell counts all derive from
+# PVT_PROCESS_SECTIONS x PVT_TEMP_C x PVT_VCC_V. These tests pin the cell
+# count, the crossing, and -- the reason klt_corner_id exists at all -- that
+# every (cell, drive) pair stays a distinct unit at the three decimals klt
+# rounds supply axis values to (klayout-tools#5870). No simulator or PDK.
+
+def _load_psat_record():
+    spec = importlib.util.spec_from_file_location(
+        "_psat_record_matrix", os.path.join(REPO, "sim/psat-sweep/psat_record.py"))
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_the_declared_matrix_is_27_cells_at_nominal_plus_minus_10pct():
+    assert gdb.PVT_PROCESS_SECTIONS == ("hbt_typ", "hbt_bcs", "hbt_wcs")
+    assert gdb.PVT_TEMP_C == (-40.0, 27.0, 125.0)
+    assert gdb.PVT_VCC_V == (0.72, 0.8, 0.88)
+    assert gdb.VCC_NOM_V in gdb.PVT_VCC_V
+    assert gdb.pvt_cell_count() == 27
+
+
+def test_the_committed_matrix_files_are_the_declaration():
+    import json
+    pvt = json.load(open(os.path.join(REPO, gdb.PVT_MATRIX_REL)))
+    psat = json.load(open(os.path.join(REPO, gdb.PSAT_MATCH_MATRIX_REL)))
+    assert pvt["process"] == list(gdb.PVT_PROCESS_SECTIONS)
+    assert pvt["temperature_c"] == list(gdb.PVT_TEMP_C)
+    assert pvt["supply_v"] == {"vcc": list(gdb.PVT_VCC_V)}
+    # The psat file is the same cells crossed with the drive grid: the same
+    # (vamp, vcc) pairs the request carries, cell for cell.
+    axis = psat["supply_v"]
+    assert len(axis["vamp"]) == len(axis["vcc"])
+    req = gdb.psat_request("match")["corners"]["supply_v"]
+    assert axis == req
+    assert set(axis["vcc"]) == set(gdb.PVT_VCC_V)
+    for vcc in gdb.PVT_VCC_V:
+        assert sum(1 for c in axis["vcc"] if c == vcc) == len(gdb.drive_grid_match_dbm())
+
+
+def test_the_ac_requests_declare_the_same_matrix():
+    for req in (gdb.ac_gain_request(), gdb.ac_stability_request()):
+        assert [p["name"] for p in req["corners"]["process"]] == list(gdb.PVT_PROCESS_SECTIONS)
+        assert req["corners"]["temperature_c"] == list(gdb.PVT_TEMP_C)
+        assert req["corners"]["supply_v"] == {"vcc": list(gdb.PVT_VCC_V)}
+        # 27 units at 300 s need more than one ceiling-sized job: the request
+        # says how many shards, the same way the psat bench does.
+        assert req["remote"]["hosts"] == gdb.batch_hosts(27, gdb.AC_TIMEOUT_S)
+        assert req["batch"]["capacity_wait_s"] == 600
+
+
+def test_the_matrix_corner_ids_are_distinct_at_three_decimals():
+    """Every (cell, drive) pair is one unit: 2862 units, 2862 distinct ids.
+
+    klt formats each supply value to three decimals in the corner id (and in
+    the artifact-directory slug), so two vamp values inside one millivolt
+    would collapse onto one unit (klayout-tools#5870). The drive grids step
+    0.8/0.4 dB, whose worst case (~1 me-ohm... ~0.96 mV at the -36 dBm floor)
+    is one bucket wide but never two points deep; this pins that.
+    """
+    units = gdb.pvt_psat_units("match")
+    assert len(units) == gdb.pvt_cell_count() * len(gdb.drive_grid_match_dbm()) == 2862
+    assert gdb.assert_pvt_corner_ids_distinct(units) == 2862
+
+
+def test_the_corner_id_mirror_matches_klts_format():
+    """The mirror is load-bearing: it is what screens units pre-submit."""
+    assert gdb.klt_corner_id("hbt_typ", {"vamp": 0.010023745, "vcc": 0.8}, 27) \
+        == "hbt_typ/vamp=0.010_vcc=0.800V/27C"
+    assert gdb.klt_corner_id("hbt_typ", {"vamp": 2.0, "vcc": 0.88}, -40) \
+        == "hbt_typ/vamp=2.000_vcc=0.880V/-40C"
+    assert gdb.klt_corner_id("hbt_typ", {"vcc": 0.72}, 125) == "hbt_typ/0.720V/125C"
+    assert gdb.klt_corner_id("hbt_typ", {}, 27) == "hbt_typ/novdd/27C"
+
+
+def test_close_supply_values_are_refused_not_merged():
+    """Two drive points inside one 3-decimal bucket must fail, not collapse."""
+    units = [{"process": "hbt_typ", "temperature_c": 27,
+              "supply_v": {"vamp": v, "vcc": 0.8}} for v in (0.01001, 0.01002)]
+    with pytest.raises(ValueError, match="klayout-tools#5870"):
+        gdb.assert_pvt_corner_ids_distinct(units)
+
+
+def test_outputs_emits_the_matrix_files_and_refuses_a_colliding_grid(monkeypatch):
+    assert gdb.PVT_MATRIX_REL in gdb.outputs()
+    assert gdb.PSAT_MATCH_MATRIX_REL in gdb.outputs()
+    # A drive grid fine enough to collide at three decimals fails generation
+    # itself, so a drifting grid cannot silently merge two units.
+    real = gdb.drive_grid_match_dbm
+
+    def too_fine():
+        pts = real()
+        pts[1] = pts[0] + 1e-6          # inside one millivolt bucket
+        return pts
+
+    monkeypatch.setattr(gdb, "drive_grid_match_dbm", too_fine)
+    with pytest.raises(ValueError, match="klayout-tools#5870"):
+        gdb.outputs()

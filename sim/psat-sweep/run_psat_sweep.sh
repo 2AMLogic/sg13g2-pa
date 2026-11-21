@@ -54,12 +54,27 @@ python3 -I "${SCRIPT_DIR}/../lib/gen_dut_benches.py" --check
 
 sim_begin_record --suffix "${SUFFIX}" --pathspec sim --pathspec design --pathspec ':!sim/psat-sweep/records' --pathspec ':!sim/psat-sweep/corners'
 failed=0
+# The matched variant is the PVT-matrix bench (issue #173): screen the per-unit
+# corner ids (klt collapses close supply values, klayout-tools#5870) and check
+# the request against the declared drive-crossed matrix BEFORE the submit, and
+# the finished report against it after. The bare variant stays nominal-only
+# (no declared matrix; its cold start is the item-9 run).
+if [[ "${VARIANT}" == match ]]; then
+  sim_dry_run_corner_ids "${BENCH}" || failed=1
+  sim_corner_matrix_check "${SCRIPT_DIR}/psat_sweep_match.pvt-matrix.json" request \
+      "${SCRIPT_DIR}/${BENCH}.request.json" "${BENCH}" || failed=1
+fi
 # The corner statuses gate (psat_record.py, sim_gate_logs). sim_run_one submits
-# once -- the capacity wait is the request's batch.capacity_wait_s -- never
-# reruns locally, and sets failed=1 rather than exiting, so the gate below is
-# what stops the record.
-sim_run_one "${BENCH}"
+# once -- the capacity wait is the request's batch.capacity_wait_s, and
+# --capacity-retries 3 lets klt itself re-run shards a fleet capacity refusal
+# took out, each pass with a fresh wait -- never reruns locally, and sets
+# failed=1 rather than exiting, so the gate below is what stops the record.
+sim_run_one "${BENCH}" --capacity-retries 3
 sim_gate_logs
+if [[ "${VARIANT}" == match ]]; then
+  sim_corner_matrix_check "${SCRIPT_DIR}/psat_sweep_match.pvt-matrix.json" report \
+      "${OUT}/${BENCH}.report.json" "${BENCH}" || failed=1
+fi
 (( failed == 0 )) || exit 1
 
 REC="${RECORDS_DIR}/${RECORD_ID}.md"
