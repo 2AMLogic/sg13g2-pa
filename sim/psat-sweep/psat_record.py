@@ -34,6 +34,7 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
 import gen_dut_benches as gdb  # noqa: E402
 import rf_extract as rx  # noqa: E402
+import spec_rows as sr  # noqa: E402
 from provenance import commit_line  # noqa: E402
 # The (P) breakdown minima and the (M) model window live once, in sim/lib/device_limits.py
 # (provenance marked there); the bench facts live once in gen_dut_benches.py, which
@@ -108,11 +109,29 @@ def _remote_md(remote):
         vals = sorted({str(s.get(key)) for s in fleet if s.get(key) is not None})
         return ", ".join(vals) if vals else "n/a"
     ids = ", ".join(str(s.get("job_id", "?")) for s in fleet)
+    if len(fleet) > 20:
+        ids = ", ".join(str(s.get("job_id", "?")) for s in fleet[:20]) \
+            + f", ... (+{len(fleet) - 20} more)"
     elapsed = [s.get("elapsed_seconds") for s in fleet if s.get("elapsed_seconds") is not None]
+    # Whole-run wall clock from the fleet blocks' own client timestamps: first
+    # submit to last terminal state (includes every capacity wait klt sat out,
+    # which no per-shard field separates).
+    wall = "n/a"
+    subs = [s.get("client_submitted_at") for s in fleet if s.get("client_submitted_at")]
+    terms = [s.get("client_status_terminal_at") for s in fleet if s.get("client_status_terminal_at")]
+    if subs and terms:
+        from datetime import datetime
+        def _ts(x):
+            return datetime.fromisoformat(x.replace("Z", "+00:00"))
+        try:
+            wall = f"{(_ts(max(terms)) - _ts(min(subs))).total_seconds():.0f} s"
+        except ValueError:
+            pass
     return (f"{len(fleet)} fleet shards (request.remote.hosts); provider {uniq('provider')}; "
             f"region {uniq('region')}; instance_type {uniq('instance_type')}; "
             f"lifecycle {uniq('lifecycle')}; runner klt {uniq('runner_klt_version')}; "
-            f"elapsed {min(elapsed)}-{max(elapsed)} s; job ids: {ids}"
+            f"elapsed {min(elapsed)}-{max(elapsed)} s; wall clock (first submit to last "
+            f"terminal, capacity waits included) {wall}; job ids: {ids}"
             + "  -- full per-shard environment capture in corners/<id>/*.report.json")
 
 
@@ -123,6 +142,250 @@ def label(st):
     if st["outside_window"]:
         tags.append("OUTSIDE MODEL WINDOW")
     return "; ".join(tags) if tags else "inside window, within breakdown minima"
+
+
+def _cell_md(cell):
+    return f"`{cell['process']}` / {cell['temperature_c']:g} C / {cell['vcc']:g} V"
+
+
+def _rung(ok_target, ok_fallback):
+    """A row verdict rung: met (Target), fallback, or missed (below Fallback)."""
+    return "met" if ok_target else ("fallback" if ok_fallback else "missed")
+
+
+def _worst_stress(pts):
+    """The worst per-device stress over a cell's whole sweep, and where it sits."""
+    worst_pt = max(pts, key=lambda p: p["stress"]["vce_pk_v"])
+    out = dict(worst_pt["stress"])
+    for k in ("vce_pk_v", "vcb_pk_v", "vbe_pk_v", "ic_pk_a", "tj_max_c"):
+        out[k] = max(p["stress"][k] for p in pts)
+    for k in ("frac_vce_outside", "frac_vbe_outside", "frac_ic_outside", "frac_tj_outside"):
+        out[k] = max(p["stress"][k] for p in pts)
+    out["breakdown_violation"] = any(p["stress"]["breakdown_violation"] for p in pts)
+    out["outside_window"] = any(p["stress"]["outside_window"] for p in pts)
+    out["at_p_avail_dbm"] = worst_pt["p_avail_dbm"]
+    return out
+
+
+def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
+                  cell_order, by_cell, out_json):
+    """The PVT-matrix record (issue #173): one reduction per cell, per-cell
+    ratified-row verdicts, per-cell breakdown/window labels -- all provisional
+    while the Supply row is DRAFT."""
+    n_cells_declared = gdb.pvt_cell_count()
+    cells = []
+    for key in cell_order:
+        grp = by_cell[key]
+        grp["points"].sort(key=lambda p: p["p_in_w"])
+        red, red_err = None, None
+        try:
+            red = rx.reduce_sweep(grp["points"])
+        except rx.ExtractError as e:
+            red_err = {"code": e.code, "message": str(e)}
+        cells.append({"cell": grp["cell"], "points": grp["points"],
+                      "failures": grp["failures"], "reduction": red,
+                      "reduction_error": red_err,
+                      "s11_large_worst_db": (max(p["s11_large_db"] for p in grp["points"])
+                                             if grp["points"] else None),
+                      "worst_stress": _worst_stress(grp["points"]) if grp["points"] else None})
+
+    # The row summary the README's failing-row list is drawn from: every row's
+    # worst cell (the spec binds the worst cell as the figure).
+    def _fig(cell, key):
+        return cell["reduction"] and cell["reduction"].get(key)
+
+    def _worst(key, agg):
+        vals = [agg(c) for c in cells if agg(c) is not None]
+        return min(vals) if vals else None
+
+    row_summary = {}
+    if cells:
+        row_summary = {
+            "psat_worst_dbm": _worst("psat_dbm", lambda c: _fig(c, "psat_dbm")),
+            "p1db_worst_dbm": _worst("p1db_out_dbm", lambda c: _fig(c, "p1db_out_dbm")),
+            "pae_worst": _worst("peak_pae", lambda c: _fig(c, "peak_pae")),
+            "s11_large_worst_db": _worst(None, lambda c: c["s11_large_worst_db"]),
+        }
+
+    json.dump({"record_id": rid, "variant": variant, "bench": bench["name"],
+               "pvt_matrix": True, "output_network": net, "cells": cells,
+               "row_summary": row_summary},
+              open(out_json, "w"), indent=1, default=float)
+
+    n_units = len(rep.get("corners", []))
+    n_failed = sum(len(c["failures"]) for c in cells)
+    o = []
+    w = o.append
+    w(f"# psat-sweep record {rid} -- PVT matrix, {len(cells)} cells")
+    w("")
+    w(f"**PROVISIONAL: Supply row DRAFT.** The {gdb.VCC_NOM_V:g} V nominal the "
+      f"{gdb.PVT_VCC_V[0]:g}/{gdb.VCC_NOM_V:g}/{gdb.PVT_VCC_V[2]:g} V supply points hang "
+      "off is DR 0003, PROPOSED -- the spec's Supply row is not ratified, so **no "
+      "verdict below is a pass claim for any ratified row**; each is a per-cell "
+      "finding about where the design stands.")
+    w("")
+    if net is not None:
+        w("**Simulated** (ngspice transient) through **ideal passives, off-chip match**: "
+          "the DUT's own `Lchoke`, `Cblock`, `Cin` and every element of the off-chip "
+          "L-section are lossless with no self-resonance; **no inductor model is used** "
+          "(DR 0001 D-1 still deferred), so P_Out/PAE are not quotable as an on-chip "
+          "output-network result. The bench evidences the spec's **Fallback** "
+          "Output-port cell's boundary convention only; the Target (on-chip match) cell "
+          "stays unevidenced. Its harmonic terminations are set by the network, so its "
+          "figures are **not compared** with the bare-50-ohm bench's.")
+        w("")
+    w("## Conditions")
+    w("")
+    w(f"- Bench `sim/psat-sweep/{bench['name']}.spice`; spec rows: Psat, P1dB, Peak PAE, "
+      "Input match (large-signal), Device stress (RATIFIED); back-off PAE, harmonics, "
+      "large-signal stability, thermal (DRAFT, reported only).")
+    w(f"- **Declared matrix**: `sim/pvt-matrix.json` -- {len(gdb.PVT_PROCESS_SECTIONS)} HBT "
+      f"sections ({', '.join(gdb.PVT_PROCESS_SECTIONS)}) x {len(gdb.PVT_TEMP_C)} ambient "
+      f"temperatures ({'/'.join(f'{t:g}' for t in gdb.PVT_TEMP_C)} C) x supply "
+      f"{gdb.PVT_VCC_V[0]:g}/{gdb.VCC_NOM_V:g}/{gdb.PVT_VCC_V[2]:g} V "
+      f"(nominal +/-10 %) = **{n_cells_declared} cells**, each a full drive sweep "
+      f"({len(gdb.drive_grid_match_dbm())} points; {n_units} units in this report). "
+      "Drive-crossed declaration: `sim/psat-sweep/psat_sweep_match.pvt-matrix.json`. "
+      "`klt corner-matrix` checked the request before submit and the report after "
+      f"(committed verdicts: `corners/{rid}/{bench['name']}.corner-matrix-{{request,report}}.json`); "
+      f"this report covers {len(cells)} of {n_cells_declared} declared cells.")
+    w("- **R/C process sections**: the spec pairs `res_*` / `cap_*` sections with the HBT "
+      "corner of the same name, but the DUT's `Rb`, `Cin`, `Cblock` and `Lchoke` are "
+      "ideal ngspice elements (`design/netlist/sg13g2-pa.spice`), so **no R/C corner "
+      "applies to them**; only the HBT section moves. When real passive models land, "
+      "the matrix gains the paired sections.")
+    w("- **The bare deck stays nominal-only** (`psat_sweep.request.json`, one cell): the "
+      "ratified rows are judged on this matched bench, and the bare deck's flat-50-ohm "
+      "harmonic terminations make its P_Out/PAE not comparable with it, so a 27-cell "
+      "bare run would evidence no judged row.")
+    w(f"- Source: sine EMF behind {RS:g} ohm at {F0 / 1e9:g} GHz; drive = **available** "
+      "power A^2/(8 Rs); P_in computed from the measured input V and I (mismatch "
+      "counted). Self-heating on (card default `selft=1`); the ambient is the cell's.")
+    w(f"- {bench['load_md']} {bench['terminations_md']}")
+    w("- PAE = (P_out,f0 - P_in,f0) / P_DC; P_DC = total Vcc supply power, bias "
+      "reference included; integrated over an integer number of RF periods "
+      "(rectangular-window coherent DFT, step T/400), same extractor as the "
+      "nominal-cell records (`sim/known-answer/` checked).")
+    w(commit_line(git_sha, dirty))
+    w(f"- klt {klt_v}; {ng_v}; PDK per `sim/pdk.json`.")
+    w(f"- Backend: `{rep.get('environment', {}).get('backend', 'see report')}`; "
+      f"remote: `{_remote_md(rep.get('environment', {}).get('remote', 'n/a'))}`.")
+    w("")
+    w("## Per-cell figures and ratified-row verdicts")
+    w("")
+    w("Worst stress over the cell's whole sweep. A cell whose reduction was refused "
+      "has no figure and no verdict rung -- `--` -- which is a finding, not a pass; "
+      "the refusal code is in the cell's detail block below.")
+    w("")
+    w("| Cell | Psat dBm | P1dB out dBm | Peak PAE % | S11 large worst dB | "
+      "Vce pk V | Vcb pk V | Tj max C | Stress label | Psat | P1dB | PAE | S11 |")
+    w("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    for c in cells:
+        red, st = c["reduction"], c["worst_stress"]
+
+        def fig(key, fmt, _red=red):
+            if _red is None or _red.get(key) is None:
+                return "--"
+            return fmt.format(_red[key])
+
+        def rung_psat():
+            if red is None or red.get("psat_dbm") is None:
+                return "--"
+            return _rung(red["psat_dbm"] > sr.PSAT_TARGET_DBM,
+                         red["psat_dbm"] > sr.PSAT_FALLBACK_DBM)
+
+        def rung_p1db():
+            if red is None or red.get("p1db_out_dbm") is None:
+                return "--"
+            return _rung(red["p1db_out_dbm"] > sr.P1DB_TARGET_DBM,
+                         red["p1db_out_dbm"] > sr.P1DB_FALLBACK_DBM)
+
+        def rung_pae():
+            if red is None or red.get("peak_pae") is None:
+                return "--"
+            return _rung(red["peak_pae"] > sr.PAE_TARGET,
+                         red["peak_pae"] > sr.PAE_FALLBACK)
+
+        def rung_s11():
+            if c["s11_large_worst_db"] is None:
+                return "--"
+            return _rung(c["s11_large_worst_db"] < sr.S11_TARGET_DB,
+                         c["s11_large_worst_db"] < sr.S11_FALLBACK_DB)
+
+        pae_pct = "--" if red is None or red.get("peak_pae") is None else f"{100 * red['peak_pae']:.1f}"
+        s11 = "--" if c["s11_large_worst_db"] is None else f"{c['s11_large_worst_db']:.2f}"
+        w(f"| {_cell_md(c['cell'])} "
+          f"| {fig('psat_dbm', '{:.2f}')} | {fig('p1db_out_dbm', '{:.2f}')} "
+          f"| {pae_pct} | {s11} "
+          f"| {st['vce_pk_v']:.3f} | {st['vcb_pk_v']:.3f} | {st['tj_max_c']:.1f} "
+          f"| {label(st)} | {rung_psat()} | {rung_p1db()} | {rung_pae()} | {rung_s11()} |")
+    w("")
+    w(f"Rungs are against the RATIFIED rows (Target / Fallback): Psat > "
+      f"{sr.PSAT_TARGET_DBM:g} / > {sr.PSAT_FALLBACK_DBM:g} dBm; output P1dB > "
+      f"{sr.P1DB_TARGET_DBM:g} / > {sr.P1DB_FALLBACK_DBM:g} dBm; peak PAE > "
+      f"{100 * sr.PAE_TARGET:g} / > {100 * sr.PAE_FALLBACK:g} %; S11 (large-signal, "
+      f"worst drive) < {sr.S11_TARGET_DB:g} / < {sr.S11_FALLBACK_DB:g} dB. The spec "
+      "binds the **worst cell** as each row's figure, and a cell outside the model "
+      "window is labelled, never passed.")
+    if row_summary:
+        parts = []
+        if row_summary.get("psat_worst_dbm") is not None:
+            parts.append(f"Psat {row_summary['psat_worst_dbm']:.2f} dBm")
+        if row_summary.get("p1db_worst_dbm") is not None:
+            parts.append(f"output P1dB {row_summary['p1db_worst_dbm']:.2f} dBm")
+        if row_summary.get("pae_worst") is not None:
+            parts.append(f"peak PAE {100 * row_summary['pae_worst']:.1f} %")
+        if row_summary.get("s11_large_worst_db") is not None:
+            parts.append(f"S11 large {row_summary['s11_large_worst_db']:.2f} dB")
+        if parts:
+            w("")
+            w("**Worst cell over the matrix**: " + " | ".join(parts) + ".")
+    w("")
+    w("## Per-cell detail")
+    w("")
+    for c in cells:
+        red, st, fl = c["reduction"], c["worst_stress"], c["failures"]
+        head = _cell_md(c["cell"])
+        w(f"### {head}")
+        w("")
+        if red:
+            w(f"- Psat {red['psat_dbm']:.2f} dBm (sweep end reached: "
+              f"{red['psat_at_sweep_end']}); PAE at Psat {100 * (red['pae_at_psat'] or 0):.1f} %; "
+              + (f"P1dB out {red['p1db_out_dbm']:.2f} dBm at P_in {red['p1db_in_dbm']:.2f} dBm; "
+                 if red.get("p1db_out_dbm") is not None else
+                 "P1dB not reached within the sweep (no extrapolation); ")
+              + f"linear gain {red['gain_linear_db']:.2f} dB.")
+        else:
+            e = c["reduction_error"]
+            w(f"- Reduction refused: `{e['code']}` -- {e['message']}")
+        if st:
+            w(f"- Worst stress at Pavail {st['at_p_avail_dbm']:.1f} dBm: Vce pk "
+              f"{st['vce_pk_v']:.3f} V, Vcb pk {st['vcb_pk_v']:.3f} V, Vbe pk "
+              f"{st['vbe_pk_v']:.3f} V, Ic pk {1e3 * st['ic_pk_a']:.2f} mA/device, Tj max "
+              f"{st['tj_max_c']:.1f} C -> **{label(st)}** (outside-window fractions "
+              f"Vce/Vbe/Ic/Tj {100 * st['frac_vce_outside']:.0f}/"
+              f"{100 * st['frac_vbe_outside']:.0f}/{100 * st['frac_ic_outside']:.0f}/"
+              f"{100 * st['frac_tj_outside']:.0f} %).")
+        w(f"- {len(c['points'])} of {len(c['points']) + len(fl)} units extracted"
+          + (f"; {len(fl)} could not be: " + ", ".join(sorted({f_['code'] for f_ in fl})) + "."
+             if fl else "."))
+        w("")
+    w(f"Device stress limits and labels per `sim/lib/device_limits.py`: BVCEO(min) "
+      f"{BVCEO_MIN:.1f} V, BVCBO(min) {BVCBO_MIN:.1f} V (process spec); window V_CE "
+      f"{VCE_WIN[0]:.1f}-{VCE_WIN[1]:.1f} V, V_BE {VBE_WIN[0]:.2f}-{VBE_WIN[1]:.2f} V, "
+      f"I_C < {1e3 * IC_MAX_PER_DEVICE:g} mA/device, Tj <= {TJ_MAX:g} C (model card). "
+      "The 125 C cells exceed the card's temperature window by construction "
+      "(ambient alone is at the window top, before self-heating) and are labelled "
+      "**OUTSIDE MODEL WINDOW**, never passed. Per-point stress lives in this "
+      f"record's JSON sidecar (`records/{rid}.json`) and the raw corners under "
+      f"`corners/{rid}/`.")
+    w("")
+    if n_failed:
+        w(f"{n_failed} of {n_units} units could not be extracted (listed per cell above); "
+          "they are excluded from that cell's reduction and never dropped silently.")
+        w("")
+    print("\n".join(o))
+    return 0 if any(c["points"] for c in cells) else 1
 
 
 def main(argv):
@@ -138,6 +401,9 @@ def main(argv):
             continue
         amp = c["supply_v"]["vamp"]
         pav = amp * amp / (8 * RS)
+        cell = {"process": c.get("process", "?"),
+                "temperature_c": float(c.get("temperature_c", 27)),
+                "vcc": float(c["supply_v"].get("vcc", gdb.VCC_NOM_V))}
         try:
             t, s = rx.load_klt_waveform(c["artifacts"]["waveform"])
             # P_out and the harmonics from the LOAD's own V and I (spec: "DFT of the
@@ -150,9 +416,31 @@ def main(argv):
             ex["s11_large_db"] = 10 * math.log10(max(1 - ex["p_in_w"] / pav, 1e-12))
             ex["stress"] = stress(t, s, ex, c.get("temperature_c", 27), bench["ic_sense_i"])
             ex["corner_id"] = cid
+            ex["cell"] = cell
             points.append(ex)
         except rx.ExtractError as e:
-            failures.append({"corner_id": cid, "p_avail_dbm": rx.dbm(pav), "code": e.code, "message": str(e)})
+            failures.append({"corner_id": cid, "p_avail_dbm": rx.dbm(pav),
+                             "code": e.code, "message": str(e), "cell": cell})
+    # Group by PVT cell. One cell -> the nominal-cell record this bench has
+    # always written; several -> the matrix record (issue #173): one reduction
+    # per cell, never one reduction over the whole report (points from
+    # different cells are not one drive sweep).
+    cell_order, by_cell = [], {}
+    for p in points:
+        key = (p["cell"]["process"], p["cell"]["temperature_c"], p["cell"]["vcc"])
+        if key not in by_cell:
+            by_cell[key] = {"cell": p["cell"], "points": [], "failures": []}
+            cell_order.append(key)
+        by_cell[key]["points"].append(p)
+    for f in failures:
+        key = (f["cell"]["process"], f["cell"]["temperature_c"], f["cell"]["vcc"])
+        if key in by_cell:
+            by_cell[key]["failures"].append(f)
+
+    if len(cell_order) > 1:
+        return render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
+                             cell_order, by_cell, out_json)
+
     points.sort(key=lambda p: p["p_in_w"])
     red, red_err = None, None
     try:

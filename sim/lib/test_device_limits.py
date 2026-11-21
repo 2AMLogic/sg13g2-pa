@@ -164,11 +164,18 @@ def test_ac_record_renders_the_committed_conditions_unchanged(record, tmp_path, 
     """At today's constants the two formerly-retyped lines render byte-identically.
 
     `sim/ac-*/records/` is append-only evidence, so this pins that single-sourcing the
-    facts changed how the record is built and not what it says.
+    facts changed how the record is built and not what it says. PVT-matrix records
+    (issue #173) have no single cell to compare -- their per-cell conditions are the
+    declared matrix, pinned by test_ac_record.py -- so a committed record without a
+    "- Cell:" line must actually be one of those.
     """
+    committed = open(record).read().splitlines()
+    if not any(ln.startswith("- Cell:") for ln in committed):
+        assert any("PVT matrix" in ln for ln in committed[:3]), \
+            f"{record} has no '- Cell:' line and is not a PVT-matrix record"
+        pytest.skip("PVT-matrix record: no single nominal cell to compare")
     kind = "gain" if "/ac-gain/" in record else "stability"
     rendered = _render_ac(kind, tmp_path, capsys).splitlines()
-    committed = open(record).read().splitlines()
     # The corner id is the run's own, so compare the nominal cell up to it.
     assert (_conditions_line(rendered, "- Cell:").split("; corner id")[0]
             == _conditions_line(committed, "- Cell:").split("; corner id")[0])

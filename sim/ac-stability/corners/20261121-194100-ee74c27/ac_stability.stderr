@@ -1,0 +1,17 @@
+klt: batch job klt-sim-6fb2c7db3518 submitting to s3://<bucket>/jobs/klt-sim-6fb2c7db3518
+klt: batch job klt-sim-300de351e177 submitting to s3://<bucket>/jobs/klt-sim-300de351e177
+klt: batch job klt-sim-7b1e0f23683f submitting to s3://<bucket>/jobs/klt-sim-7b1e0f23683f
+klt sim: batch job klt-sim-6fb2c7db3518: submitted
+klt sim: shards 0/3 launched, 1 launching, 2 pending, 0 collected; launch rate unknown, ETA unknown
+klt sim: batch job klt-sim-7b1e0f23683f: submitted
+klt sim: batch job klt-sim-300de351e177: submitted
+klt sim: batch job klt-sim-6fb2c7db3518 launched; re-attach with `klt sim <request> --backend batch --attach klt-sim-6fb2c7db3518`
+klt sim: batch job klt-sim-300de351e177 launched; re-attach with `klt sim <request> --backend batch --attach klt-sim-300de351e177`
+klt sim: shards 3/3 launched, 0 launching, 0 pending, 0 collected; launch rate 523.3/min, ETA 0m
+klt sim: batch job klt-sim-7b1e0f23683f launched; re-attach with `klt sim <request> --backend batch --attach klt-sim-7b1e0f23683f`
+klt sim: batch job klt-sim-300de351e177 state=no status.json yet elapsed=1s
+klt sim: batch job klt-sim-6fb2c7db3518 state=no status.json yet elapsed=1s
+klt sim: batch job klt-sim-7b1e0f23683f state=no status.json yet elapsed=1s
+klt sim: batch job klt-sim-300de351e177: failed
+klt sim: batch job klt-sim-6fb2c7db3518: done
+klt sim: batch job klt-sim-7b1e0f23683f: failed
