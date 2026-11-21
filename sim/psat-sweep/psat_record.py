@@ -51,22 +51,29 @@ N_UNITS, NX = gdb.output_array()   # output-array devices sharing COLL/VB, and t
 IC_MAX_PER_DEVICE = IC_WIN_PER_NX * NX
 
 
-def stress(t, s, ex, ambient_c, ic_sense):
+def stress(t, s, ex, ambient_c, bench):
     """Peaks and window fractions over the extraction's integer-period window.
 
-    ``ic_sense`` names the trace carrying the current leaving RFOUT into whatever is
-    on the far side of the chip boundary -- i.e. `Cblock`'s current, which is what makes
-    the per-device I_C below a KCL balance at COLL. In the bare deck the load branch IS
-    that current; through an output network it is not (a shunt branch takes part of it),
-    so the bench declares the node and this never guesses it. Getting it wrong would
-    move every `Ic pk mA` and `frac_ic_outside` with nothing raised.
+    ``bench`` is the variant's own ``psat_bench()`` fact dict. Per-device ``I_C`` is a
+    KCL balance at COLL: ``(i(Lchoke) + (v(COLL)-v(VCC))/Rdchoke - <boundary>) / N``.
+    The bias-feed damping resistor ``Rdchoke`` (issue #172) is a fourth branch on
+    COLL alongside Lchoke, Cblock and the devices; its current is derived from the
+    already-saved node pair ``v(xdut.coll)``/``v(vcc)`` rather than an extra saved
+    vector, so its value is read from the netlist (``bench['rdchoke_ohm']``), never
+    hand-copied. ``ic_sense_i`` names the trace carrying the current leaving RFOUT
+    into whatever is on the far side of the chip boundary -- i.e. `Cblock`'s current.
+    In the bare deck the load branch IS that current; through an output network it is
+    not (a shunt branch takes part of it), so the bench declares the node and this
+    never guesses it. Getting either branch wrong would move every `Ic pk mA` and
+    `frac_ic_outside` with nothing raised.
     """
     t0 = ex["window_start_s"]
     t1 = t0 + ex["window_periods"] / F0
     m = (t >= t0 * (1 - 1e-9)) & (t <= t1 * (1 + 1e-9))
     vc = s["v(xdut.coll)"][m]
     vb = s["v(xdut.vb)"][m]
-    ic = (s["i(l.xdut.lchoke)"][m] - s[ic_sense][m]) / N_UNITS
+    i_rdchoke = (s["v(xdut.coll)"][m] - s["v(vcc)"][m]) / bench["rdchoke_ohm"]
+    ic = (s["i(l.xdut.lchoke)"][m] + i_rdchoke - s[bench["ic_sense_i"]][m]) / N_UNITS
     tj_rise = s["v(xdut.xq1.t)"][m]
     vcb = vc - vb
     tj = ambient_c + tj_rise
@@ -148,7 +155,7 @@ def main(argv):
             ex = {k: (float(v) if isinstance(v, (np.floating,)) else v) for k, v in ex.items()}
             ex["p_avail_dbm"] = rx.dbm(pav)
             ex["s11_large_db"] = 10 * math.log10(max(1 - ex["p_in_w"] / pav, 1e-12))
-            ex["stress"] = stress(t, s, ex, c.get("temperature_c", 27), bench["ic_sense_i"])
+            ex["stress"] = stress(t, s, ex, c.get("temperature_c", 27), bench)
             ex["corner_id"] = cid
             points.append(ex)
         except rx.ExtractError as e:
@@ -172,7 +179,8 @@ def main(argv):
     if net is None:
         w("**Simulated** (ngspice transient), nominal cell only, **through ideal passives** "
           "(`Lchoke`, `Cblock`, `Cin` of the DUT are lossless with no self-resonance; no inductor model "
-          "is used). P_out, PAE and the harmonics below are not quotable as an on-chip output-network "
+          "is used; the issue-#172 stabilisation resistors `Rin`/`Rshm`/`Rsho`/`Rdchoke` are ideal and "
+          "lossy by design). P_out, PAE and the harmonics below are not quotable as an on-chip output-network "
           "result (spec: Output port / match, Inductor / passive models). Not a pass/fail claim; this "
           "record shows the bench runs cold. Topology DR 0003 is PROPOSED, Supply is DRAFT.")
     else:
@@ -221,7 +229,9 @@ def main(argv):
         w("")
         w("**The chip boundary is `RFOUT`** (`design/README.md`: \"`RFOUT` is the off-chip "
           "match boundary\"). On the **chip** side: the DUT only -- its output array and "
-          f"`Lchoke`, `Cblock`, `Cin`. **Off** chip: the sense source `Vbsense`, `Lmatch`, "
+          f"`Lchoke`, `Cblock`, `Cin`, plus the ideal stabilisation resistors "
+          "`Rin`/`Rshm`/`Rsho`/`Rdchoke` (issue #172, lossy by design). **Off** chip: the "
+          f"sense source `Vbsense`, `Lmatch`, "
           f"`Cmatch`, `Vlsense` and the {gdb.RL_OHM:g} ohm load. Every off-chip element is "
           "ideal and lossless.")
         w("")
@@ -313,7 +323,7 @@ def main(argv):
     w(f"The {N_UNITS} array devices share the collector and base nodes and are identical, so one device's "
       "terminals are quoted for each. `V_CE`/`V_CB`/`V_BE` are the **external terminal** voltages (emitter "
       "at ground; the internal collector/base nodes sit inside the card's series resistances). `I_C` per "
-      f"device = (i(Lchoke) - {bench['ic_sense_md']}) / {N_UNITS}. Junction temperature = ambient + the card's thermal "
+      f"device = {bench['ic_formula_md']} / {N_UNITS}. Junction temperature = ambient + the card's thermal "
       f"node. Limits: BVCEO(min) {BVCEO_MIN:.1f} V, BVCBO(min) {BVCBO_MIN:.1f} V (process spec Rev. 1.2); "
       f"window V_CE {VCE_WIN[0]:.1f}-{VCE_WIN[1]:.1f} V, V_BE {VBE_WIN[0]:.2f}-{VBE_WIN[1]:.2f} V, "
       f"I_C < {1e3 * IC_MAX_PER_DEVICE:g} mA/device, T_j <= {TJ_MAX:g} C (model card). Fractions are of "

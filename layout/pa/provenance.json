@@ -3,7 +3,7 @@
   "description": "Provenance of layout/pa/sg13g2_pa.gds (T1 item 2). Placement of PDK npn13G2 cells only; unrouted. See layout/README.md.",
   "netlist": {
     "path": "design/netlist/sg13g2-pa.spice",
-    "content_hash": "sha256:b10bc89410f84bd0051a7009fd1648c1d12a46bda2ffebfc54bd0e6e33f056c6"
+    "content_hash": "sha256:99469b90f5969ed454de9f965ad03d59c02d4a5a83cbeeb8083eaac28cac654f"
   },
   "generator": {
     "script": "layout/pa/generate.sh",

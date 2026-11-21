@@ -290,6 +290,32 @@ def cblock_farads(text=None):
     return _spice_value(hits[0])
 
 
+# The DUT's bias-feed damping resistor, across Lchoke (VCC-COLL). Issue #172 added it
+# so the collector's low-frequency resonance with Lchoke is damped; the psat stress
+# extractor closes KCL at COLL through its branch current, derived from the saved node
+# pair as (v(COLL)-v(VCC))/Rdchoke, so its VALUE is read from the netlist here for the
+# same reason Cblock's is: a hand-copied resistance silently mis-reports per-device I_C.
+_RDCHOKE_RE = re.compile(
+    r"^Rdchoke\s+(?:VCC\s+COLL|COLL\s+VCC)\s+(\S+)", re.IGNORECASE | re.MULTILINE)
+
+
+def rdchoke_ohms(text=None):
+    """The DUT's ``Rdchoke`` (across Lchoke) in ohms, read from the netlist.
+
+    Either node order matches (xschem emits ``VCC COLL`` today; the resistor is
+    symmetric). Exactly one line is required: with the damping branch absent the
+    extractor's KCL at COLL is silently wrong for every RF sample, and with two it
+    is not the circuit that was simulated.
+    """
+    hits = _RDCHOKE_RE.findall(netlist_text() if text is None else text)
+    if len(hits) != 1:
+        raise ValueError(f"expected exactly one `Rdchoke VCC COLL <value>` line in "
+                         f"{NETLIST}, found {len(hits)}; the psat stress extractor "
+                         "closes KCL at COLL through the bias-feed damping branch and "
+                         "cannot be derived without it")
+    return _spice_value(hits[0])
+
+
 def loadline_cell(doc=None):
     """The load-line study's nominal cell, from the committed record.
 
@@ -451,6 +477,8 @@ def psat_bench(variant="bare"):
             "p_out_v": "v(out)", "p_out_i": "i(vlsense)",
             "ic_sense_i": "i(vlsense)",
             "ic_sense_md": "i(load)",
+            "rdchoke_ohm": rdchoke_ohms(),
+            "ic_formula_md": "(i(Lchoke) + (v(COLL)-v(VCC))/Rdchoke - i(load))",
             "network": None,
             "load_md": f"Load: {RL_OHM:g} ohm resistive.",
             "terminations_md": (
@@ -468,6 +496,8 @@ def psat_bench(variant="bare"):
         "p_out_v": "v(outl)", "p_out_i": "i(vlsense)",
         "ic_sense_i": "i(vbsense)",
         "ic_sense_md": "i(RFOUT boundary)",
+        "rdchoke_ohm": rdchoke_ohms(),
+        "ic_formula_md": "(i(Lchoke) + (v(COLL)-v(VCC))/Rdchoke - i(RFOUT boundary))",
         "network": net,
         "load_md": (
             f"Load: {RL_OHM:g} ohm resistive **through an ideal, lossless off-chip "
@@ -501,8 +531,12 @@ def psat_deck(variant="bare"):
                 "  klt sim corners.supply_v (`alter vamp=`), f0 = 2.44175 GHz (band centre).",
                 f"Load: {RL_OHM:g} ohm resistive at f0 and, being a flat resistor, at 2 f0 and 3 f0",
                 "  (the DEFAULT harmonic terminations: ideal 50 ohm, labelled so).",
-                "Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT) -- no inductor model.",
+                "Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT; the",
+                "  stabilisation resistors Rin/Rshm/Rsho/Rdchoke are ideal and lossy by design) --",
+                "  no inductor model.",
                 "P_DC = full supply Vcc power, bias reference included (Iref is an ideal source from Vcc).",
+                "Per-device I_C closes KCL at COLL as (i(Lchoke) + (v(COLL)-v(VCC))/Rdchoke -",
+                "  i(Vlsense)) / N_UNITS: Rdchoke (issue #172) is the fourth branch on COLL.",
                 "Load current is measured through the 0 V source Vlsense (into the load);",
                 "supply current through Vcc (delivered = -i(vcc)); input current is -i(bs).",
             ],
@@ -532,7 +566,8 @@ Rl outl 0 {RL_OHM:g}
             "  klt sim corners.supply_v (`alter vamp=`), f0 = 2.44175 GHz (band centre).",
             "",
             "CHIP BOUNDARY IS RFOUT (node `out`; design/README.md). On the chip side:",
-            "  the DUT only (Lchoke, Cblock, Cin). Off chip: Vbsense, Lmatch, Cmatch,",
+            "  the DUT only (Lchoke, Cblock, Cin, plus the ideal stabilisation resistors",
+            "  Rin/Rshm/Rsho/Rdchoke). Off chip: Vbsense, Lmatch, Cmatch,",
             f"  Vlsense and the {RL_OHM:g} ohm load below -- all IDEAL and LOSSLESS (no Q, no",
             "  self-resonance, no inductor model). This bench evidences the spec's FALLBACK",
             "  Output-port cell (`50 ohm, off-chip output match (stated boundary)`) and its",
@@ -583,7 +618,8 @@ Rl outl 0 {RL_OHM:g}
             "    the spec's `DFT of the load voltage/current`. Vlsense is 0 V, so",
             "    v(outl) == v(oload) and the pair is co-located at the resistor.",
             f"  Per-device I_C from the CHIP BOUNDARY ({b['ic_sense_i']}, through Vbsense at",
-            "    RFOUT) = Cblock's current, so KCL at COLL is (i(Lchoke) - i(Vbsense)) / "
+            "    RFOUT) = Cblock's current, so KCL at COLL is (i(Lchoke) + ",
+            "    (v(COLL)-v(VCC))/Rdchoke - i(Vbsense)) / "
             f"{net['n_units']}.",
             "    The load branch is NOT that current here: Cmatch shunts part of it.",
             "",
@@ -638,7 +674,8 @@ def _ac_deck(title, extra_header):
         f"  X1: AC source at port 1 (RFIN), {RL_OHM:g} ohm load at RFOUT      -> S11 = 2 v(in1)/vs - 1, S21 = 2 v(out1)/vs",
         f"  X2: AC source at port 2 (RFOUT), {RS_OHM:g} ohm termination at RFIN -> S22 = 2 v(out2)/vs - 1, S12 = 2 v(in2)/vs",
         f"Quiescent point: DC operating point at Vcc = {VCC_NOM_V} V (the bias is the DUT's own mirror).",
-        "Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT).",
+        "Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT; the",
+        "stabilisation resistors Rin/Rshm/Rsho/Rdchoke are ideal, lossy by design).",
     ])
     body = f"""Vcc vcc 0 dc {VCC_NOM_V}
 Vs1 s1 0 dc 0 ac 1

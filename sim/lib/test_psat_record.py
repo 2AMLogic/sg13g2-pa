@@ -122,15 +122,29 @@ def _render(tmp_path, variant, remote="n/a"):
 
 @pytest.mark.parametrize("variant,sense_amp", [("bare", I_LOAD_A), ("match", I_BOUND_A)])
 def test_ic_is_taken_from_the_variants_own_boundary_trace(tmp_path, variant, sense_amp):
-    """`(i(Lchoke) - <this variant's boundary>) / N_UNITS`, and not the other one's."""
+    """`(i(Lchoke) + (v(COLL)-v(VCC))/Rdchoke - <this variant's boundary>) / N_UNITS`.
+
+    The bias-feed damping resistor `Rdchoke` hangs on `COLL` (issue #172), so KCL
+    there closes through its branch current too; it is derived from the saved
+    node pair rather than an extra saved vector, as `(v(COLL)-v(VCC))/Rdchoke`.
+    In the synthetic trace that term is `0.5/Rdchoke * sin(...)`, in phase with the
+    boundary current, so it shifts every I_C by a known amount -- and it is NOT the
+    other variant's node that is read.
+    """
     _md, doc = _render(str(tmp_path), variant)
     st = doc["points"][0]["stress"]
-    want = (I_CHOKE + sense_amp) / gdb.output_array()[0]
+    rd_term = (0.5) / gdb.psat_bench(variant)["rdchoke_ohm"]
+    want = (I_CHOKE + sense_amp - rd_term) / gdb.output_array()[0]
     assert st["ic_pk_a"] == pytest.approx(want, rel=1e-6)
     # ...and it is NOT what the other variant's node would have given. This is the
     # assertion that fails if the matched deck's I_C silently keeps using the load branch.
-    other = (I_CHOKE + (I_BOUND_A if variant == "bare" else I_LOAD_A)) / gdb.output_array()[0]
+    other = (I_CHOKE + (I_BOUND_A if variant == "bare" else I_LOAD_A) - rd_term) / gdb.output_array()[0]
     assert st["ic_pk_a"] != pytest.approx(other, rel=1e-3)
+    # ...and a reducer that forgot the Rdchoke branch entirely (the pre-#172 KCL)
+    # gives a different peak; this is the assertion that fails if `stress()` stops
+    # closing KCL through the bias-feed damping resistor.
+    stale = (I_CHOKE + sense_amp) / gdb.output_array()[0]
+    assert st["ic_pk_a"] != pytest.approx(stale, rel=1e-3)
 
 
 # --- the node that carries P_out and the harmonics ------------------------

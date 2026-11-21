@@ -1,0 +1,110 @@
+{
+  "fingerprint": "65386fe08e8099168b371e1f8c4eea01393a5f6abcb0f54ba84853d62c77b8ce",
+  "hosts": 10,
+  "jobs_prefix": "jobs",
+  "profile": "batch-runner-submit",
+  "region": "us-east-1",
+  "schema_version": 1,
+  "shards": [
+    {
+      "collected_at": "2026-11-21T08:01:44.634868+00:00",
+      "index": 0,
+      "job_id": "klt-sim-0f4445ecba61",
+      "launch_started_at": "2026-11-21T07:58:42.075573+00:00",
+      "launched_at": "2026-11-21T08:00:38.338972+00:00",
+      "state": "collected",
+      "submitted_at": "2026-11-21T07:58:42.075169+00:00",
+      "units_sha256": "99039c51cfe95ce0d78ccdbb5f9a94226286984f6352ece05bdad18917a8366d"
+    },
+    {
+      "collected_at": "2026-11-21T08:01:22.264284+00:00",
+      "index": 1,
+      "job_id": "klt-sim-c4af832461cb",
+      "launch_started_at": "2026-11-21T07:58:41.929297+00:00",
+      "launched_at": "2026-11-21T08:00:15.679322+00:00",
+      "state": "collected",
+      "submitted_at": "2026-11-21T07:58:41.928861+00:00",
+      "units_sha256": "b0467380f3e7e190d424ca78843762c874fae38cc207dd467ca2cd7c2d96e834"
+    },
+    {
+      "collected_at": "2026-11-21T08:01:37.121187+00:00",
+      "index": 2,
+      "job_id": "klt-sim-f04144df8824",
+      "launch_started_at": "2026-11-21T07:58:41.758663+00:00",
+      "launched_at": "2026-11-21T08:00:31.162482+00:00",
+      "state": "collected",
+      "submitted_at": "2026-11-21T07:58:41.758211+00:00",
+      "units_sha256": "ffede4489830d67cc0916bf58997e58cb425d6222402d0d5df1d2c75fcff5362"
+    },
+    {
+      "collected_at": "2026-11-21T08:01:25.328545+00:00",
+      "index": 3,
+      "job_id": "klt-sim-93b9a752ea45",
+      "launch_started_at": "2026-11-21T07:58:41.971962+00:00",
+      "launched_at": "2026-11-21T08:00:19.479844+00:00",
+      "state": "collected",
+      "submitted_at": "2026-11-21T07:58:41.969465+00:00",
+      "units_sha256": "797d9e76bebb66227b324a6d7baea38225b13cf7431ae367879a26f0374e19ff"
+    },
+    {
+      "collected_at": "2026-11-21T08:01:35.187482+00:00",
+      "index": 4,
+      "job_id": "klt-sim-082ae7b81ecc",
+      "launch_started_at": "2026-11-21T07:58:43.118213+00:00",
+      "launched_at": "2026-11-21T08:00:29.489208+00:00",
+      "state": "collected",
+      "submitted_at": "2026-11-21T07:58:43.117728+00:00",
+      "units_sha256": "c090c37e88ccbffde2ee5ea303580f3bc743e99540cf759cb9c76b59721fac35"
+    },
+    {
+      "collected_at": null,
+      "index": 5,
+      "job_id": "klt-sim-44f385068e10",
+      "launch_started_at": "2026-11-21T07:58:42.105137+00:00",
+      "launched_at": null,
+      "state": "launching",
+      "submitted_at": "2026-11-21T07:58:42.104738+00:00",
+      "units_sha256": "50e9ce8f7f4ce31708926a11cc8e1ab2e2fecba671bf92236afaaf32fafce978"
+    },
+    {
+      "collected_at": null,
+      "index": 6,
+      "job_id": "klt-sim-3361e2ce8550",
+      "launch_started_at": "2026-11-21T07:58:43.345469+00:00",
+      "launched_at": null,
+      "state": "launching",
+      "submitted_at": "2026-11-21T07:58:43.345073+00:00",
+      "units_sha256": "e26c87791239769d99e034d9830aa9b12741f200dc8aebf40fd80bcdfdcdfcf1"
+    },
+    {
+      "collected_at": "2026-11-21T08:05:37.950281+00:00",
+      "index": 7,
+      "job_id": "klt-sim-47d17835410c",
+      "launch_started_at": "2026-11-21T07:58:43.344109+00:00",
+      "launched_at": "2026-11-21T08:04:32.869304+00:00",
+      "state": "collected",
+      "submitted_at": "2026-11-21T07:58:43.343691+00:00",
+      "units_sha256": "bbd3a0487a29273408b810560fc2fbaa3f344cb45df96766046c32406e16d9f5"
+    },
+    {
+      "collected_at": "2026-11-21T08:03:15.662580+00:00",
+      "index": 8,
+      "job_id": "klt-sim-501065ac216a",
+      "launch_started_at": "2026-11-21T07:58:42.941658+00:00",
+      "launched_at": "2026-11-21T08:02:00.653699+00:00",
+      "state": "collected",
+      "submitted_at": "2026-11-21T07:58:42.941246+00:00",
+      "units_sha256": "d96d8f61015c6af7a86d2fce15155836ad0acd015b452610e13758d29c0f4c0e"
+    },
+    {
+      "collected_at": null,
+      "index": 9,
+      "job_id": "klt-sim-aec7d3281d17",
+      "launch_started_at": "2026-11-21T07:58:44.530535+00:00",
+      "launched_at": null,
+      "state": "launching",
+      "submitted_at": "2026-11-21T07:58:44.528671+00:00",
+      "units_sha256": "9c7ff87a07150f3157293c6b375ead4a49aeb8d381d4a3db9c0c6905ae0b7744"
+    }
+  ]
+}
