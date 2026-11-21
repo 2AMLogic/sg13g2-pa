@@ -254,9 +254,10 @@ def main(argv):
           f"**absorbed in closed form** into `Lmatch` "
           f"({1e9 * net['ls_plain_h']:.4f} nH L-section + "
           f"{1e9 * (net['ls_h'] - net['ls_plain_h']):.4f} nH for `Cblock`), which is why the "
-          "**collector**, not `RFOUT`, sees a real Ropt. `Lchoke` (+j1534 ohm in shunt at "
-          "`COLL`) perturbs Ropt by 0.12 % and is left alone. Both are ideal, so neither "
-          "has a self-resonance.")
+          "**collector**, not `RFOUT`, sees a real Ropt. That impedance includes the "
+          "series `Cblock` but not the DUT's shunt `Lchoke` at `COLL`; the numerical "
+          "case for leaving `Lchoke` alone, at the original design point, is issue "
+          "#116. Both are ideal, so neither has a self-resonance.")
         w(f"- Analytic ceiling for this load line: {net['nx_total']} Nx x "
           f"{ll['pout_per_nx_w']:g} W = {net['pout_ceiling_w']:g} W = "
           f"**{rx.dbm(net['pout_ceiling_w']):.2f} dBm**. Hand arithmetic over the load-line "

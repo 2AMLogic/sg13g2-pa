@@ -163,7 +163,7 @@ def test_match_network_absorbs_cblock_so_the_collector_sees_a_real_load():
         assert abs(rows[lab][1] - 50.0) > 20.0
 
 
-def test_match_network_reads_cblock_from_the_netlist():
+def test_match_network_reads_cblock_from_the_netlist(tmp_path, monkeypatch):
     """A changed Cblock must move the series branch, not be assumed 100p."""
     base = gdb.match_network(text=_array(14, 10), cell=_LL_CELL)
     half = gdb.match_network(text=_array(14, 10, cblock="50p"), cell=_LL_CELL)
@@ -172,6 +172,17 @@ def test_match_network_reads_cblock_from_the_netlist():
     # Same Ropt, so the plain L-section is identical and only the absorption moves.
     assert half["ls_plain_h"] == pytest.approx(base["ls_plain_h"], rel=1e-12)
     assert half["ls_h"] > base["ls_h"]
+    # The deck must agree with itself: the header diagram and the embedded DUT
+    # read the same netlist, so both carry the changed value -- a hand-copied
+    # `100p` in the diagram would stay behind while the DUT moved (issue #187).
+    alt = tmp_path / "dut-50p.spice"
+    alt.write_text(_array(14, 10, cblock="50p"))
+    monkeypatch.setattr(gdb, "NETLIST", alt)
+    header, embedded = gdb.psat_deck("match").split("* ---- DUT", 1)
+    assert "Cblock 50p, ON CHIP" in header
+    assert "Cblock 100p" not in header
+    assert "Cblock RFOUT COLL 50p m=1" in embedded
+    assert "Cblock RFOUT COLL 100p" not in embedded
 
 
 @pytest.mark.parametrize("text,count", [(_array(14, 10) * 2, 2), (_array(14, 10).replace(
@@ -289,6 +300,11 @@ def test_the_matched_deck_header_restates_the_topology_and_its_provenance():
     assert "FALLBACK" in header
     # The harmonic terminations are called out as no longer the default.
     assert "NO LONGER THE LABELLED IDEAL-50-OHM DEFAULT" in header
+    # The choke is described by what the arithmetic covers, not by a reactance
+    # copied from the original design point (issue #187).
+    assert "series Cblock but not the DUT's shunt Lchoke" in header
+    assert "issue #116" in header
+    assert "+j1534" not in header and "0.12%" not in header
 
 
 def test_the_matched_terminations_prose_refuses_the_default_label():
