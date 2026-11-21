@@ -225,6 +225,11 @@ def test_the_matched_record_derives_ropt_and_cites_the_load_line_row(tmp_path):
     assert doc["output_network"]["ropt_ohm"] == pytest.approx(net["ropt_ohm"], rel=1e-12)
     assert doc["variant"] == "match"
     assert doc["bench"] == "psat_sweep_match"
+    # The choke is described by what the arithmetic covers, not by a reactance
+    # copied from the original design point (issue #187).
+    assert "series `Cblock` but not the DUT's shunt `Lchoke`" in md
+    assert "issue #116" in md
+    assert "+j1534" not in md and "0.12 %" not in md
 
 
 def test_the_matched_record_states_the_tj_check_and_its_scope(tmp_path):

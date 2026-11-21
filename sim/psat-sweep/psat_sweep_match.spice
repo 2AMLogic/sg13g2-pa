@@ -32,8 +32,10 @@
 *         = 0.623865 nH L-section + 0.042485 nH absorbing Cblock
 *   Cblock is -0.6518 ohm reactive at f0 -- 34% of Ropt, so it is
 *         absorbed in closed form rather than neglected; that is why the
-*         COLLECTOR, not RFOUT, sees a real Ropt. Lchoke (+j1534 ohm shunt at
-*         COLL) is a 0.12% perturbation on Ropt and is left alone.
+*         COLLECTOR, not RFOUT, sees a real Ropt. That impedance includes
+*         the series Cblock but not the DUT's shunt Lchoke at COLL; the
+*         numerical case for leaving Lchoke alone, at the original design
+*         point, is issue #116.
 *
 * HARMONIC TERMINATIONS ARE NO LONGER THE LABELLED IDEAL-50-OHM DEFAULT:
 *   at RFOUT / at COLL through Cblock (arithmetic over ideal elements):
