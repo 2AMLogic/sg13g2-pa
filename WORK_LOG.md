@@ -5,6 +5,10 @@ triage role. Newest first.
 
 ### 2026-11-21
 
+- **Issue #176** (closed): Remove the unusable manual recovery recipe for missing dpkg-deb
+- **PR #183**: fix: replace unusable missing-dpkg-deb recovery recipe with install-and-rerun
+- **Issue #177** (closed): Consolidate PDK model suffix checks so a missing .mod include fails preflight
+- **PR #181**: fix: fail preflight on a missing .mod model include
 - **Issue #179** (closed): Move known-answer-thermal gen_bench.py onto sim/lib/bench_gen.py (lax --check overwrites evidence)
 
 ### 2026-11-19
