@@ -1,0 +1,101 @@
+{
+  "dry_run": true,
+  "status": "valid",
+  "engine": "ngspice",
+  "backend": "batch",
+  "hosts": 3,
+  "netlist": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-173/sim/ac-stability/ac_stability.spice",
+  "models_lib": null,
+  "unit_count": 27,
+  "units": [
+    {
+      "corner_id": "hbt_typ/0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/0.880V/125C"
+    }
+  ],
+  "monte_carlo": null,
+  "staged_files": [],
+  "warnings": [],
+  "published_runner": {
+    "status": "unknown",
+    "client_klt_version": "0.9.0",
+    "images": []
+  }
+}
