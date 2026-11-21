@@ -3,6 +3,10 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-21
+
+- **Issue #179** (closed): Move known-answer-thermal gen_bench.py onto sim/lib/bench_gen.py (lax --check overwrites evidence)
+
 ### 2026-11-19
 
 - **PR #170**: chore: grade the signoff record against the klt wheel's bundled checklist
