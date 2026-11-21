@@ -17,7 +17,7 @@
         "role": "source",
         "path": "design/sg13g2-pa.sch",
         "passed": true,
-        "content_hash": "sha256:5d29c3e1653d0d18f9bf2b92794e9e28de4822420bad7a78bef31a4ad8c4cc06"
+        "content_hash": "sha256:c3de82103f367a4f2bfc456b522c2d2d4403d1c334b3ca0614baaebff893b5a8"
       },
       {
         "check": "present",
@@ -31,7 +31,7 @@
         "role": "derived",
         "path": "design/netlist/sg13g2-pa.spice",
         "passed": true,
-        "content_hash": "sha256:b10bc89410f84bd0051a7009fd1648c1d12a46bda2ffebfc54bd0e6e33f056c6"
+        "content_hash": "sha256:99469b90f5969ed454de9f965ad03d59c02d4a5a83cbeeb8083eaac28cac654f"
       },
       {
         "check": "command",
@@ -75,14 +75,14 @@
             "path": "design/netlist/sg13g2-pa.spice",
             "scope": "repo"
           },
-          "content_hash": "sha256:b10bc89410f84bd0051a7009fd1648c1d12a46bda2ffebfc54bd0e6e33f056c6"
+          "content_hash": "sha256:99469b90f5969ed454de9f965ad03d59c02d4a5a83cbeeb8083eaac28cac654f"
         },
         {
           "path": {
             "path": "design/sg13g2-pa.sch",
             "scope": "repo"
           },
-          "content_hash": "sha256:5d29c3e1653d0d18f9bf2b92794e9e28de4822420bad7a78bef31a4ad8c4cc06"
+          "content_hash": "sha256:c3de82103f367a4f2bfc456b522c2d2d4403d1c334b3ca0614baaebff893b5a8"
         },
         {
           "path": {
@@ -92,7 +92,7 @@
           "content_hash": "sha256:dd8333f0379f4d150177b3930c8198217f3ccb7d5d336c4b148b6fa3f9849a5c"
         }
       ],
-      "content_hash": "sha256:acbcd09c20624fbe129e724385163066747cd5180fa72eb6aad01ae11ee24299"
+      "content_hash": "sha256:3a2a08f5e3fd7c94f39830696550657622266f59abc25750e8e6771c734797fe"
     }
   }
 }
