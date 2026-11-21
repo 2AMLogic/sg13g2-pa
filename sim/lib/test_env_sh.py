@@ -427,8 +427,6 @@ def test_the_ac_submit_is_one_fleet_run_with_matrix_screens():
     assert "--request" in r.argv and "--report" in r.argv
     assert sum(1 for a in r.argv if a.endswith("pvt-matrix.json")) == 2, r.argv
     assert "--backend" not in r.argv
-    # The submit carries the capacity-retry self-healing, never a local rerun.
-    assert "--capacity-retries" in r.argv
     # Exactly one submit of the request (the dry run expands, it does not run).
     submits = sum(1 for a in r.argv if a == "sim") - 1  # one `sim` is the dry run
     assert submits == 1, f"re-submitted: {r.argv}"

@@ -427,7 +427,7 @@ sim_run_ac_bench() {
   # The backend is the host's (KLT_SIM_BACKEND=batch on the dispatch worker:
   # a 27-cell grid is fleet work); sim_run_one submits once -- the capacity
   # wait is the request's batch.capacity_wait_s -- and never reruns locally.
-  sim_run_one "${bench}" --capacity-retries 3
+  sim_run_one "${bench}"
   # shellcheck disable=SC2119  # no --tolerate-recovered-gmin: an AC corner that
   # needed gmin stepping is not evidence these benches record.
   sim_gate_logs

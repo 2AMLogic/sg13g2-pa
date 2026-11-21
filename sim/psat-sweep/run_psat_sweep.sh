@@ -65,11 +65,12 @@ if [[ "${VARIANT}" == match ]]; then
       "${SCRIPT_DIR}/${BENCH}.request.json" "${BENCH}" || failed=1
 fi
 # The corner statuses gate (psat_record.py, sim_gate_logs). sim_run_one submits
-# once -- the capacity wait is the request's batch.capacity_wait_s, and
-# --capacity-retries 3 lets klt itself re-run shards a fleet capacity refusal
-# took out, each pass with a fresh wait -- never reruns locally, and sets
-# failed=1 rather than exiting, so the gate below is what stops the record.
-sim_run_one "${BENCH}" --capacity-retries 3
+# once -- the capacity wait is the request's batch.capacity_wait_s -- never
+# reruns locally, and sets failed=1 rather than exiting, so the gate below is
+# what stops the record. (--capacity-retries is a --batch-set-only flag at the
+# pinned klt 0.9.0; the single-request wait above is the mechanism this repo
+# pins, see sim/README.md "Running grids".)
+sim_run_one "${BENCH}"
 sim_gate_logs
 if [[ "${VARIANT}" == match ]]; then
   sim_corner_matrix_check "${SCRIPT_DIR}/psat_sweep_match.pvt-matrix.json" report \
