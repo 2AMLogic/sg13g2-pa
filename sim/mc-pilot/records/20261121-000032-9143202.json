@@ -1,0 +1,45 @@
+{
+ "runs": {
+  "dc_stat": {
+   "status": "**REFUSED/FAILED** (no report; stderr tail below)",
+   "n_requested": null,
+   "n_completed": null,
+   "remote": null
+  },
+  "dc_mismatch": {
+   "status": "**REFUSED/FAILED** (no report; stderr tail below)",
+   "n_requested": null,
+   "n_completed": null,
+   "remote": null
+  },
+  "ac_stat": {
+   "status": "**REFUSED/FAILED** (no report; stderr tail below)",
+   "n_requested": null,
+   "n_completed": null,
+   "remote": null
+  },
+  "ac_mismatch": {
+   "status": "**REFUSED/FAILED** (no report; stderr tail below)",
+   "n_requested": null,
+   "n_completed": null,
+   "remote": null
+  }
+ },
+ "monte_carlo_environment": {},
+ "model_files_sha256": {
+  "cornerHBT.lib": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462",
+  "sg13g2_hbt_stat.lib": "80d1893eb06a3417d05400335d8e58c8309b9c80061ca96ceff8f8fd68c9a7db",
+  "sg13g2_hbt_mod.lib": "ae9288f885dd30fab24b07ed1e7e02e69eac9154022a0a6da576985183b0bd79",
+  "sg13g2_hbt_mod_mismatch.lib": "1e493f25150b25b64985acd3f1e7ed2eb2e6ca4b712adf45b2de2ce2ba1a0eb2"
+ },
+ "probes": {
+  "scale": {
+   "kind": "refusal",
+   "message": "request.monte_carlo.mismatch_scale is only supported for PDK families with a verified multiplicative mismatch switch (gf180mcu, sky130); models.pdk 'ihp-sg13g2' resolves to family 'sg13g2'"
+  },
+  "instances": {
+   "kind": "refusal",
+   "message": "request.monte_carlo.instances needs models.pdk naming a PDK with a known mismatch switch (gf180mcu, sky130); got 'ihp-sg13g2'"
+  }
+ }
+}

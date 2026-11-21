@@ -1,0 +1,23 @@
+klt: warning: 2 installs provide PDK variant 'ihp-sg13g2'; read /home/ubuntu/.cache/sg13g2-pa/pdk-root (PDK_ROOT environment variable), skipped /home/ubuntu/share/pdk (search root: ~/share/pdk). Resolution is first-match-wins, so a pinned open_pdks build may not be the one this run read -- pin the root explicitly (--pdk-root, or a request's models.pdk_root) to disable the search and choose deliberately.
+klt: batch job klt-sim-c25afbaff039 submitting to s3://<bucket>/jobs/klt-sim-c25afbaff039
+klt: batch job klt-sim-1739993d3274 submitting to s3://<bucket>/jobs/klt-sim-1739993d3274
+klt: batch job klt-sim-818edb34620d submitting to s3://<bucket>/jobs/klt-sim-818edb34620d
+klt: batch job klt-sim-a432db1758a9 submitting to s3://<bucket>/jobs/klt-sim-a432db1758a9
+klt sim: batch job klt-sim-818edb34620d: submitted
+klt sim: shards 0/4 launched, 1 launching, 3 pending, 0 collected; launch rate unknown, ETA unknown
+klt sim: batch job klt-sim-a432db1758a9: submitted
+klt sim: batch job klt-sim-c25afbaff039: submitted
+klt sim: batch job klt-sim-1739993d3274: submitted
+klt sim: batch job klt-sim-1739993d3274 launched; re-attach with `klt sim <request> --backend batch --attach klt-sim-1739993d3274`
+klt sim: batch job klt-sim-a432db1758a9 launched; re-attach with `klt sim <request> --backend batch --attach klt-sim-a432db1758a9`
+klt sim: batch job klt-sim-1739993d3274 state=no status.json yet elapsed=1s
+klt sim: batch job klt-sim-a432db1758a9 state=no status.json yet elapsed=1s
+klt sim: batch job klt-sim-c25afbaff039 launched; re-attach with `klt sim <request> --backend batch --attach klt-sim-c25afbaff039`
+klt sim: shards 4/4 launched, 0 launching, 0 pending, 0 collected; launch rate 66.6/min, ETA 0m
+klt sim: batch job klt-sim-818edb34620d launched; re-attach with `klt sim <request> --backend batch --attach klt-sim-818edb34620d`
+klt sim: batch job klt-sim-c25afbaff039 state=no status.json yet elapsed=1s
+klt sim: batch job klt-sim-818edb34620d state=no status.json yet elapsed=1s
+klt sim: batch job klt-sim-a432db1758a9: done
+klt sim: batch job klt-sim-1739993d3274: done
+klt sim: batch job klt-sim-c25afbaff039: done
+klt sim: batch job klt-sim-818edb34620d: done

@@ -208,7 +208,7 @@ sim_begin_record() {
 sim_gate_logs() {
   # sim_gate_logs [--tolerate-recovered-gmin]
   #
-  # Per-corner log gate over ${OUT}/*/*/ngspice.log: a log carrying any
+  # Per-corner log gate over direct and sharded runs under ${OUT}: a log carrying any
   # model/convergence error pattern fails its point -- the point is named on
   # stderr and the caller's `failed=1` is set. This gate reads logs only; the
   # `klt sim` exit code is gated separately, in sim_run_one.
@@ -226,7 +226,7 @@ sim_gate_logs() {
     --tolerate-recovered-gmin) tolerate=1 ;;
     *) echo "sim_gate_logs: unknown option '$1'" >&2; exit 2 ;;
   esac
-  for log in "${OUT}"/*/*/ngspice.log; do
+  for log in "${OUT}"/*/*/ngspice.log "${OUT}"/*/*/*/ngspice.log; do
     [[ -f "${log}" ]] || continue
     filtered="${log}"
     if (( tolerate )) && grep -q 'Dynamic gmin stepping completed' "${log}"; then

@@ -1,0 +1,132 @@
+{
+  "netlist": "mc_op.spice",
+  "models": {
+    "pdk": "ihp-sg13g2"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "hbt_typ_mismatch",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_typ_mismatch"
+          }
+        ]
+      }
+    ],
+    "temperature_c": [
+      27
+    ]
+  },
+  "analysis": {
+    "kind": "op",
+    "args": ""
+  },
+  "monte_carlo": {
+    "n": 100,
+    "seed": 174,
+    "vary": "mismatch",
+    "mismatch_scale": 0
+  },
+  "measurements": [
+    {
+      "name": "ic1",
+      "expr": "@q.x1.xq1.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic2",
+      "expr": "@q.x1.xq2.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic3",
+      "expr": "@q.x1.xq3.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic4",
+      "expr": "@q.x1.xq4.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic5",
+      "expr": "@q.x1.xq5.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic6",
+      "expr": "@q.x1.xq6.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic7",
+      "expr": "@q.x1.xq7.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic8",
+      "expr": "@q.x1.xq8.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic9",
+      "expr": "@q.x1.xq9.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic10",
+      "expr": "@q.x1.xq10.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic11",
+      "expr": "@q.x1.xq11.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic12",
+      "expr": "@q.x1.xq12.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic13",
+      "expr": "@q.x1.xq13.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic14",
+      "expr": "@q.x1.xq14.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic_total",
+      "expr": "@q.x1.xq1.qnpn13g2[ic] + @q.x1.xq2.qnpn13g2[ic] + @q.x1.xq3.qnpn13g2[ic] + @q.x1.xq4.qnpn13g2[ic] + @q.x1.xq5.qnpn13g2[ic] + @q.x1.xq6.qnpn13g2[ic] + @q.x1.xq7.qnpn13g2[ic] + @q.x1.xq8.qnpn13g2[ic] + @q.x1.xq9.qnpn13g2[ic] + @q.x1.xq10.qnpn13g2[ic] + @q.x1.xq11.qnpn13g2[ic] + @q.x1.xq12.qnpn13g2[ic] + @q.x1.xq13.qnpn13g2[ic] + @q.x1.xq14.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "ic_diff_12",
+      "expr": "ic1 - ic2",
+      "unit": "A"
+    },
+    {
+      "name": "ic_ref",
+      "expr": "@q.x1.xqref.qnpn13g2[ic]",
+      "unit": "A"
+    },
+    {
+      "name": "icc_vcc",
+      "expr": "i(vcc)",
+      "unit": "A"
+    }
+  ],
+  "options": {
+    "timeout_s": 60,
+    "keep_artifacts": true,
+    "ngspice_init": [
+      "set numdgt=8"
+    ]
+  },
+  "backend": "local"
+}
