@@ -34,6 +34,21 @@ which is **PROPOSED, not ratified**:
   band follows `sg13g2-lna`'s ratified band and has not been cited here yet.
   Any Pout or PAE figure derived from this netlist is **through ideal
   passives**.
+- **Stabilisation and input match (issue #172): four ideal resistors, lossy
+  by design.** `Rin` (33 Ω, series between `RFIN` and the `Cin` tap node
+  `INM`) and `Rshm` (56 Ω, shunt `INM` to GND) form a **lossy resistive
+  input match** — no inductor is added (DR 0001 D-1 open), so this is an
+  explicitly labelled ideal-element match whose gain cost is paid in S21, not
+  a lossless match. `Rsho` (1 kΩ, shunt at `RFOUT`) damps the output port at
+  the bottom of the swept range, where `Cblock` leaves it a near-lossless
+  reactance. `Rdchoke` (150 Ω, in parallel with `Lchoke`) damps the
+  bias-feed/collector resonance below the band. All four are **ideal
+  resistors** (no PDK resistor model, no temperature coefficient, no layout
+  parasitic); the reason each is ideal is that this issue sizes the
+  *network*, and PDK `rpoly` devices would be substituted at layout time
+  with their own model sections. The input shunt sits behind `Cin`, which
+  provides its DC block, so the mirror bias is untouched (DC operating point
+  unchanged: `V(COLL)` 0.8 V, `V(VB)` 0.778 V).
 - **Bias** is an ideal 1 mA reference current into a diode-connected
   `npn13G2` (`Nx=10`), mirrored 1:14 to the array through `Rb` (1 kΩ). The
   1 mA, the 1 kΩ and the resulting quiescent current are placeholders: the

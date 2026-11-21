@@ -181,6 +181,27 @@ def test_cblock_farads_refuses_anything_but_one_cblock_line(text, count):
         gdb.cblock_farads(text)
 
 
+def test_rdchoke_ohms_reads_the_committed_netlist():
+    """`Rdchoke` (across Lchoke, issue #172) feeds the psat KCL; its value is read,
+    never hand-copied, for the same reason `cblock_farads` is."""
+    assert gdb.rdchoke_ohms() == pytest.approx(150.0, rel=1e-12)
+
+
+@pytest.mark.parametrize("line", ["Rdchoke VCC COLL 220 m=1\n", "Rdchoke COLL VCC 220 m=1\n"])
+def test_rdchoke_ohms_accepts_either_node_order(line):
+    assert gdb.rdchoke_ohms(_array(1, 10) + line) == pytest.approx(220.0, rel=1e-12)
+
+
+@pytest.mark.parametrize("text,count", [
+    (_array(1, 10), 0),
+    (_array(1, 10) + "Rdchoke VCC COLL 150 m=1\nRdchoke COLL VCC 150 m=1\n", 2),
+])
+def test_rdchoke_ohms_refuses_absent_or_duplicated_damping(text, count):
+    """A missing damping branch would silently break KCL at COLL, not error out."""
+    with pytest.raises(ValueError, match=f"found {count}"):
+        gdb.rdchoke_ohms(text)
+
+
 @pytest.mark.parametrize("text,want", [
     ("100p", 100e-12), ("1e-10", 1e-10), ("4.7meg", 4.7e6), ("2.2n", 2.2e-9),
     ("3m", 3e-3), ("100pF", 100e-12), ("5", 5.0), (".5n", 0.5e-9),

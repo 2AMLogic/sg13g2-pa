@@ -1,4 +1,4 @@
-** sch_path: /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-36/design/sg13g2-pa.sch
+** sch_path: /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-172/design/sg13g2-pa.sch
 .subckt sg13g2-pa RFIN RFOUT VCC GND
 *.ipin RFIN
 *.opin RFOUT
@@ -22,6 +22,10 @@ Iref VCC VREF 1m
 XQref VREF VREF GND GND npn13G2 Nx=10
 Rb VB VREF 1k m=1
 Lchoke VCC COLL 100n m=1
+Rdchoke VCC COLL 150 m=1
 Cblock RFOUT COLL 100p m=1
-Cin VB RFIN 100p m=1
+Rsho RFOUT GND 1k m=1
+Rin RFIN INM 33 m=1
+Rshm INM GND 56 m=1
+Cin VB INM 100p m=1
 .ends

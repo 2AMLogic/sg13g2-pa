@@ -67,7 +67,9 @@ def main(argv):
     w(f"# {'ac-gain' if kind == 'gain' else 'ac-stability'} record {rid}")
     w("")
     w("**Simulated** (ngspice), nominal cell only, **through ideal passives** (the DUT's "
-      "`Lchoke`/`Cblock`/`Cin` are lossless, no self-resonance, no inductor model). "
+      "`Lchoke`/`Cblock`/`Cin` are lossless, no self-resonance, no inductor model; the "
+      "issue-#172 stabilisation resistors `Rin`/`Rshm`/`Rsho`/`Rdchoke` are ideal and "
+      "lossy by design). "
       "Not a pass/fail claim: this record shows the bench runs cold. The topology "
       "(DR 0003) is PROPOSED and the Supply row is DRAFT.")
     w("")
@@ -93,14 +95,20 @@ def main(argv):
             w(f"| {_fmt(f / 1e6, 2)} | {_fmt(sp.db20(s['s21'][i]))} | {_fmt(sp.db20(s['s11'][i]))} | "
               f"{_fmt(sp.db20(s['s22'][i]))} |")
         w("")
+        s21_min = float(np.min(sp.db20(s["s21"])))
+        s11_max = float(np.max(sp.db20(s["s11"])))
         w(f"Transducer gain = |S21|^2 with {gdb.RS_OHM:g} ohm source and {gdb.RL_OHM:g} ohm "
           "load. Spec targets "
           "(power gain > 15 dB, S11 < -10 dB) are reported against, not asserted: "
-          f"min S21 over band {_fmt(float(np.min(sp.db20(s['s21']))))} dB, "
-          f"worst S11 {_fmt(float(np.max(sp.db20(s['s11']))))} dB.")
-        w("The network is not matched -- the DUT's `Cin`/`Cblock`/`Lchoke` are placeholder parts "
-          f"(values in `{NETLIST_REL}`) -- so a poor S11 is expected and is the honest bench "
-          "output.")
+          f"min S21 over band {_fmt(s21_min)} dB "
+          f"({s21_min - 15.0:+.2f} dB against the > 15 dB row), "
+          f"worst S11 {_fmt(s11_max)} dB "
+          f"({-10.0 - s11_max:+.2f} dB of margin to the -10 dB Target).")
+        w("The input is **resistively matched, not losslessly matched** (issue #172): "
+          "`Rin`/`Rshm` are ideal resistors and no inductor was added (DR 0001 D-1 "
+          "open), so the band S11 above is that lossy network's and its gain cost is "
+          "paid in S21 -- a lower S11 through resistors alone would cost more S21 "
+          "than the > 15 dB row has left.")
     else:
         w(f"## Stability, {_fmt(freq[0] / 1e6, 1)} MHz - {_fmt(freq[-1] / 1e9, 2)} GHz ({len(freq)} points)")
         w("")
@@ -115,6 +123,27 @@ def main(argv):
         w(f"- points per decade: {len(freq) / np.log10(freq[-1] / freq[0]):.1f} (spec: >= 40)")
         verdict = "mu > 1 at every point" if float(np.min(st["mu"])) > 1 else "mu <= 1 at one or more points"
         w(f"- observation (this cell only): {verdict}.")
+        w("")
+        w("### Cause of the pre-#172 instability, and what changed")
+        w("")
+        w("Before the issue-#172 network (`records/20261118-225926-ef3c005.md`, same cell), "
+          "mu was 0.0228 at 0.176 GHz and below 1 at **every** one of the 174 points. The "
+          f"cause is circuit-level: the array idles with V_CE = {gdb.VCC_NOM_V:g} - V_BE "
+          "≈ 22 mV (the draft supply cannot support 2 V_BE), so the BC junction is "
+          "weakly forward-biased and reverse transmission through the device is only "
+          "~-25 dB; with 17-29 dB of forward gain below the band, the loop product "
+          "|S12*S21| ≈ 0.7 from 60 MHz to 30 GHz. At low frequency the collector "
+          "additionally resonates: `Lchoke` is only j110 ohm at 176 MHz -- not a choke "
+          "there -- and the load it forms with the array capacitance and the port peaks "
+          "the gain at 29 dB around 176 MHz, where mu bottoms.")
+        w("")
+        w("The fix is four ideal resistors (no inductor added, DR 0001 D-1 open): `Rin` "
+          "(series at RFIN) and `Rshm` (shunt at the `Cin` tap node) pad the input and "
+          "cut the loop product in both directions; `Rsho` (shunt at RFOUT) gives the "
+          "10-30 MHz output port the resistive loss it otherwise lacks (Cblock makes it "
+          "a near-lossless reactance there, |S22| ≈ 1.0); `Rdchoke` (across "
+          "`Lchoke`) damps the bias-feed resonance that peaks the gain below the band. "
+          "The cost is in-band gain (see the ac-gain record of this design revision).")
         w("")
         w("| f (GHz) | mu | k | abs(delta) | S21 (dB) |")
         w("|---|---|---|---|---|")
