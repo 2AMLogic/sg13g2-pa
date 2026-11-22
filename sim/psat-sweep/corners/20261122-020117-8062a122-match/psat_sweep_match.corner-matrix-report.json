@@ -1,0 +1,14 @@
+{
+  "matrix": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-192/sim/psat-sweep/psat_sweep_match.pvt-matrix.json",
+  "mode": "report",
+  "source": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-192/sim/psat-sweep/corners/20261122-020117-8062a122-match/psat_sweep_match.report.json",
+  "complete": true,
+  "matrix_size": 2862,
+  "observed_count": 2862,
+  "missing": [],
+  "extra": [],
+  "duplicate": [],
+  "not_simulated": [],
+  "non_finite": [],
+  "out_of_bounds": []
+}

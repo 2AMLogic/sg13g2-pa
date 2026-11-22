@@ -1,0 +1,11 @@
+{
+  "matrix": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-192/sim/psat-sweep/psat_sweep_match.pvt-matrix.json",
+  "mode": "request",
+  "source": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-192/sim/psat-sweep/psat_sweep_match.request.json",
+  "complete": true,
+  "matrix_size": 2862,
+  "observed_count": 2862,
+  "missing": [],
+  "extra": [],
+  "duplicate": []
+}
