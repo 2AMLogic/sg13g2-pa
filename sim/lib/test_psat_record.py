@@ -8,11 +8,10 @@ BOTH extraction nodes:
 * **`P_out`/H2/H3.** In the bare deck `Vlsense` is a 0 V source directly on `out`, so
   `v(out) * i(vlsense)` is the load power. With a network in between, `v(out)` and the
   load current are at different nodes and their product is not a power at all.
-* **Per-device `I_C`.** `stress()` takes it as `(i(Lchoke) - <boundary>) / N_UNITS`,
-  which is KCL at `COLL` only when `<boundary>` is `Cblock`'s current. In the bare deck
-  the load branch *is* that current; through an L-section the shunt capacitor takes part
-  of it, so the load current under-reports every `I_C` **silently** -- no KeyError, no
-  ExtractError, just a wrong `Ic pk mA` column and a wrong `frac_ic_outside`.
+* **Per-device `I_C`.** `stress()` sums the currents entering COLL through Lchoke
+  and Rdchoke, subtracts the external boundary and Rsho currents, and divides
+  by the number of devices. In the matched bench the boundary current includes
+  current diverted through Cmatch before the load.
 
 Neither failure raises anything, so the tests below are what catch them: the synthetic
 waveform deliberately gives every candidate trace a DIFFERENT amplitude, so a record
@@ -233,7 +232,7 @@ def test_the_matched_record_derives_ropt_and_cites_the_load_line_row(tmp_path):
     """AC 2: the number and its provenance, not a pasted constant."""
     md, doc = _render(str(tmp_path), "match")
     net = gdb.match_network()
-    assert f"Ropt = {net['ropt_ohm']:.4f} ohm at the collector" in md
+    assert f"collector design target Ropt = {net['ropt_ohm']:.4f} ohm" in md
     assert net["loadline_record"] in md
     assert "swing_mode saturated" in md
     # It says, in the record, that the recommended array's figure was not used.
@@ -244,8 +243,8 @@ def test_the_matched_record_derives_ropt_and_cites_the_load_line_row(tmp_path):
     assert doc["bench"] == "psat_sweep_match"
     # The choke is described by what the arithmetic covers, not by a reactance
     # copied from the original design point (issue #187).
-    assert "series `Cblock` but not the DUT's shunt `Lchoke`" in md
-    assert "issue #116" in md
+    assert "actual collector load includes the DUT shunts" in md
+    assert "issue #116" in md.lower()
     assert "+j1534" not in md and "0.12 %" not in md
 
 
@@ -374,7 +373,8 @@ def _findings_render(tmp_path, specs, remote="n/a", report_dir=None):
                 continue
             pin_w = 10 ** (pin_dbm / 10) / 1000
             pout_w = pin_w * 10 ** (sp["gains_db"][pi] / 10)
-            vamp = math.sqrt(8 * gdb.RS_OHM * pin_w / sp["s11_ratio"])
+            ratio = sp["s11_ratios"][pi] if "s11_ratios" in sp else sp["s11_ratio"]
+            vamp = math.sqrt(8 * gdb.RS_OHM * pin_w / ratio)
             wav = os.path.join(str(tmp_path), f"mw{si}-{pi}.json")
             _sweep_waveform(wav, pin_w, pout_w)
             corners.append({"corner_id": cid, "process": sp["proc"],
@@ -402,6 +402,19 @@ def _findings_render(tmp_path, specs, remote="n/a", report_dir=None):
 ALL_MET = {"proc": "hbt_typ", "temp": 27.0, "vcc": 0.8,
            "pins_dbm": [-20, -19, -18, -17], "gains_db": [36] * 4,
            "s11_ratio": 0.95}
+
+
+@pytest.mark.parametrize("cell_count", [1, 2])
+def test_s11_at_psat_uses_the_peak_output_point(tmp_path, cell_count):
+    sweep = dict(ALL_MET, pins_dbm=[-20, -19.5, -19, -18.5, -18],
+                 gains_db=[20, 20, 20, 18, 17], s11_ratios=[0.5, 0.6, 0.9, 0.7, 0.8])
+    md, doc = _findings_render(tmp_path, [sweep, dict(sweep, temp=125)][:cell_count])
+    for cell in doc.get("cells", [doc]):
+        index = cell["reduction"]["psat_index"]
+        assert index == 2
+        assert cell["points"][index]["s11_large_db"] == pytest.approx(-10, abs=0.001)
+    assert md.count("Large-signal S11 at Psat = -10.00 dB") == cell_count
+    assert "Seen by `COLL` through `Cblock`" in md
 
 
 def test_the_matrix_record_links_each_finding_to_its_tracker(tmp_path):

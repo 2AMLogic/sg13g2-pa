@@ -131,8 +131,8 @@ for its own reasons, not before.
 The default psat deck drives a **bare 50 ohm** from `RFOUT`, so nothing transforms the
 load and the output array is not loaded the way the load-line study
 (`device-npn13g2/records/`, DR 0003) sized it. `--match` runs the same sweep through an
-**ideal, lossless off-chip L-section**, so the collector sees that study's load-line
-resistance. It evidences the spec's **Fallback** Output-port cell -- "50 ohm, **off-chip**
+**ideal, lossless off-chip L-section** designed for that load-line resistance.
+It evidences the spec's **Fallback** Output-port cell -- "50 ohm, **off-chip**
 output match (stated boundary)" -- and only its boundary convention; the **Target**
 (on-chip match) row stays unevidenced while DR 0001 D-1, the inductor-model source, is
 deferred. No inductor model is used or needed.
@@ -141,7 +141,7 @@ deferred. No inductor model is used or needed.
 
 | Side | Elements |
 |---|---|
-| **On chip** | the DUT: its output array and `Lchoke`, `Cblock`, `Cin` |
+| **On chip** | the DUT, including the output array, `Lchoke`, `Cblock`, `Cin` and the four stabilisation resistors |
 | **Off chip** | `Vbsense` (a 0 V boundary sense), `Lmatch`, `Cmatch`, `Vlsense`, the 50 ohm load -- all **ideal and lossless**: no Q, no self-resonance |
 
 By that same spec row, a real off-chip network's loss is **not counted as the chip's**,
@@ -152,7 +152,8 @@ tuned**: the resistance is the load-line record's own array-independent
 `vswing_v / iq_per_nx_a` over the array the DUT netlist actually has (via
 `output_array()`), and the L-section is the closed form for it with the DUT's on-chip
 `Cblock` -- a third of that resistance in reactance at f0 -- absorbed into the series
-branch, so the **collector**, not `RFOUT`, sees a real load line. The study's own
+branch. This gives the design target at f0. The actual collector load also
+includes `Rsho` at `RFOUT` and `Rdchoke` in parallel with `Lchoke` at `COLL`. The study's own
 `nx_needed.load_ohm_ideal` is **not** used: it belongs to the larger array the study
 *recommends*, not the one benched.
 
@@ -165,10 +166,10 @@ in `psat_bench(variant)` and read from there by `psat_record.py` rather than ass
   `../spec/target-spec.md` ("Harmonic terminations"), does **not** compare its P_out or
   PAE with the bare-50-ohm record's.
 - **Both extraction nodes move.** `P_out` and the harmonics come from the 50 ohm
-  resistor's own V and I; per-device `I_C` comes from the boundary sense at `RFOUT`
-  (`Cblock`'s current, which is what closes KCL at `COLL`) and **not** from the load
-  branch, which `Cmatch` now shunts part of. Neither mistake raises anything --
-  `lib/test_psat_record.py` is what catches them.
+  resistor's own V and I. The `RFOUT` boundary sense measures the current entering
+  the off-chip network. Adding the on-chip `Rsho` current gives the current through
+  `Cblock`. Subtract that sum from the currents arriving through `Lchoke` and
+  `Rdchoke` and divide by the device count to get per-device collector current.
 
 Its record is suffixed `-match` (`sim_begin_record --suffix`, as
 `known-answer/run.sh --wrong-load` does), so it cannot be confused with or overwrite a

@@ -67,11 +67,8 @@ def stress(t, s, ex, ambient_c, bench):
     already-saved node pair ``v(xdut.coll)``/``v(vcc)`` rather than an extra saved
     vector, so its value is read from the netlist (``bench['rdchoke_ohm']``), never
     hand-copied. ``ic_sense_i`` names the trace carrying the current leaving RFOUT
-    into whatever is on the far side of the chip boundary -- i.e. `Cblock`'s current.
-    In the bare deck the load branch IS that current; through an output network it is
-    not (a shunt branch takes part of it), so the bench declares the node and this
-    never guesses it. Getting either branch wrong would move every `Ic pk mA` and
-    `frac_ic_outside` with nothing raised.
+    into the external load or matching network. At RFOUT this current and the
+    on-chip shunt current together account for the current arriving through Cblock.
     """
     t0 = ex["window_start_s"]
     t1 = t0 + ex["window_periods"] / F0
@@ -391,6 +388,19 @@ def _cell_md(cell):
     return f"`{cell['process']}` / {cell['temperature_c']:g} C / {cell['vcc']:g} V"
 
 
+def _match_table(net):
+    rows = [
+        "| Frequency | External termination | Design target (external + `Cblock`) "
+        "| Into the network at `RFOUT` | Seen by `COLL` through `Cblock` |",
+        "|---|---|---|---|---|",
+    ]
+    for r in gdb.match_impedances(net):
+        impedances = (r.z_external, r.z_coll_target, r.z_rfout, r.z_coll)
+        values = " | ".join(f"{z.real:.3f} {z.imag:+.3f}j ohm" for z in impedances)
+        rows.append(f"| {r.label} ({r.f_hz / 1e9:.5f} GHz) | {values} |")
+    return rows
+
+
 def _rung(ok_target, ok_fallback):
     """A row verdict rung: met (Target), fallback, or missed (below Fallback)."""
     return "met" if ok_target else ("fallback" if ok_fallback else "missed")
@@ -506,6 +516,14 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
       "power A^2/(8 Rs); P_in computed from the measured input V and I (mismatch "
       "counted). Self-heating on (card default `selft=1`); the ambient is the cell's.")
     w(f"- {bench['load_md']} {bench['terminations_md']}")
+    if net is not None:
+        w("")
+        w("Calculated from ideal elements. The actual collector load includes `Rsho` "
+          "at RFOUT and the parallel `Rdchoke` and `Lchoke` branches at COLL.")
+        w("")
+        o.extend(_match_table(net))
+        w("")
+    w(f"- Per-device collector current = {bench['ic_formula_md']} / {N_UNITS}.")
     w("- PAE = (P_out,f0 - P_in,f0) / P_DC; P_DC = total Vcc supply power, bias "
       "reference included; integrated over an integer number of RF periods "
       "(rectangular-window coherent DFT, step T/400), same extractor as the "
@@ -586,6 +604,7 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
                  if red.get("p1db_out_dbm") is not None else
                  "P1dB not reached within the sweep (no extrapolation); ")
               + f"linear gain {red['gain_linear_db']:.2f} dB.")
+            w(f"- Large-signal S11 at Psat = {c['points'][red['psat_index']]['s11_large_db']:.2f} dB.")
         else:
             e = c["reduction_error"]
             w(f"- Reduction refused: `{e['code']}` -- {e['message']}")
@@ -773,7 +792,7 @@ def main(argv):
           f"`vswing_v / iq_per_nx_a` = {ll['vswing_v']:g} / {ll['iq_per_nx_a']:g} = "
           f"{net['r_per_nx_ohm']:.4f} ohm per Nx -- over the array **this netlist has** "
           f"({net['n_units']} devices x Nx={net['nx']} = {net['nx_total']} Nx), giving "
-          f"**Ropt = {net['ropt_ohm']:.4f} ohm at the collector**. Source: "
+          f"**collector design target Ropt = {net['ropt_ohm']:.4f} ohm**. Source: "
           f"`{net['loadline_record']}`, cell `supply_nominal_v "
           f"{ll['supply_nominal_v']:g}` / `tolerance {ll['tolerance']}` / `swing_mode "
           f"{ll['swing_mode']}`. That record's own `nx_needed.load_ohm_ideal` "
@@ -787,11 +806,10 @@ def main(argv):
           f"{100 * abs(net['cblock_x_ohm']) / net['ropt_ohm']:.0f} % of Ropt, so it is "
           f"**absorbed in closed form** into `Lmatch` "
           f"({1e9 * net['ls_plain_h']:.4f} nH L-section + "
-          f"{1e9 * (net['ls_h'] - net['ls_plain_h']):.4f} nH for `Cblock`), which is why the "
-          "**collector**, not `RFOUT`, sees a real Ropt. That impedance includes the "
-          "series `Cblock` but not the DUT's shunt `Lchoke` at `COLL`; the numerical "
-          "case for leaving `Lchoke` alone, at the original design point, is issue "
-          "#116. Both are ideal, so neither has a self-resonance.")
+          f"{1e9 * (net['ls_h'] - net['ls_plain_h']):.4f} nH for `Cblock`). The external "
+          "network in series with `Cblock` gives the real design target at f0. The "
+          "actual collector load includes the DUT shunts tabulated below. Issue #116 "
+          "documents the choice of `Lchoke` at the original design point.")
         w(f"- Analytic ceiling for this load line: {net['nx_total']} Nx x "
           f"{ll['pout_per_nx_w']:g} W = {net['pout_ceiling_w']:g} W = "
           f"**{rx.dbm(net['pout_ceiling_w']):.2f} dBm**. Hand arithmetic over the load-line "
@@ -806,13 +824,7 @@ def main(argv):
           "the **actual load** -- that, through `Cblock`, in parallel with `Rdchoke` and "
           "`Lchoke` at `COLL`.")
         w("")
-        w("| Frequency | External termination | Design target (external + `Cblock`) "
-          "| Into the network at `RFOUT` | Seen by `COLL` through `Cblock` |")
-        w("|---|---|---|---|---|")
-        zf = lambda z: f"{z.real:.3f} {z.imag:+.3f}j ohm"   # noqa: E731
-        for r in gdb.match_impedances(net):
-            w(f"| {r.label} ({r.f_hz / 1e9:.5f} GHz) | {zf(r.z_external)} "
-              f"| {zf(r.z_coll_target)} | {zf(r.z_rfout)} | {zf(r.z_coll)} |")
+        o.extend(_match_table(net))
         w("")
         w("**The harmonic terminations are therefore no longer the labelled ideal-50-ohm "
           "default** -- the collector sees "
@@ -832,6 +844,7 @@ def main(argv):
         w(f"- Linear gain (median of the 3 lowest-drive points): {red['gain_linear_db']:.2f} dB")
         w(f"- **Psat = {red['psat_dbm']:.2f} dBm** (fundamental; sweep end reached: {red['psat_at_sweep_end']}), "
           f"PAE at Psat {100 * (red['pae_at_psat'] or 0):.1f} %")
+        w(f"- Large-signal S11 at Psat = {points[red['psat_index']]['s11_large_db']:.2f} dB.")
         if red["p1db_status"] == "reached":
             w(f"- **P1dB (output) = {red['p1db_out_dbm']:.2f} dBm** at P_in = {red['p1db_in_dbm']:.2f} dBm")
         else:
@@ -863,10 +876,10 @@ def main(argv):
       "the samples in the window.")
     w("")
     if net is not None:
-        w(f"`I_C` is taken from the **chip boundary** (`{bench['ic_sense_i']}`, the 0 V source "
-          "`Vbsense` at `RFOUT`), which is `Cblock`'s own current and so closes KCL at `COLL`. "
-          "It is deliberately **not** the load-branch current: `Cmatch` shunts part of that, so "
-          "the load current would under-report every `I_C` below with nothing raised.")
+        w(f"The boundary sense `{bench['ic_sense_i']}` measures the current entering the "
+          "off-chip network. Adding the on-chip `Rsho` branch gives the current leaving "
+          "the collector through `Cblock`. Off chip, the boundary current splits again "
+          "between `Cmatch` and the load.")
         w("")
         w("**The self-heating thermal node this `Tj max C` column comes from is "
           "known-answer checked** in `sim/known-answer-thermal/` (issue #115; record "

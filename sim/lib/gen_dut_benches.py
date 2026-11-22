@@ -122,7 +122,7 @@ TRAN_STOP_S = (N_PERIODS + 0.1) * T_PERIOD_S
 # Nothing here is tuned to a result. The resistance comes from the load-line record's
 # nominal cell and the DUT's own array size; the two element values are the closed-form
 # L-section for that resistance, with the DUT's on-chip `Cblock` absorbed into the
-# series branch so the COLLECTOR, not RFOUT, sees a real load-line resistance.
+# series branch to cancel its reactance at f0 before accounting for DUT shunts.
 LOADLINE_RECORD = (REPO / "sim" / "device-npn13g2" / "records"
                    / "20261107-125027-93cf5ae.loadline.json")
 # The load-line cell to size against: the nominal supply, nominal tolerance,
@@ -548,8 +548,8 @@ def match_network(text=None, cell=None):
                                                             GND
 
     ``ls_h`` carries the plain L-section reactance ``q*ropt`` **plus** ``Cblock``'s
-    ``1/(w0*Cblock)``, so at f0 the collector sees ``ropt_ohm`` with no residual
-    reactance. That absorption is closed form, not a tuned cancellation.
+    ``1/(w0*Cblock)``, so the external network in series with Cblock gives
+    ``ropt_ohm`` at f0. ``match_impedances`` includes the DUT's shunt branches.
     """
     n_units, nx = output_array(text)
     cell = loadline_cell() if cell is None else cell
@@ -665,13 +665,10 @@ def psat_bench(variant="bare"):
     """Every fact the deck and the record must agree on, for one psat variant.
 
     ``psat_record.py`` reads the bench name, the load and harmonic-termination prose
-    and the three extraction node names from here. That is the point: the two variants
-    put the load power and the chip-boundary current on DIFFERENT nodes, and both
-    moves fail silently if the reducer keeps its own copy. `i(vlsense)` is `Cblock`'s
-    current in the bare deck (nothing else sits on `out`) and the *load* current in the
-    matched one, so a reducer that kept using it for per-device `I_C` would print a
-    wrong `Ic pk mA` column with no error raised; and `v(out) * i(vlsense)` is a power
-    only while the two are the same node, which the matched deck's network breaks.
+    and the extraction nodes from here. `i(vlsense)` measures the load current
+    in both variants. The matched bench also needs `i(vbsense)` at the input
+    of the L-section. Adding the current through the on-chip Rsho to either
+    variant's boundary current gives the current through Cblock.
     """
     if variant not in PSAT_VARIANTS:
         raise ValueError(f"unknown psat variant {variant!r} (want one of {PSAT_VARIANTS})")
@@ -680,13 +677,12 @@ def psat_bench(variant="bare"):
             "variant": "bare",
             "name": "psat_sweep",
             "suffix": "",
-            # The load branch is the only other element on `out`, so one 0 V source
-            # serves as both the load sense and the chip-boundary sense.
+            # The bare external load is directly at the chip boundary.
             "p_out_v": "v(out)", "p_out_i": "i(vlsense)",
             "ic_sense_i": "i(vlsense)",
             "ic_sense_md": "i(load)",
             "rdchoke_ohm": rdchoke_ohms(),
-        "rsho_ohm": rsho_ohms(),
+            "rsho_ohm": rsho_ohms(),
             "ic_formula_md": "(i(Lchoke) + (v(VCC)-v(COLL))/Rdchoke - i(load) - v(RFOUT)/Rsho)",
             "network": None,
             "load_md": f"Load: {RL_OHM:g} ohm resistive.",
