@@ -24,10 +24,13 @@ deck), including the array size read from the DUT netlist, the deck name, the ex
 node names and the harmonic-termination sentence. The record prose is formatted from
 them, so it cannot fall behind the constants that produced its labels.
 """
+import glob
 import json
 import math
 import os
+import re
 import sys
+from datetime import datetime
 
 import numpy as np
 
@@ -35,6 +38,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import gen_dut_benches as gdb  # noqa: E402
 import rf_extract as rx  # noqa: E402
 import spec_rows as sr  # noqa: E402
+from finding_trackers import (DID_NOT_SIMULATE, POWER_ROWS,  # noqa: E402
+                              STABILITY_AND_MATCH, line_md, units_md)
 from provenance import commit_line  # noqa: E402
 # The (P) breakdown minima and the (M) model window live once, in sim/lib/device_limits.py
 # (provenance marked there); the bench facts live once in gen_dut_benches.py, which
@@ -99,6 +104,10 @@ def _remote_md(remote):
     they agreed on. The full blocks stay in the committed
     `corners/<id>/psat_sweep_match.report.json`, which is where someone auditing the run
     would look anyway.
+
+    The summary is **round-local**: after a `--resume` run this report's fleet is the
+    LAST round's launched set, not the whole run's (issue #194) -- the whole-run
+    picture is `_sharded_run_md`'s to state, next to this line.
     """
     if not isinstance(remote, dict):
         return remote
@@ -113,26 +122,247 @@ def _remote_md(remote):
         ids = ", ".join(str(s.get("job_id", "?")) for s in fleet[:20]) \
             + f", ... (+{len(fleet) - 20} more)"
     elapsed = [s.get("elapsed_seconds") for s in fleet if s.get("elapsed_seconds") is not None]
-    # Whole-run wall clock from the fleet blocks' own client timestamps: first
-    # submit to last terminal state (includes every capacity wait klt sat out,
-    # which no per-shard field separates).
+    # Round-local wall clock from the fleet blocks' own client timestamps: first
+    # submit (launch stamp where a block carries no submit stamp -- that happens
+    # on resumed shards) to last terminal state, within THIS round only.
     wall = "n/a"
-    subs = [s.get("client_submitted_at") for s in fleet if s.get("client_submitted_at")]
+    subs = [s.get("client_submitted_at") or s.get("client_launched_at")
+            for s in fleet]
+    subs = [x for x in subs if x]
     terms = [s.get("client_status_terminal_at") for s in fleet if s.get("client_status_terminal_at")]
     if subs and terms:
-        from datetime import datetime
-        def _ts(x):
-            return datetime.fromisoformat(x.replace("Z", "+00:00"))
         try:
             wall = f"{(_ts(max(terms)) - _ts(min(subs))).total_seconds():.0f} s"
         except ValueError:
             pass
-    return (f"{len(fleet)} fleet shards (request.remote.hosts); provider {uniq('provider')}; "
+    return (f"{len(fleet)} fleet shards in this report's final round (round-local); "
+            f"provider {uniq('provider')}; "
             f"region {uniq('region')}; instance_type {uniq('instance_type')}; "
             f"lifecycle {uniq('lifecycle')}; runner klt {uniq('runner_klt_version')}; "
-            f"elapsed {min(elapsed)}-{max(elapsed)} s; wall clock (first submit to last "
-            f"terminal, capacity waits included) {wall}; job ids: {ids}"
+            f"elapsed {min(elapsed)}-{max(elapsed)} s; round-local wall clock (first "
+            f"submit or launch to last terminal, capacity waits included) {wall}; "
+            f"job ids: {ids}"
             + "  -- full per-shard environment capture in corners/<id>/*.report.json")
+
+
+def _ts(x):
+    """An ISO-8601 client/receipt timestamp as a datetime (Z-suffixed allowed)."""
+    return datetime.fromisoformat(x.replace("Z", "+00:00"))
+
+
+# A round's stderr carries each submission as its own line; the same job id can
+# appear in a dozen later status lines, which establish nothing (issue #194).
+_SUBMIT_RE = re.compile(r"batch job (klt-sim-[0-9a-f]+) submitting")
+
+
+def _submit_ids(path):
+    """Distinct job ids one round's stderr shows being SUBMITTED (not mentioned)."""
+    ids = set()
+    with open(path, errors="replace") as fh:
+        for ln in fh:
+            m = _SUBMIT_RE.search(ln)
+            if m:
+                ids.add(m.group(1))
+    return ids
+
+
+def _round_logs(run_dir, bench):
+    """[(label, path)] -- the initial submit and the numbered resume rounds.
+
+    The resume logs are operator-named (`<bench>.resume1.stderr`,
+    `<bench>.resume2.pass.stderr`, ...); the number is the sort key.
+    """
+    logs = []
+    init = os.path.join(run_dir, f"{bench}.stderr")
+    if os.path.isfile(init):
+        logs.append(("initial", init))
+    def _num(p):
+        m = re.search(r"\.resume(\d+)", os.path.basename(p))
+        return int(m.group(1)) if m else 0
+    for p in sorted(glob.glob(os.path.join(run_dir, f"{bench}.resume*.stderr")), key=_num):
+        m = re.search(r"\.resume(\d+)", os.path.basename(p))
+        logs.append((f"resume{m.group(1)}", p))
+    return logs
+
+
+def _load_receipts(run_dir, bench):
+    """{job_id: receipt} for every batch receipt under the run's shard dirs.
+
+    A receipt is the launch evidence: capacity refusals, repeated status lines
+    and the submit lines themselves establish nothing about a launch -- a
+    receipt with `launched_at` does.
+    """
+    out = {}
+    for p in glob.glob(os.path.join(run_dir, bench, "*", "batch-receipt-*.json")):
+        try:
+            r = json.load(open(p))
+        except (OSError, ValueError):
+            continue
+        if r.get("job_id"):
+            out[r["job_id"]] = r
+    return out
+
+
+def _sharded_run_md(rid, run_dir, bench, request_path, remote):
+    """Whole-run provenance for a sharded `klt sim` run, from committed evidence.
+
+    The final report's `environment.remote` block describes the LAST round: its
+    `fleet` is that round's launched set, and after a `--resume` run its
+    `unlaunched_shards` / `resumable` can read stale against a finished whole
+    (all corners present, corner-matrix verdict clean). What the whole run
+    actually did lives in three committed artifacts: the request (the declared
+    `remote.hosts`), the per-round submit stderr under `corners/<rid>/` (which
+    jobs each round sent), and the batch receipts under
+    `corners/<rid>/<bench>/` (which of those launched, and when). Where a piece
+    is missing, the missing piece is named -- a narrower interval is never
+    passed off as the whole run's.
+
+    `request_path` is the request that generated the report: a per-run copy in
+    `run_dir` wins, else the committed bench request next to this script.
+    """
+    o = []
+    # -- what the request declared ------------------------------------------
+    declared = None
+    try:
+        with open(request_path) as fh:
+            declared = json.load(fh).get("remote", {}).get("hosts")
+    except (OSError, ValueError):
+        pass
+    if declared is not None:
+        o.append(f"the request declares {declared} shards per attempt "
+                 f"(`remote.hosts`)")
+    else:
+        o.append(f"the request was not found at `{request_path}`; the declared "
+                 f"per-attempt shard count is not evidenced here")
+    # -- the rounds the stderr evidences, and what each launched -------------
+    logs = _round_logs(run_dir, bench)
+    receipts = _load_receipts(run_dir, bench)
+    rounds_txt = []
+    launched_ids = set()
+    for label, path in logs:
+        ids = _submit_ids(path)
+        launched_ids |= ids & set(receipts)
+        rounds_txt.append(f"{label}: {len(ids & set(receipts))} launched of "
+                          f"{len(ids)} submitted")
+    if logs:
+        attempts = (f"{len(logs)} attempts evidenced by submit stderr under "
+                    f"`corners/{rid}/` ({', '.join(rounds_txt)})")
+        if len(logs) == 1:
+            attempts += (f" -- a single submit round, so the round-local fleet "
+                         f"line above describes the whole run")
+        o.append(attempts)
+    else:
+        o.append(f"no submit stderr found (want `{bench}.stderr` / "
+                 f"`{bench}.resume*.stderr` under `corners/{rid}/`); the attempt "
+                 f"count and per-round launches are not evidenced")
+    if receipts:
+        o.append(f"{len(launched_ids)} distinct job ids with launch receipts under "
+                 f"`corners/{rid}/{bench}/`")
+    else:
+        o.append(f"no launch receipts found under `corners/{rid}/{bench}/`; "
+                 f"launched shard counts are not evidenced (a submission line "
+                 f"alone does not establish a launch)")
+    # -- the whole-run span, endpoints labelled for what they are ------------
+    laun = sorted(_ts(r["launched_at"]) for r in receipts.values() if r.get("launched_at"))
+    comp = sorted(_ts(r["completed_at"]) for r in receipts.values() if r.get("completed_at"))
+    if laun and comp:
+        span = (comp[-1] - laun[0]).total_seconds()
+        no_comp = len(receipts) - len(comp)
+        tail = f"; {no_comp} receipt records no completion" if no_comp else ""
+        o.append(f"whole-run elapsed, first evidenced launch "
+                 f"{laun[0].strftime('%Y-%m-%dT%H:%M:%SZ')} to last evidenced "
+                 f"completion {comp[-1].strftime('%Y-%m-%dT%H:%M:%SZ')} = "
+                 f"{span:.0f} s, idle gaps between attempts included (submit "
+                 f"timestamps are not among the committed artifacts, so this is "
+                 f"launch-to-completion, not submit-to-terminal{tail})")
+    elif receipts:
+        o.append("the whole-run elapsed span is not evidenced (the receipts carry "
+                 "no usable `launched_at`/`completed_at` pair)")
+    # -- the stale tail flags the final report can carry after a resume -------
+    if isinstance(remote, dict) and (remote.get("resumable")
+                                     or remote.get("unlaunched_shards")):
+        o.append("the final report's fleet line above is round-local -- the LAST "
+                 "round's launched set -- and its `unlaunched_shards` / "
+                 "`resumable` fields describe that round's tail, not the whole "
+                 "run -- whole-run completion is the committed corner-matrix "
+                 "report verdict")
+    return "Sharded run provenance (whole run): " + "; ".join(o) + "."
+
+
+def _rung_psat(red):
+    if red is None or red.get("psat_dbm") is None:
+        return None
+    return _rung(red["psat_dbm"] > sr.PSAT_TARGET_DBM, red["psat_dbm"] > sr.PSAT_FALLBACK_DBM)
+
+
+def _rung_p1db(red):
+    if red is None or red.get("p1db_out_dbm") is None:
+        return None
+    return _rung(red["p1db_out_dbm"] > sr.P1DB_TARGET_DBM, red["p1db_out_dbm"] > sr.P1DB_FALLBACK_DBM)
+
+
+def _rung_pae(red):
+    if red is None or red.get("peak_pae") is None:
+        return None
+    return _rung(red["peak_pae"] > sr.PAE_TARGET, red["peak_pae"] > sr.PAE_FALLBACK)
+
+
+def _rung_s11(s11_db):
+    if s11_db is None:
+        return None
+    return _rung(s11_db < sr.S11_TARGET_DB, s11_db < sr.S11_FALLBACK_DB)
+
+
+def _findings_md(cells):
+    """The findings/tracker section: every rung below `met` names the design
+    iteration that tracks it, and findings no issue tracks say so (issue #194).
+
+    Rungs are recomputed with the same `_rung_*` the verdict table uses, so a
+    count here can never disagree with the table above it. A cell that refused
+    its reduction or never simulated grades nothing -- it is a finding of its
+    own class, never folded into a row's shortfall count.
+    """
+    lines = []
+    rows = (
+        ("Input match (large-signal S11, worst drive)",
+         [_rung_s11(c["s11_large_worst_db"]) for c in cells], STABILITY_AND_MATCH),
+        ("Psat", [_rung_psat(c["reduction"]) for c in cells], POWER_ROWS),
+        ("Output P1dB", [_rung_p1db(c["reduction"]) for c in cells], POWER_ROWS),
+        ("Peak PAE", [_rung_pae(c["reduction"]) for c in cells], POWER_ROWS),
+    )
+    for name, rungs, tracker in rows:
+        ln = line_md(name, rungs, tracker)
+        if ln:
+            lines.append(ln)
+    n_status = sum(1 for c in cells for f in c["failures"]
+                   if f["code"].startswith("KLT_STATUS_"))
+    if n_status:
+        codes = sorted({f["code"] for c in cells for f in c["failures"]
+                        if f["code"].startswith("KLT_STATUS_")})
+        lines.append(units_md(n_status, "sweep unit",
+                              f"did not simulate ({', '.join(f'`{c}`' for c in codes)})",
+                              DID_NOT_SIMULATE))
+    refused = [c for c in cells
+               if c["reduction"] is None and c["reduction_error"] and c["points"]]
+    if refused:
+        codes = sorted({c["reduction_error"]["code"] for c in refused})
+        lines.append(units_md(len(refused), "cell",
+                              f"refused a reduction ({', '.join(f'`{c}`' for c in codes)})",
+                              None))
+    unextracted = [f for c in cells for f in c["failures"]
+                   if not f["code"].startswith("KLT_STATUS_")]
+    if unextracted:
+        codes = sorted({f["code"] for f in unextracted})
+        lines.append(units_md(len(unextracted), "sweep unit",
+                              f"could not be extracted "
+                              f"({', '.join(f'`{c}`' for c in codes)}); excluded from "
+                              f"their cells' reductions", None))
+    if not lines:
+        lines.append("- No verdict falls below its rung; every cell reduced and "
+                     "every unit simulated.")
+    return ["## Findings and their trackers", "",
+            "Each finding this run records, with the design iteration that tracks "
+            "it (named only where one exists):", ""] + lines
 
 
 def label(st):
@@ -168,10 +398,11 @@ def _worst_stress(pts):
 
 
 def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
-                  cell_order, by_cell, out_json):
+                  cell_order, by_cell, out_json, run_dir=None, request_path=None):
     """The PVT-matrix record (issue #173): one reduction per cell, per-cell
     ratified-row verdicts, per-cell breakdown/window labels -- all provisional
-    while the Supply row is DRAFT."""
+    while the Supply row is DRAFT. ``run_dir``/``request_path`` (issue #194)
+    locate the run's committed artifacts for the whole-run provenance bullet."""
     n_cells_declared = gdb.pvt_cell_count()
     cells = []
     for key in cell_order:
@@ -270,12 +501,17 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
     w(f"- klt {klt_v}; {ng_v}; PDK per `sim/pdk.json`.")
     w(f"- Backend: `{rep.get('environment', {}).get('backend', 'see report')}`; "
       f"remote: `{_remote_md(rep.get('environment', {}).get('remote', 'n/a'))}`.")
+    _remote = rep.get("environment", {}).get("remote")
+    if (run_dir and request_path and isinstance(_remote, dict)
+            and isinstance(_remote.get("fleet"), list) and _remote["fleet"]):
+        w(f"- {_sharded_run_md(rid, run_dir, bench['name'], request_path, _remote)}")
     w("")
     w("## Per-cell figures and ratified-row verdicts")
     w("")
     w("Worst stress over the cell's whole sweep. A cell whose reduction was refused "
       "has no figure and no verdict rung -- `--` -- which is a finding, not a pass; "
-      "the refusal code is in the cell's detail block below.")
+      "the refusal code is in the cell's detail block below. A cell none of whose "
+      "units simulated carries `--` throughout: also a finding, never a pass.")
     w("")
     w("| Cell | Psat dBm | P1dB out dBm | Peak PAE % | S11 large worst dB | "
       "Vce pk V | Vcb pk V | Tj max C | Stress label | Psat | P1dB | PAE | S11 |")
@@ -288,37 +524,16 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
                 return "--"
             return fmt.format(_red[key])
 
-        def rung_psat():
-            if red is None or red.get("psat_dbm") is None:
-                return "--"
-            return _rung(red["psat_dbm"] > sr.PSAT_TARGET_DBM,
-                         red["psat_dbm"] > sr.PSAT_FALLBACK_DBM)
-
-        def rung_p1db():
-            if red is None or red.get("p1db_out_dbm") is None:
-                return "--"
-            return _rung(red["p1db_out_dbm"] > sr.P1DB_TARGET_DBM,
-                         red["p1db_out_dbm"] > sr.P1DB_FALLBACK_DBM)
-
-        def rung_pae():
-            if red is None or red.get("peak_pae") is None:
-                return "--"
-            return _rung(red["peak_pae"] > sr.PAE_TARGET,
-                         red["peak_pae"] > sr.PAE_FALLBACK)
-
-        def rung_s11():
-            if c["s11_large_worst_db"] is None:
-                return "--"
-            return _rung(c["s11_large_worst_db"] < sr.S11_TARGET_DB,
-                         c["s11_large_worst_db"] < sr.S11_FALLBACK_DB)
-
         pae_pct = "--" if red is None or red.get("peak_pae") is None else f"{100 * red['peak_pae']:.1f}"
         s11 = "--" if c["s11_large_worst_db"] is None else f"{c['s11_large_worst_db']:.2f}"
+        stress_md = "-- | -- | -- | --" if st is None else (
+            f"{st['vce_pk_v']:.3f} | {st['vcb_pk_v']:.3f} | {st['tj_max_c']:.1f} "
+            f"| {label(st)}")
         w(f"| {_cell_md(c['cell'])} "
           f"| {fig('psat_dbm', '{:.2f}')} | {fig('p1db_out_dbm', '{:.2f}')} "
           f"| {pae_pct} | {s11} "
-          f"| {st['vce_pk_v']:.3f} | {st['vcb_pk_v']:.3f} | {st['tj_max_c']:.1f} "
-          f"| {label(st)} | {rung_psat()} | {rung_p1db()} | {rung_pae()} | {rung_s11()} |")
+          f"| {stress_md} | {_rung_psat(red) or '--'} | {_rung_p1db(red) or '--'} "
+          f"| {_rung_pae(red) or '--'} | {_rung_s11(c['s11_large_worst_db']) or '--'} |")
     w("")
     w(f"Rungs are against the RATIFIED rows (Target / Fallback): Psat > "
       f"{sr.PSAT_TARGET_DBM:g} / > {sr.PSAT_FALLBACK_DBM:g} dBm; output P1dB > "
@@ -340,6 +555,9 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
         if parts:
             w("")
             w("**Worst cell over the matrix**: " + " | ".join(parts) + ".")
+    w("")
+    for ln in _findings_md(cells):
+        w(ln)
     w("")
     w("## Per-cell detail")
     w("")
@@ -393,11 +611,27 @@ def main(argv):
     bench = gdb.psat_bench(variant)       # raises ValueError on an unknown variant
     net = bench["network"]
     rep = json.load(open(report_path))
+    # The committed artifacts this run left beside the report (issue #194): the
+    # submit stderr per round and the batch receipts live under the report's own
+    # directory, and the request is a per-run copy there if one exists, else the
+    # committed bench request next to this script.
+    run_dir = os.path.dirname(os.path.abspath(report_path))
+    _cand = os.path.join(run_dir, f"{bench['name']}.request.json")
+    request_path = _cand if os.path.isfile(_cand) else os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), f"{bench['name']}.request.json")
     points, failures = [], []
     for c in rep["corners"]:
         cid = c.get("corner_id", "?")
         if c.get("status") != "pass":
-            failures.append({"corner_id": cid, "code": f"KLT_STATUS_{c.get('status')}"})
+            # The cell is carried on the failure (the report names process/
+            # temperature/supply even for an errored corner), so a cell none of
+            # whose units simulated still appears below -- as a finding, never
+            # as a silent absence.
+            failures.append({"corner_id": cid, "code": f"KLT_STATUS_{c.get('status')}",
+                             "cell": {"process": c.get("process", "?"),
+                                      "temperature_c": float(c.get("temperature_c", 27)),
+                                      "vcc": float((c.get("supply_v") or {}).get(
+                                          "vcc", gdb.VCC_NOM_V))}})
             continue
         amp = c["supply_v"]["vamp"]
         pav = amp * amp / (8 * RS)
@@ -434,12 +668,15 @@ def main(argv):
         by_cell[key]["points"].append(p)
     for f in failures:
         key = (f["cell"]["process"], f["cell"]["temperature_c"], f["cell"]["vcc"])
-        if key in by_cell:
-            by_cell[key]["failures"].append(f)
+        if key not in by_cell:
+            by_cell[key] = {"cell": f["cell"], "points": [], "failures": []}
+            cell_order.append(key)
+        by_cell[key]["failures"].append(f)
 
     if len(cell_order) > 1:
         return render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
-                             cell_order, by_cell, out_json)
+                             cell_order, by_cell, out_json,
+                             run_dir=run_dir, request_path=request_path)
 
     points.sort(key=lambda p: p["p_in_w"])
     red, red_err = None, None

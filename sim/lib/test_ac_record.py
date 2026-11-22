@@ -117,3 +117,55 @@ def test_a_matrix_report_lists_not_simulated_cells(tmp_path):
     assert "did not simulate" in md
     assert "`hbt_wcs` / 125 C / 0.72 V" in md
     assert "no figure, not a pass" in md
+
+
+# --- findings point at the design iteration that tracks them (issue #194) ----
+
+
+def test_a_matrix_gain_report_links_each_finding_to_its_tracker(tmp_path):
+    # S21 0.5 (-6 dB): gain missed, no tracker for it; S11 0.7 (-3.1 dB): #172.
+    # Second cell: gain met, S11 met -- a passing row acquires no link.
+    cells = [("hbt_typ", 27.0, 0.8, 0.5, 0.7), ("hbt_wcs", -40.0, 0.72, 6.32, 0.0032)]
+    rc, md = _render(tmp_path, "gain", _corners(tmp_path, cells))
+    assert rc == 0
+    sec = md.split("## Findings and their trackers", 1)[1]
+    assert ("Input match (S11): 1 cell below the Fallback rung (1 `missed`) "
+            "-- design iteration #172." in sec)
+    gain_line = [ln for ln in sec.splitlines() if ln.startswith("- Power gain:")][0]
+    assert "1 cell below the Fallback rung (1 `missed`)" in gain_line
+    assert "#1" not in gain_line          # a row with no tracker is linked to nothing
+
+
+def test_a_matrix_stability_report_links_mu_to_its_tracker(tmp_path):
+    # s21 0.8, s11 0.3: min mu 0.82 < 1 (the flat network's closed-form mu);
+    # second cell same. Both missed -> the stability finding names #172.
+    cells = [("hbt_typ", 27.0, 0.8, 0.8, 0.3), ("hbt_bcs", 125.0, 0.88, 0.8, 0.3)]
+    rc, md = _render(tmp_path, "stability", _corners(tmp_path, cells))
+    assert rc == 0
+    sec = md.split("## Findings and their trackers", 1)[1]
+    assert ("Stability (mu > 1): 2 cells below the rung (2 `missed`) "
+            "-- design iteration #172." in sec)
+
+
+def test_a_matrix_report_links_not_simulated_cells_to_their_tracker(tmp_path):
+    corners = _corners(tmp_path, [("hbt_typ", 27.0, 0.8, 0.5, 0.3),
+                                  ("hbt_bcs", -40.0, 0.72, 6.32, 0.0032)])
+    corners.append({"corner_id": "hbt_wcs/0.720V/125C", "process": "hbt_wcs",
+                    "temperature_c": 125.0, "status": "error",
+                    "supply_v": {"vcc": 0.72}})
+    rc, md = _render(tmp_path, "gain", corners)
+    assert rc == 0
+    sec = md.split("## Findings and their trackers", 1)[1]
+    assert ("1 cell did not simulate (status `error`) "
+            "-- design iteration #188." in sec)
+
+
+def test_an_all_met_matrix_report_links_nothing(tmp_path):
+    # S21 6.32 (16 dB) met; S11 0.0032 (-49.9 dB) met; nothing errored.
+    cells = [("hbt_typ", 27.0, 0.8, 6.32, 0.0032),
+             ("hbt_wcs", -40.0, 0.72, 6.32, 0.0032)]
+    rc, md = _render(tmp_path, "gain", _corners(tmp_path, cells))
+    assert rc == 0
+    sec = md.split("## Findings and their trackers", 1)[1]
+    assert "No verdict falls below its rung" in sec
+    assert "#172" not in sec and "#188" not in sec

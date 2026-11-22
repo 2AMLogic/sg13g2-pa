@@ -297,6 +297,294 @@ def test_the_matched_record_summarizes_its_sharded_backend(tmp_path):
     assert "full per-shard environment capture" in md
 
 
+# --- findings point at the design iteration that tracks them (issue #194) ----
+
+
+def _sweep_waveform(path, pin_w, pout_w):
+    """A settled steady-state trace for one drive point of a matrix cell.
+
+    `v(in)`/`i(bs)` carry ``pin_w`` co-phase, `v(outl)`/`i(vlsense)` carry
+    ``pout_w``; the stress traces are constants (no findings test grades them).
+    Amplitudes come from the powers, so a cell's rungs are set by the spec's
+    own arithmetic on numbers the test chooses, not by retyped voltages.
+    """
+    n = N_PER * PER_STEP + 1
+    t = np.arange(n) / (F0 * PER_STEP)
+    s = np.sin(2 * math.pi * F0 * t)
+    vin = 2 * pin_w / 0.002          # vin * 0.002 / 2 = pin_w
+    voutl = 2 * pout_w / 0.030       # voutl * 0.030 / 2 = pout_w
+    traces = {
+        "v(out)": 0.5 * s,
+        "v(outl)": voutl * s,
+        "v(in)": vin * s,
+        "v(vcc)": np.full(n, VCC),
+        "v(amp)": np.full(n, 1.0),
+        "i(vbsense)": 0.080 * s,
+        "i(vlsense)": 0.030 * s,
+        "i(vcc)": np.full(n, I_VCC),
+        "i(bs)": -0.002 * s,
+        "i(l.xdut.lchoke)": np.full(n, I_CHOKE),
+        "v(xdut.coll)": VCC + 0.5 * s,
+        "v(xdut.vb)": np.full(n, 0.85),
+        "v(xdut.xq1.t)": np.full(n, 0.6),
+    }
+    names = ["time"] + list(traces)
+    cols = [t] + list(traces.values())
+    doc = {"variables": [{"name": nm} for nm in names],
+           "points": np.column_stack(cols).tolist()}
+    with open(path, "w") as fh:
+        json.dump(doc, fh)
+
+
+def _findings_render(tmp_path, specs, remote="n/a", report_dir=None):
+    """Run psat_record.main over a multi-cell report -- the matrix path.
+
+    Each spec: ``proc``/``temp``/``vcc``; ``pins_dbm`` (drive points, P_in at
+    the DUT input); ``gains_db`` per drive point (equal on the 3 lowest points
+    -> a linear region reduce_sweep accepts); ``s11_ratio`` = P_in/P_avail at
+    every point (sets the S11 rung; close to 1 is a good match); ``status``
+    makes the whole cell one that did not simulate.
+    """
+    corners = []
+    for si, sp in enumerate(specs):
+        for pi, pin_dbm in enumerate(sp["pins_dbm"]):
+            cid = f"{sp['proc']}/pt{pi}"
+            if sp.get("status", "pass") != "pass":
+                corners.append({"corner_id": cid, "process": sp["proc"],
+                                "temperature_c": sp["temp"],
+                                "supply_v": {"vamp": 1.0, "vcc": sp["vcc"]},
+                                "status": sp["status"]})
+                continue
+            pin_w = 10 ** (pin_dbm / 10) / 1000
+            pout_w = pin_w * 10 ** (sp["gains_db"][pi] / 10)
+            vamp = math.sqrt(8 * gdb.RS_OHM * pin_w / sp["s11_ratio"])
+            wav = os.path.join(str(tmp_path), f"mw{si}-{pi}.json")
+            _sweep_waveform(wav, pin_w, pout_w)
+            corners.append({"corner_id": cid, "process": sp["proc"],
+                            "temperature_c": sp["temp"],
+                            "supply_v": {"vamp": vamp, "vcc": sp["vcc"]},
+                            "status": "pass",
+                            "artifacts": {"waveform": wav}})
+    report = {"environment": {"backend": "test", "remote": remote},
+              "corners": corners}
+    rep_dir = report_dir or str(tmp_path)
+    rep_path = os.path.join(rep_dir, "psat_sweep_match.report.json")
+    out_json = os.path.join(str(tmp_path), "rec-matrix.json")
+    with open(rep_path, "w") as fh:
+        json.dump(report, fh)
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = PSAT.main(["psat_record.py", "match", "rid-matrix", "deadbee", "0",
+                        "klt 0.9.1", "ngspice-47", rep_path, out_json])
+    assert rc == 0
+    return buf.getvalue(), json.load(open(out_json))
+
+
+ALL_MET = {"proc": "hbt_typ", "temp": 27.0, "vcc": 0.8,
+           "pins_dbm": [-20, -19, -18, -17], "gains_db": [36] * 4,
+           "s11_ratio": 0.95}
+
+
+def test_the_matrix_record_links_each_finding_to_its_tracker(tmp_path):
+    """Mixed verdicts: every row below its rung names its tracker, a met row
+    acquires no link, and a cell that did not simulate is a recorded finding
+    with a tracker, not a silent absence (issue #194)."""
+    specs = [
+        # all-met cell (Psat +19 dBm, PAE 47 %, S11 -13 dB): no finding may name it
+        dict(ALL_MET),
+        # compressing cell: P1dB reached and missed, Psat/PAE missed, S11 missed
+        {"proc": "hbt_wcs", "temp": 27.0, "vcc": 0.72,
+         "pins_dbm": [-20, -19, -18, -17.5, -17],
+         "gains_db": [20, 20, 20, 19.4, 18.8], "s11_ratio": 0.5},
+        # single drive point: reduction refused, S11 met
+        {"proc": "hbt_bcs", "temp": -40.0, "vcc": 0.72,
+         "pins_dbm": [-10], "gains_db": [20], "s11_ratio": 0.95},
+        # did not simulate at all
+        {"proc": "hbt_bcs", "temp": 125.0, "vcc": 0.8,
+         "pins_dbm": [-10, -11], "gains_db": [20, 20], "s11_ratio": 0.5,
+         "status": "error"},
+    ]
+    md, _doc = _findings_render(tmp_path, specs)
+    sec = md.split("## Findings and their trackers", 1)[1].split("## Per-cell detail", 1)[0]
+    assert ("Input match (large-signal S11, worst drive): 1 cell below the Fallback "
+            "rung (1 `missed`) -- design iteration #172." in sec)
+    for row in ("Psat", "Output P1dB", "Peak PAE"):
+        assert (f"{row}: 1 cell below the Fallback rung (1 `missed`) "
+                "-- design iteration #192." in sec)
+    assert ("2 sweep units did not simulate (`KLT_STATUS_error`) "
+            "-- design iteration #188." in sec)
+    assert ("1 cell refused a reduction (`SWEEP_TOO_SHORT`) "
+            "-- no design-iteration tracker." in sec)
+    # the all-met cell is named nowhere in the findings section
+    assert "hbt_typ" not in sec
+    # ...and the did-not-simulate cell renders a full-width `--` table row (13
+    # columns, like every other row), not a shifted short one
+    err_row = [ln for ln in md.splitlines() if ln.startswith("| `hbt_bcs` / 125 C / 0.8 V")][0]
+    assert err_row.count("|") == 14
+
+
+def test_an_all_met_matrix_record_links_nothing(tmp_path):
+    md, _doc = _findings_render(tmp_path, [dict(ALL_MET),
+                                         dict(ALL_MET, proc="hbt_wcs", vcc=0.88)])
+    sec = md.split("## Findings and their trackers", 1)[1].split("## Per-cell detail", 1)[0]
+    assert "No verdict falls below its rung" in sec
+    assert "#172" not in sec and "#188" not in sec and "#192" not in sec
+
+
+# --- a resumed sharded run describes the whole run, not the last round ------
+
+
+def _write_round_stderr(path, submitted, mentions=()):
+    """A round's submit stderr: `submitting` lines name what the round sent;
+    bare status mentions name nothing (a mention is not a launch)."""
+    lines = [f"klt: batch job {j} submitting to s3://<bucket>/jobs/{j}" for j in submitted]
+    lines += [f"klt: batch job {j} status RUNNING (attempt 2)" for j in mentions]
+    with open(path, "w") as fh:
+        fh.write("\n".join(lines) + "\n")
+
+
+def _write_receipt(run_dir, bench, job, launched, completed=None):
+    """The launch evidence for one shard: a batch receipt."""
+    d = os.path.join(run_dir, bench, job)
+    os.makedirs(d, exist_ok=True)
+    with open(os.path.join(d, f"batch-receipt-{job}.json"), "w") as fh:
+        json.dump({"job_id": job, "launched_at": launched, "completed_at": completed,
+                   "state": "done" if completed else None}, fh)
+
+
+def _run_dir(tmp_path, declared=None):
+    run = os.path.join(str(tmp_path), "corners", "rid")
+    os.makedirs(run, exist_ok=True)
+    req = os.path.join(run, "psat_sweep_match.request.json")
+    if declared is not None:
+        with open(req, "w") as fh:
+            json.dump({"remote": {"hosts": declared}}, fh)
+    return run, req
+
+
+def test_a_resumed_sharded_run_reports_whole_run_provenance(tmp_path):
+    """Declared 10 per attempt; initial submits 5 (2 launch), resume1 submits 5
+    (3 launch, one never completes); a 2 h gap sits between the rounds. The
+    provenance must state per-round counts, the whole-run span and the
+    final-round span independently (issue #194)."""
+    run, req = _run_dir(tmp_path, declared=10)
+    first = [f"klt-sim-{k:04x}" for k in range(5)]
+    second = [f"klt-sim-{k:04x}" for k in range(5, 10)]
+    _write_round_stderr(os.path.join(run, "psat_sweep_match.stderr"),
+                        first, mentions=[first[0], second[0]])    # repeats: no launch
+    _write_round_stderr(os.path.join(run, "psat_sweep_match.resume1.stderr"),
+                        second, mentions=[second[0]])
+    _write_receipt(run, "psat_sweep_match", first[0],
+                   "2026-11-21T10:00:00Z", "2026-11-21T10:05:00Z")
+    _write_receipt(run, "psat_sweep_match", first[1],
+                   "2026-11-21T10:00:30Z", "2026-11-21T10:05:30Z")
+    _write_receipt(run, "psat_sweep_match", second[0],
+                   "2026-11-21T12:00:00Z", "2026-11-21T12:05:00Z")
+    _write_receipt(run, "psat_sweep_match", second[1],
+                   "2026-11-21T12:00:05Z", "2026-11-21T12:05:05Z")
+    _write_receipt(run, "psat_sweep_match", second[2],
+                   "2026-11-21T12:00:10Z", None)                  # never completed
+    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match", req,
+                               {"fleet": [{"job_id": second[0]}],
+                                "unlaunched_shards": 65, "resumable": True})
+    assert "declares 10 shards per attempt" in out
+    assert "initial: 2 launched of 5 submitted" in out
+    assert "resume1: 3 launched of 5 submitted" in out
+    assert "5 distinct job ids with launch receipts" in out
+    assert "first evidenced launch 2026-11-21T10:00:00Z" in out
+    assert "last evidenced completion 2026-11-21T12:05:05Z" in out
+    assert "7505 s" in out                      # 10:00:00 -> 12:05:05, gap included
+    assert "launch-to-completion" in out        # not submit-to-terminal
+    assert "1 receipt records no completion" in out
+    assert "round-local" in out and "`unlaunched_shards`" in out and "`resumable`" in out
+
+
+def test_missing_provenance_evidence_is_named_not_papered_over(tmp_path):
+    run, _req = _run_dir(tmp_path)      # no request, no stderr, no receipts
+    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match",
+                               os.path.join(run, "nope.request.json"),
+                               {"fleet": [{"job_id": "klt-sim-0000"}]})
+    assert "was not found" in out                     # the request
+    assert "no submit stderr found" in out            # the rounds
+    assert "no launch receipts found" in out          # the launches
+
+
+def test_a_sharded_run_without_resumes_says_so(tmp_path):
+    run, req = _run_dir(tmp_path, declared=3)
+    _write_round_stderr(os.path.join(run, "psat_sweep_match.stderr"),
+                        ["klt-sim-0000", "klt-sim-0001"])
+    _write_receipt(run, "psat_sweep_match", "klt-sim-0000",
+                   "2026-11-21T10:00:00Z", "2026-11-21T10:01:00Z")
+    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match", req, {"fleet": []})
+    assert "single submit round" in out
+    assert "initial: 1 launched of 2 submitted" in out
+
+
+def test_the_matrix_record_carries_the_sharded_run_provenance(tmp_path):
+    run, _req = _run_dir(tmp_path, declared=3)
+    _write_round_stderr(os.path.join(run, "psat_sweep_match.stderr"),
+                        ["klt-sim-0000", "klt-sim-0001"])
+    _write_receipt(run, "psat_sweep_match", "klt-sim-0000",
+                   "2026-11-21T10:00:00Z", "2026-11-21T10:01:00Z")
+    fleet = [{"provider": "aws-batch-fleet", "job_id": "klt-sim-0000",
+              "region": "us-east-1", "instance_type": "m7i.4xlarge",
+              "lifecycle": "spot", "runner_klt_version": "0.9.0",
+              "elapsed_seconds": 30}]
+    md, _doc = _findings_render(tmp_path, [dict(ALL_MET),
+                                         dict(ALL_MET, proc="hbt_wcs", s11_ratio=0.5)],
+                              remote={"fleet": fleet}, report_dir=run)
+    assert "round-local" in md
+    assert "Sharded run provenance" in md
+    assert "declares 3 shards per attempt" in md
+    assert "initial: 1 launched of 2 submitted" in md
+    assert "single submit round" in md
+
+
+def test_the_round_local_wall_clock_uses_launch_stamps_when_submit_stamps_are_absent():
+    """A fleet block with no `client_submitted_at` still gets a span -- from its
+    launch stamp, labelled as such, never silently narrower (issue #194)."""
+    fleet = [{"provider": "aws-batch-fleet", "job_id": "klt-sim-0000",
+              "client_submitted_at": None,
+              "client_launched_at": "2026-11-21T15:54:31Z",
+              "client_status_terminal_at": "2026-11-21T16:00:31Z",
+              "elapsed_seconds": 30}]
+    out = PSAT._remote_md({"fleet": fleet})
+    assert "360 s" in out
+    assert "first submit or launch" in out
+    assert "round-local" in out
+
+
+# The #193 run's own committed evidence, re-derived (issue #194 test plan):
+# the request, the eight stderr logs, the 747 receipts and the final report
+# are all in-tree, so the provenance statements below are checkable forever.
+COMMITTED_MATCH_RUN = os.path.join(
+    REPO, "sim/psat-sweep/corners/20261121-003533-b2746d0-match")
+
+
+def test_the_committed_matched_run_provenance_matches_its_artifacts():
+    rep = json.load(open(os.path.join(COMMITTED_MATCH_RUN, "psat_sweep_match.report.json")))
+    remote = rep["environment"]["remote"]
+    out = PSAT._sharded_run_md("20261121-003533-b2746d0-match", COMMITTED_MATCH_RUN,
+                               "psat_sweep_match",
+                               os.path.join(REPO, "sim/psat-sweep",
+                                            "psat_sweep_match.request.json"),
+                               remote)
+    assert "declares 261 shards per attempt" in out
+    assert "8 attempts evidenced" in out
+    assert "initial: 61 launched of 293 submitted" in out
+    assert "resume1: 99 launched of 261 submitted" in out
+    assert "resume7: 38 launched of 38 submitted" in out
+    assert "747 distinct job ids with launch receipts" in out
+    assert "2026-11-21T00:37:50Z" in out and "2026-11-21T16:02:07Z" in out
+    assert "55457 s" in out and "34 receipt records no completion" in out
+    assert "launch-to-completion" in out
+    loc = PSAT._remote_md(remote)
+    assert "39 fleet shards in this report's final round (round-local)" in loc
+    assert "478 s" in loc
+
+
 # --- the two facts this record used to retype (issue #119) -----------------
 
 
