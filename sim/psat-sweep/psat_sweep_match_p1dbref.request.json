@@ -1,0 +1,101 @@
+{
+  "netlist": "psat_sweep_match.spice",
+  "models": {
+    "pdk": "ihp-sg13g2"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "hbt_typ",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_typ"
+          }
+        ]
+      },
+      {
+        "name": "hbt_bcs",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_bcs"
+          }
+        ]
+      },
+      {
+        "name": "hbt_wcs",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_wcs"
+          }
+        ]
+      }
+    ],
+    "temperature_c": [
+      -40.0,
+      27.0,
+      125.0
+    ],
+    "supply_v": {
+      "vamp": [
+        0.001002374,
+        0.001588656,
+        0.002517851,
+        0.003990525,
+        0.006324555,
+        0.010023745,
+        0.001002374,
+        0.001588656,
+        0.002517851,
+        0.003990525,
+        0.006324555,
+        0.010023745,
+        0.001002374,
+        0.001588656,
+        0.002517851,
+        0.003990525,
+        0.006324555,
+        0.010023745
+      ],
+      "vcc": [
+        0.72,
+        0.72,
+        0.72,
+        0.72,
+        0.72,
+        0.72,
+        0.8,
+        0.8,
+        0.8,
+        0.8,
+        0.8,
+        0.8,
+        0.88,
+        0.88,
+        0.88,
+        0.88,
+        0.88,
+        0.88
+      ]
+    }
+  },
+  "analysis": {
+    "kind": "tran",
+    "args": "2p 204.812n"
+  },
+  "options": {
+    "timeout_s": 300,
+    "keep_artifacts": true,
+    "waveforms": true,
+    "capture_only": true,
+    "save_mode": "netlist"
+  },
+  "batch": {
+    "capacity_wait_s": 600
+  },
+  "remote": {
+    "hosts": 15
+  }
+}

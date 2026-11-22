@@ -589,3 +589,78 @@ def test_outputs_emits_the_matrix_files_and_refuses_a_colliding_grid(monkeypatch
     monkeypatch.setattr(gdb, "drive_grid_match_dbm", too_fine)
     with pytest.raises(ValueError, match="klayout-tools#5870"):
         gdb.outputs()
+
+
+# --- The P1dB linear-reference probe (issue #192) ---------------------------
+#
+# The spec's Output P1dB row takes its reference gain from "the linear region of
+# the same sweep (drive >= 20 dB below the compressing level)". The committed
+# matched grid cannot reach that region: its bottom (-36.0 dBm available) sits at
+# the floor klt's 3-decimal corner-id encoding allows for <= 1 dB spaced drive
+# points, and every cell's compression is only ~8-16 dB above that bottom. The
+# probe is the separate bench that measures the region the grid cannot.
+
+
+def test_the_reference_probe_grid_reaches_below_the_20dB_reference_line():
+    """Compression only ever happens in the fine-stepped region (the coarse tail
+    exists to be linear), so 20 dB below the fine region's start bounds how low
+    the reference measurement must go for EVERY cell."""
+    grid = gdb.P1DBREF_PROBE_GRID_DBM
+    assert grid[0] <= gdb.PSAT_MATCH_COARSE_TOP_DBM - 20.0
+    # uniform 4 dB spacing: the finest tested that stays corner-id-distinct down to
+    # the encoding's floor (2 dB collides below -44 dBm available)
+    steps = {round(b - a, 6) for a, b in zip(grid, grid[1:])}
+    assert steps == {4.0}
+    # the top probe point IS the committed grid's bottom: the probe bridges the
+    # committed reference points instead of floating free of them
+    assert grid[-1] == gdb.drive_grid_match_dbm()[0]
+
+
+def test_the_reference_probe_amplitudes_stay_one_bucket_apart():
+    """Each consecutive probe amplitude rounds to a different 3-decimal bucket:
+    the encoding constraint that sets the 4 dB spacing, pinned as arithmetic."""
+    amps = [gdb.amp_v(p) for p in gdb.P1DBREF_PROBE_GRID_DBM]
+    buckets = [f"{a:.3f}" for a in amps]
+    assert len(set(buckets)) == len(buckets)
+
+
+def test_the_reference_probe_covers_every_declared_cell_with_distinct_ids():
+    units = gdb.p1dbref_probe_units()
+    assert len(units) == gdb.pvt_cell_count() * len(gdb.P1DBREF_PROBE_GRID_DBM)
+    assert gdb.assert_pvt_corner_ids_distinct(units) == len(units)
+    # every declared cell is probed at every probe drive
+    cells = {(u["process"], u["temperature_c"], round(u["supply_v"]["vcc"], 3)) for u in units}
+    assert len(cells) == gdb.pvt_cell_count()
+
+
+def test_the_reference_probe_request_rides_the_committed_matched_deck():
+    req = gdb.p1dbref_probe_request()
+    n_units = gdb.pvt_cell_count() * len(gdb.P1DBREF_PROBE_GRID_DBM)
+    # same committed deck the matrix bench uses (the probe changes NO bench
+    # fact: load, terminations and extraction nodes are the matched bench's)
+    assert req["netlist"] == "psat_sweep_match.spice"
+    match = gdb.psat_request("match")
+    assert req["analysis"] == match["analysis"]
+    assert req["options"] == match["options"]
+    assert req["remote"]["hosts"] == gdb.batch_hosts(n_units, gdb.PSAT_MATCH_TIMEOUT_S)
+    assert req["batch"]["capacity_wait_s"] == 600
+    axis = req["corners"]["supply_v"]
+    assert [p["name"] for p in req["corners"]["process"]] == list(gdb.PVT_PROCESS_SECTIONS)
+    assert req["corners"]["temperature_c"] == list(gdb.PVT_TEMP_C)
+    assert len(axis["vamp"]) == len(axis["vcc"]) == len(gdb.P1DBREF_PROBE_GRID_DBM) * len(gdb.PVT_VCC_V)
+    for vcc in gdb.PVT_VCC_V:
+        got = [round(p, 9) for p in (gdb.amp_v(p) for p in gdb.P1DBREF_PROBE_GRID_DBM)]
+        have = [v for v, c in zip(axis["vamp"], axis["vcc"]) if c == vcc]
+        assert have == got
+
+
+def test_outputs_emits_the_reference_probe_request_and_refuses_a_colliding_one(monkeypatch):
+    assert gdb.P1DBREF_PROBE_REQUEST_REL in gdb.outputs()
+    real = gdb.P1DBREF_PROBE_GRID_DBM
+
+    def colliding():
+        return list(real[:2]) + [real[1] + 1e-6]      # inside one millivolt bucket
+
+    monkeypatch.setattr(gdb, "P1DBREF_PROBE_GRID_DBM", colliding())
+    with pytest.raises(ValueError, match="klayout-tools#5870"):
+        gdb.outputs()

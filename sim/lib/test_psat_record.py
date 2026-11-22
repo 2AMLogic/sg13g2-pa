@@ -32,6 +32,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 import gen_dut_benches as gdb  # noqa: E402
+from provenance import sha  # noqa: E402
+
+MATCH_DECK_HASH = "sha256:" + sha(os.path.join(REPO, "sim/psat-sweep/psat_sweep_match.spice"))
 
 
 def _load(name, relpath):
@@ -382,7 +385,8 @@ def _findings_render(tmp_path, specs, remote="n/a", report_dir=None):
                             "supply_v": {"vamp": vamp, "vcc": sp["vcc"]},
                             "status": "pass",
                             "artifacts": {"waveform": wav}})
-    report = {"environment": {"backend": "test", "remote": remote},
+    report = {"provenance": {"input": {"content_hash": MATCH_DECK_HASH}},
+              "environment": {"backend": "test", "remote": remote},
               "corners": corners}
     rep_dir = report_dir or str(tmp_path)
     rep_path = os.path.join(rep_dir, "psat_sweep_match.report.json")
@@ -687,7 +691,8 @@ def _matrix_render(tmp_path):
                 "supply_v": {"vamp": vamp, "vcc": vcc},
                 "artifacts": {"waveform": wav},
             })
-    report = {"environment": {"backend": "test", "remote": "n/a"}, "corners": corners}
+    report = {"provenance": {"input": {"content_hash": MATCH_DECK_HASH}},
+              "environment": {"backend": "test", "remote": "n/a"}, "corners": corners}
     rep_path = os.path.join(tmp, "report.json")
     out_json = os.path.join(tmp, "rec.json")
     with open(rep_path, "w") as fh:
@@ -717,6 +722,21 @@ def test_a_matrix_report_reduces_per_cell_and_labels_it_provisional(tmp_path):
     # The 27 C cell and the 125 C cell are separate detail blocks.
     assert "`hbt_typ` / 27 C / 0.8 V" in md
     assert "`hbt_wcs` / 125 C / 0.72 V" in md
+
+
+def test_candidate_matrix_identifies_and_links_its_archived_input(tmp_path):
+    inputs = tmp_path / "inputs"
+    inputs.mkdir()
+    (inputs / gdb.NETLIST.name).symlink_to(gdb.NETLIST)
+    deck = Path(REPO) / "sim/psat-sweep/psat_sweep_match.spice"
+    (inputs / deck.name).symlink_to(deck)
+    (inputs / "candidate.txt").write_text("Trial bias resistor.")
+    rc, md, doc = _matrix_render(tmp_path)
+    assert rc == 0
+    assert doc["dut"] == {"netlist_sha256": sha(gdb.NETLIST), "deck_content_hash": MATCH_DECK_HASH,
+                          "role": "candidate", "description": "Trial bias resistor."}
+    assert "**Candidate DUT.** Trial bias resistor." in md
+    assert "(inputs/sg13g2-pa.spice)" in md and "(inputs/psat_sweep_match.spice)" in md
 
 
 def test_the_125c_cell_is_labelled_outside_the_window_not_passed(tmp_path):

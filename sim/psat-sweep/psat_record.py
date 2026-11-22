@@ -24,6 +24,7 @@ deck), including the array size read from the DUT netlist, the deck name, the ex
 node names and the harmonic-termination sentence. The record prose is formatted from
 them, so it cannot fall behind the constants that produced its labels.
 """
+import hashlib
 import json
 import math
 import os
@@ -420,12 +421,49 @@ def _worst_stress(pts):
     return out
 
 
+def verified_dut(rep, deck, netlist):
+    """Tie the DUT bytes to the generated deck klt actually simulated."""
+    content = deck.read_bytes()
+    deck_hash = "sha256:" + hashlib.sha256(content).hexdigest()
+    reported = rep.get("provenance", {}).get("input", {}).get("content_hash")
+    if reported != deck_hash:
+        raise ValueError(f"{deck}: deck hash {deck_hash} differs from klt input {reported!r}")
+    net_bytes = netlist.read_bytes()
+    net_hash = hashlib.sha256(net_bytes).hexdigest()
+    header = f"* DUT: design/netlist/sg13g2-pa.spice, sha256 {net_hash}, inlined verbatim below."
+    if header.encode() not in content.splitlines() or net_bytes.rstrip(b"\n") not in content:
+        raise ValueError(f"{deck}: cannot verify the inlined DUT against {netlist}")
+    return {"netlist_sha256": net_hash, "deck_content_hash": deck_hash}
+
+
 def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
                   cell_order, by_cell, out_json, run_dir=None, request_path=None):
     """The PVT-matrix record (issue #173): one reduction per cell, per-cell
     ratified-row verdicts, per-cell breakdown/window labels -- all provisional
     while the Supply row is DRAFT. ``run_dir`` (issue #194)
     locates the run's committed artifacts for the whole-run provenance bullet."""
+    # A run snapshot also survives a candidate revert or an unreachable commit.
+    inputs = Path(run_dir) / "inputs" if run_dir else None
+    deck = Path(__file__).with_name(bench["name"] + ".spice")
+    netlist = gdb.NETLIST
+    candidate = None
+    if inputs is not None and inputs.is_dir():
+        deck = inputs / deck.name
+        netlist = inputs / netlist.name
+        note = inputs / "candidate.txt"
+        if note.is_file():
+            candidate = note.read_text().strip()
+    try:
+        dut = verified_dut(rep, deck, netlist)
+    except (OSError, ValueError) as exc:
+        print(f"psat_record: {exc}", file=sys.stderr)
+        return 2
+    dut["role"] = "candidate" if candidate is not None else "as-run"
+    if candidate is not None:
+        dut["description"] = candidate
+    record_dir = Path(out_json).parent
+    deck_link = os.path.relpath(deck, record_dir)
+    netlist_link = os.path.relpath(netlist, record_dir)
     n_cells_declared = gdb.pvt_cell_count()
     cells = []
     for key in cell_order:
@@ -462,7 +500,7 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
         }
 
     json.dump({"record_id": rid, "variant": variant, "bench": bench["name"],
-               "pvt_matrix": True, "output_network": net, "cells": cells,
+               "pvt_matrix": True, "dut": dut, "output_network": net, "cells": cells,
                "row_summary": row_summary},
               open(out_json, "w"), indent=1, default=float)
 
@@ -471,6 +509,12 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
     o = []
     w = o.append
     w(f"# psat-sweep record {rid} -- PVT matrix, {len(cells)} cells")
+    w("")
+    if candidate is not None:
+        w(f"**Candidate DUT.** {candidate}")
+        w("")
+    w(f"[DUT netlist]({netlist_link}) (SHA-256 `{dut['netlist_sha256']}`) · "
+      f"[Simulated deck]({deck_link}) (`{dut['deck_content_hash']}`).")
     w("")
     w(f"**PROVISIONAL: Supply row DRAFT.** The {gdb.VCC_NOM_V:g} V nominal the "
       f"{gdb.PVT_VCC_V[0]:g}/{gdb.VCC_NOM_V:g}/{gdb.PVT_VCC_V[2]:g} V supply points hang "
@@ -490,7 +534,7 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
         w("")
     w("## Conditions")
     w("")
-    w(f"- Bench `sim/psat-sweep/{bench['name']}.spice`; spec rows: Psat, P1dB, Peak PAE, "
+    w(f"- Bench [{deck.name}]({deck_link}); spec rows: Psat, P1dB, Peak PAE, "
       "Input match (large-signal), Device stress (RATIFIED); back-off PAE, harmonics, "
       "large-signal stability, thermal (DRAFT, reported only).")
     w(f"- **Declared matrix**: `sim/pvt-matrix.json` -- {len(gdb.PVT_PROCESS_SECTIONS)} HBT "
@@ -505,7 +549,7 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
       f"this report covers {len(cells)} of {n_cells_declared} declared cells.")
     w("- **R/C process sections**: the spec pairs `res_*` / `cap_*` sections with the HBT "
       "corner of the same name, but the DUT's `Rb`, `Cin`, `Cblock` and `Lchoke` are "
-      "ideal ngspice elements (`design/netlist/sg13g2-pa.spice`), so **no R/C corner "
+      f"ideal ngspice elements in the [DUT netlist]({netlist_link}), so **no R/C corner "
       "applies to them**; only the HBT section moves. When real passive models land, "
       "the matrix gains the paired sections.")
     w("- **The bare deck stays nominal-only** (`psat_sweep.request.json`, one cell): the "
