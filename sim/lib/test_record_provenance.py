@@ -41,6 +41,7 @@ BULLET_LITERALS = ("- Commit:", "- Repo `")
 RENDERERS = (
     "sim/lib/ac_record.py",
     "sim/psat-sweep/psat_record.py",
+    "sim/psat-sweep/p1dbref_record.py",
     "sim/known-answer/check_known_answer.py",
     "sim/known-answer-thermal/thermal_record.py",
     "sim/smoke/summarize.py",
@@ -139,6 +140,9 @@ NO_INVENTORY_BY_DECISION = (
     ("sim/psat-sweep/psat_record.py",
      "renders no sha256 inventory section; recording the decision, not an "
      "accidental exemption (issue #144)"),
+    ("sim/psat-sweep/p1dbref_record.py",
+     "renders no sha256 inventory section; a verification probe of the committed "
+     "matrix record, not a bench inventory (issue #192)"),
 )
 
 # The pin bullet's rendered shape: ``- `sim/lib/<name>.py` `<sha>` ``. The

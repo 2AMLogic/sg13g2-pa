@@ -176,6 +176,41 @@ PSAT_MATCH_TOP_DBM = 10.0
 # bracket with ~3 dB to spare below it -- on the fine step.
 PSAT_MATCH_COARSE_TOP_DBM = -28.0
 
+# --- The P1dB linear-reference probe (issue #192) ---------------------------
+#
+# The spec's Output P1dB row takes its reference gain from "the linear region of the
+# same sweep (drive >= 20 dB below the compressing level)". The committed matched grid
+# CANNOT satisfy that sentence, and not by oversight: its bottom (-36.0 dBm available)
+# sits at the floor klt's corner-id encoding allows. klt names each unit by a corner id
+# whose supply-axis values are formatted to three decimals (`vamp=0.010`), and rounds
+# the artifact directory to the same slug, so two drive points whose source amplitudes
+# fall in one millivolt bucket collapse onto one unit (the klayout-tools#5870 class of
+# collision; `assert_pvt_corner_ids_distinct` refuses it at generation time, and the
+# matrix record's committed corner ids show the 3-decimal format live). Below roughly
+# 10 mV of amplitude -- about -35.7 dBm available into 50 ohm -- no <= 1 dB spaced
+# grid stays one bucket per point, and `reduce_sweep` forbids steps above 1 dB before
+# Psat, so the committed bench cannot reach a reference region 20 dB under any cell
+# that compresses above -48 dBm available. Every cell of the matrix record does: the
+# earliest measured 1 dB point is at Pavail -25.6 dBm (nominal cell), which leaves the
+# committed reference points only ~8-16 dB below compression depending on the cell.
+# The encoding gap is filed with klayout-tools (friction protocol); until it closes,
+# this probe is the bench that measures what the committed grid cannot.
+#
+# It reuses the committed MATCHED deck unchanged (same load, harmonic terminations and
+# extraction nodes -- it changes no bench fact) and swaps only the drive axis for a
+# SPARSE low-drive one: 4 dB spacing, the coarsest that keeps every corner id distinct
+# down to -56 dBm available (2 dB spacing collides below about -44 dBm: consecutive
+# amplitudes share the `vamp=0.003` bucket). -56 dBm is itself 28 dB below the
+# earliest measured compression, so the probe's own lowest points already satisfy the
+# spec sentence the committed grid violates; the top probe point IS the committed
+# grid's bottom, so the two measurements bridge. The probe is NOT a drive sweep: its
+# steps are 4 dB, its points bracket no compression, and `reduce_sweep` is never run
+# on it -- its record extrapolates each cell's gain-vs-drive deficit to zero drive
+# (`p1dbref_record.py`) and reports the error the committed three-lowest-points
+# reference carries.
+P1DBREF_PROBE_GRID_DBM = (-56.0, -52.0, -48.0, -44.0, -40.0, -36.0)
+P1DBREF_PROBE_REQUEST_REL = "sim/psat-sweep/psat_sweep_match_p1dbref.request.json"
+
 
 def drive_grid_dbm():
     """Available drive power, dBm, ascending. The reducer's step limits apply to the
@@ -201,7 +236,11 @@ def drive_grid_match_dbm():
       compressing, so the three lowest-drive points ``reduce_sweep`` takes its
       reference gain from disagree (0.391 dB against a 0.1 dB limit) and the whole
       reduction is refused ``LINEAR_REGION_NOT_FOUND``. First matched run,
-      ``…-651c0cf-match``.
+      ``…-651c0cf-match``. The bottom also cannot move DOWN: klt's corner-id
+      encoding rounds supply-axis values to three decimals, so below ~10 mV of
+      source amplitude no <= 1 dB spaced grid keeps one bucket per point (see
+      ``P1DBREF_PROBE_GRID_DBM`` -- the low-drive probe that measures the
+      reference region this floor keeps the committed grid out of).
     * **The coarse tail must stop early.** With the bare grid's boundary (-16.8 dBm) the
       1 dB compression point lands inside the 0.8 dB region: measured P_in steps 0.912 dB
       across the bracket against a 0.5 dB limit, refused ``SWEEP_STEP_TOO_COARSE``.
@@ -284,6 +323,10 @@ def pvt_psat_units(variant="match"):
     crossed axes above, enumerated here so the corner-id screen below sees
     exactly the units a submit would dispatch."""
     axis = pvt_psat_supply_axis(variant)
+    return _crossed_units(axis)
+
+
+def _crossed_units(axis):
     units = []
     for proc in PVT_PROCESS_SECTIONS:
         for vamp, vcc in zip(axis["vamp"], axis["vcc"]):
@@ -291,6 +334,46 @@ def pvt_psat_units(variant="match"):
                 units.append({"process": proc, "temperature_c": temp,
                               "supply_v": {"vamp": vamp, "vcc": vcc}})
     return units
+
+
+def p1dbref_probe_axis():
+    """The probe request's `corners.supply_v`: the sparse low-drive grid crossed
+    with the supply points, supply-major exactly like `pvt_psat_supply_axis`
+    (vamp/vcc sweep together by index, one contiguous run of probe points per
+    cell)."""
+    vamps, vccs = [], []
+    for vcc in PVT_VCC_V:
+        for p in P1DBREF_PROBE_GRID_DBM:
+            vamps.append(round(amp_v(p), 9))
+            vccs.append(vcc)
+    return {"vamp": vamps, "vcc": vccs}
+
+
+def p1dbref_probe_units():
+    """Every (cell, probe drive) unit of the reference-probe request, for the
+    same pre-submit corner-id screen the matrix units get."""
+    return _crossed_units(p1dbref_probe_axis())
+
+
+def p1dbref_probe_request():
+    """The P1dB linear-reference probe request (issue #192): every declared PVT
+    cell x the sparse low-drive grid, on the committed matched deck.
+
+    Same options, timeout and sharding arithmetic as the matched matrix bench
+    (it is the same per-unit transient); it is NOT a declared-matrix bench, so
+    it gets no `klt corner-matrix` gate -- its coverage is the probe grid, and
+    its record states both."""
+    units = p1dbref_probe_units()
+    n_units = assert_pvt_corner_ids_distinct(units)
+    req = _matrix_request(
+        "psat_sweep_match.spice",
+        {"kind": "tran", "args": f"{TRAN_STEP_S * 1e12:.6g}p {TRAN_STOP_S * 1e9:.6g}n"},
+        {"timeout_s": PSAT_MATCH_TIMEOUT_S, "keep_artifacts": True, "waveforms": True,
+         "capture_only": True, "save_mode": "netlist"},
+        corners_extra={"supply_v": p1dbref_probe_axis()},
+    )
+    req["remote"] = {"hosts": batch_hosts(n_units, PSAT_MATCH_TIMEOUT_S)}
+    return req
 
 
 def klt_corner_id(process, supply_v, temperature_c):
@@ -958,6 +1041,10 @@ def outputs():
         # they gate, regenerated only here.
         PVT_MATRIX_REL: j(pvt_matrix()),
         PSAT_MATCH_MATRIX_REL: j(psat_match_pvt_matrix()),
+        # The P1dB linear-reference probe's request (issue #192): the committed
+        # matched deck under a sparse low-drive axis. No deck of its own and no
+        # declared-matrix file -- it is not a matrix bench.
+        P1DBREF_PROBE_REQUEST_REL: j(p1dbref_probe_request()),
     }
 
 
