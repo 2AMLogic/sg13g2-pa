@@ -3,6 +3,7 @@
 
     ac_record.py {gain|stability} <record-id> <git-sha> <dirty> <klt-version> <ngspice-version> <klt-report.json> > record.md
 """
+from collections import Counter
 import json
 import os
 import sys
@@ -71,11 +72,13 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
     against the RATIFIED rows, labelled provisional while the Supply row is
     DRAFT. Full per-frequency sweeps stay in the klt artifacts."""
     import spec_rows as sr
+    import finding_trackers as ft
+    from finding_trackers import line_md, units_md
     rows, failures = [], []
     for c in rep["corners"]:
         cell = _cell_of(c)
         if c.get("status") != "pass":
-            failures.append((cell, c.get("corner_id", "?"), c.get("status")))
+            failures.append((cell, c.get("corner_id", "?"), c.get("status"), ft.ac_error_tracker(c)))
             continue
         freq, d = _load_complex_vectors(c["artifacts"]["complex_vectors"])
         s = sp.s_from_nodes(d)
@@ -84,9 +87,14 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
                      "corner_id": c.get("corner_id", "?")})
     out = []
     w = out.append
+    # The rungs this record grades, kept for the findings section below: every
+    # verdict below `met` names the design iteration that tracks it (issue
+    # #194) -- computed in the same loop, so the table and the summary cannot
+    # disagree.
+    gain_rungs, s11_rungs, mu_rungs = [], [], []
     bench_dir = "ac-gain" if kind == "gain" else "ac-stability"
     w(f"# {'ac-gain' if kind == 'gain' else 'ac-stability'} record {rid} -- PVT matrix, "
-      f"{len(rows)} cells")
+      f"{len(rep['corners'])} cells")
     w("")
     w(f"**PROVISIONAL: Supply row DRAFT.** The {gdb.VCC_NOM_V:g} V nominal the "
       f"{gdb.PVT_VCC_V[0]:g}/{gdb.VCC_NOM_V:g}/{gdb.PVT_VCC_V[2]:g} V supply points hang "
@@ -104,7 +112,7 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
       f"sections ({', '.join(gdb.PVT_PROCESS_SECTIONS)}) x {len(gdb.PVT_TEMP_C)} ambient "
       f"temperatures ({'/'.join(f'{t:g}' for t in gdb.PVT_TEMP_C)} C) x supply "
       f"{gdb.PVT_VCC_V[0]:g}/{gdb.VCC_NOM_V:g}/{gdb.PVT_VCC_V[2]:g} V (nominal +/-10 %) "
-      f"= **{gdb.pvt_cell_count()} cells**; this report covers {len(rows)} of "
+      f"= **{gdb.pvt_cell_count()} cells**; this report grades {len(rows)} of "
       f"{gdb.pvt_cell_count()} declared cells (`klt corner-matrix` verdicts committed under "
       f"`corners/{rid}/`). Quiescent point: the DUT's own mirror bias at the cell's "
       "Vcc. Self-heating on (card default).")
@@ -127,9 +135,13 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
             s21 = sp.db20(r["s"]["s21"])
             s11 = sp.db20(r["s"]["s11"])
             mn, wx = float(np.min(s21)), float(np.max(s11))
+            rg = _rung(mn > sr.GAIN_TARGET_DB, mn > sr.GAIN_FALLBACK_DB)
+            rs = _rung(wx < sr.S11_TARGET_DB, wx < sr.S11_FALLBACK_DB)
+            gain_rungs.append(rg)
+            s11_rungs.append(rs)
             w(f"| {_cell_md(r['cell'])} | {mn:.2f} | {wx:.2f} "
-              f"| {_rung(mn > sr.GAIN_TARGET_DB, mn > sr.GAIN_FALLBACK_DB)} "
-              f"| {_rung(wx < sr.S11_TARGET_DB, wx < sr.S11_FALLBACK_DB)} |")
+              f"| {rg} "
+              f"| {rs} |")
         w("")
         w(f"Rungs against the RATIFIED rows (Target / Fallback): power gain > "
           f"{sr.GAIN_TARGET_DB:g} / > {sr.GAIN_FALLBACK_DB:g} dB (min in-band S21); "
@@ -150,10 +162,12 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
             st, freq = r["st"], r["freq"]
             imin = int(np.argmin(st["mu"]))
             mn = float(st["mu"][imin])
+            rg = _rung(mn > sr.MU_MIN, mn > sr.MU_MIN)
+            mu_rungs.append(rg)
             w(f"| {_cell_md(r['cell'])} | {mn:.4f} | {freq[imin] / 1e9:.4g} "
               f"| {float(np.min(st['k'])):.3g} | {float(np.max(st['abs_delta'])):.3g} "
               f"| {st['max_abs_s11']:.4f} | {st['max_abs_s22']:.4f} "
-              f"| {_rung(mn > sr.MU_MIN, mn > sr.MU_MIN)} |")
+              f"| {rg} |")
         w("")
         w("mu > 1 (Edwards-Sinsky) is the pass metric at every point; k and |delta| are "
           "reported, not graded (k is ill-conditioned on low-S12 topologies). The spec's "
@@ -165,11 +179,31 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
               f"{min(float(np.min(r['st']['mu'])) for r in rows):.4f}.")
     w("")
     if failures:
-        w("## Cells that did not simulate")
+        w("## Cells with figures withheld")
         w("")
-        for cell, cid, status in failures:
-            w(f"- {_cell_md(cell)} (`{cid}`): status `{status}` -- no figure, not a pass.")
+        for cell, cid, status, _tracker in failures:
+            w(f"- {_cell_md(cell)} (`{cid}`): klt status `{status}`, grade withheld.")
         w("")
+    w("## Findings and their trackers")
+    w("")
+    w("Each finding this run records, with the design iteration that tracks it "
+      "(named only where one exists):")
+    w("")
+    if kind == "gain":
+        fl = [line_md("Input match (S11)", s11_rungs, ft.STABILITY_AND_MATCH),
+              line_md("Power gain", gain_rungs, None)]
+    else:
+        fl = [line_md("Stability (mu > 1)", mu_rungs, ft.STABILITY_AND_MATCH,
+                      rung="the rung")]
+    error_counts = Counter((status, tracker) for _cell, _cid, status, tracker in failures)
+    for (status, tracker), count in error_counts.items():
+        fl.append(units_md(count, "cell", f"with grade withheld (klt status `{status}`)", tracker))
+    fl = [ln for ln in fl if ln]
+    if not fl:
+        fl = ["- No verdict falls below its rung and every cell was graded."]
+    for ln in fl:
+        w(ln)
+    w("")
     w("Full per-frequency sweeps: klt artifacts under `corners/<id>/`. Points per decade "
       "and the negative-resistance check are unchanged from the nominal-cell bench "
       "(spec: >= 40 pts/decade).")
