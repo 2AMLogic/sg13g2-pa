@@ -1,0 +1,13 @@
+* klt sim -- generated corner deck, do not edit
+.lib /opt/pdk/ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib hbt_bcs
+.include /var/tmp/eda-job-klt-sim-df482b8cbf32/inputs/netlist.cir
+.temp 125.0
+.control
+alter vamp=0.263651348
+alter vcc=0.8
+set filetype=ascii
+tran 2p 204.812n
+write /var/tmp/eda-job-klt-sim-df482b8cbf32/outputs/artifacts/hbt_bcs_vamp0p264_vcc0p800V_125C/waveform.raw
+quit
+.endc
+.end

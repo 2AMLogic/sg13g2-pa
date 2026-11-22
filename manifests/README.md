@@ -15,7 +15,17 @@ pinned `klayout-tools` wheel](https://github.com/2AMLogic/klayout-tools/blob/v0.
   `evidence/item2.json`), 3 (DRC clean, from
   `../layout/reports/drc-klt-0.9.1.json`), 9 (testbenches shipped, from
   `evidence/item9.json`) and 10 (repo hygiene, from `evidence/item10.json`)
-  are cited today.
+  are cited today. **Item 5 (corner verification) is deliberately not
+  cited**: the provisional PVT matrix (#173) put per-cell records on all
+  three DUT benches, and `klt signoff --manifest` grades item 5 on every
+  ratified row meeting its cell in every corner -- the matrix honestly
+  records Stability and Input match missed in every simulated cell (#172),
+  P1dB missed in every reduced cell with Psat and peak PAE under their
+  Fallback rungs in the worst cells (#192), and three 125 C cells that did
+  not simulate on the two AC benches (#188), so the item stays
+  `unmet, no_evidence`-class until the design iterations (#172, #188, #192)
+  close and the benches re-run. Citing it now would grade `unmet` with
+  the matrix as evidence; the citation is added when it can grade `met`.
 - **`../layout/reports/drc-klt-0.9.1.json`**: the item-3 citation. Unlike
   items 1, 2, 9 and 10 there is no `evidence/item3.json` wrapper and no
   `--attest` step: `klt drc` already emits a first-class envelope, so the

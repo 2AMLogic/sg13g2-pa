@@ -3,6 +3,16 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-21
+
+- **Issue #187** (closed): Remove hand-copied Cblock and Lchoke values from matched Psat bench commentary
+- **PR #189**: fix: stop hand-copying Cblock and Lchoke values in the matched Psat bench
+- **Issue #176** (closed): Remove the unusable manual recovery recipe for missing dpkg-deb
+- **PR #183**: fix: replace unusable missing-dpkg-deb recovery recipe with install-and-rerun
+- **Issue #177** (closed): Consolidate PDK model suffix checks so a missing .mod include fails preflight
+- **PR #181**: fix: fail preflight on a missing .mod model include
+- **Issue #179** (closed): Move known-answer-thermal gen_bench.py onto sim/lib/bench_gen.py (lax --check overwrites evidence)
+
 ### 2026-11-19
 
 - **PR #170**: chore: grade the signoff record against the klt wheel's bundled checklist

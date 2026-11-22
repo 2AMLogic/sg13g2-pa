@@ -1,0 +1,18 @@
+{
+  "matrix": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-173/sim/pvt-matrix.json",
+  "mode": "report",
+  "source": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-173/sim/ac-gain/corners/20261121-010216-b2746d0/ac_gain.report.json",
+  "complete": false,
+  "matrix_size": 27,
+  "observed_count": 27,
+  "missing": [],
+  "extra": [],
+  "duplicate": [],
+  "not_simulated": [
+    "hbt_bcs/0.800V/125C",
+    "hbt_wcs/0.720V/125C",
+    "hbt_wcs/0.880V/125C"
+  ],
+  "non_finite": [],
+  "out_of_bounds": []
+}

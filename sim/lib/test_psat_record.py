@@ -23,6 +23,7 @@ import importlib.util
 import json
 import math
 import os
+from pathlib import Path
 import sys
 
 import numpy as np
@@ -122,28 +123,30 @@ def _render(tmp_path, variant, remote="n/a"):
 
 @pytest.mark.parametrize("variant,sense_amp", [("bare", I_LOAD_A), ("match", I_BOUND_A)])
 def test_ic_is_taken_from_the_variants_own_boundary_trace(tmp_path, variant, sense_amp):
-    """`(i(Lchoke) + (v(COLL)-v(VCC))/Rdchoke - <this variant's boundary>) / N_UNITS`.
+    """`(i(Lchoke) + (v(VCC)-v(COLL))/Rdchoke - <boundary> - v(RFOUT)/Rsho) / N_UNITS`.
 
     The bias-feed damping resistor `Rdchoke` hangs on `COLL` (issue #172), so KCL
     there closes through its branch current too; it is derived from the saved
-    node pair rather than an extra saved vector, as `(v(COLL)-v(VCC))/Rdchoke`.
-    In the synthetic trace that term is `0.5/Rdchoke * sin(...)`, in phase with the
-    boundary current, so it shifts every I_C by a known amount -- and it is NOT the
+    node pair rather than an extra saved vector, as `(v(VCC)-v(COLL))/Rdchoke`. `Rsho` (RFOUT to GND) takes
+    `v(RFOUT)/Rsho` of Cblock's current before the boundary. In the synthetic trace the
+    Rdchoke term is `-0.5/Rdchoke * sin(...)` and the Rsho term `V_OUT_A/Rsho * sin(...)`,
+    both in phase with the boundary current, so the negative crest is the I_C peak -- and it is NOT the
     other variant's node that is read.
     """
     _md, doc = _render(str(tmp_path), variant)
     st = doc["points"][0]["stress"]
     rd_term = (0.5) / gdb.psat_bench(variant)["rdchoke_ohm"]
-    want = (I_CHOKE + sense_amp - rd_term) / gdb.output_array()[0]
+    rs_term = V_OUT_A / gdb.psat_bench(variant)["rsho_ohm"]
+    want = (I_CHOKE + sense_amp + rd_term + rs_term) / gdb.output_array()[0]
     assert st["ic_pk_a"] == pytest.approx(want, rel=1e-6)
     # ...and it is NOT what the other variant's node would have given. This is the
     # assertion that fails if the matched deck's I_C silently keeps using the load branch.
-    other = (I_CHOKE + (I_BOUND_A if variant == "bare" else I_LOAD_A) - rd_term) / gdb.output_array()[0]
+    other = (I_CHOKE + (I_BOUND_A if variant == "bare" else I_LOAD_A) + rd_term + rs_term) / gdb.output_array()[0]
     assert st["ic_pk_a"] != pytest.approx(other, rel=1e-3)
     # ...and a reducer that forgot the Rdchoke branch entirely (the pre-#172 KCL)
     # gives a different peak; this is the assertion that fails if `stress()` stops
     # closing KCL through the bias-feed damping resistor.
-    stale = (I_CHOKE + sense_amp) / gdb.output_array()[0]
+    stale = (I_CHOKE + sense_amp - rd_term) / gdb.output_array()[0]   # the wrong-sign Rdchoke, no Rsho
     assert st["ic_pk_a"] != pytest.approx(stale, rel=1e-3)
 
 
@@ -201,9 +204,9 @@ def test_the_matched_record_states_the_terminations_and_refuses_the_comparison(t
     assert "no longer the labelled ideal-50-ohm" in md
     # Both impedances, at f0 / 2 f0 / 3 f0, at BOTH nodes.
     assert "Into the network at `RFOUT`" in md and "Seen by `COLL` through `Cblock`" in md
-    for lab, _f, z_rfout, z_coll in gdb.match_impedances(net):
-        assert f"{z_rfout.real:.3f} {z_rfout.imag:+.3f}j ohm" in md
-        assert f"{z_coll.real:.3f} {z_coll.imag:+.3f}j ohm" in md
+    for r in gdb.match_impedances(net):
+        for z in (r.z_external, r.z_coll_target, r.z_rfout, r.z_coll):
+            assert f"{z.real:.3f} {z.imag:+.3f}j ohm" in md
     # And the explicit refusal to compare with the bare record.
     assert "20261107-125209-93cf5ae" in md
     assert "are not compared" in md
@@ -239,6 +242,11 @@ def test_the_matched_record_derives_ropt_and_cites_the_load_line_row(tmp_path):
     assert doc["output_network"]["ropt_ohm"] == pytest.approx(net["ropt_ohm"], rel=1e-12)
     assert doc["variant"] == "match"
     assert doc["bench"] == "psat_sweep_match"
+    # The choke is described by what the arithmetic covers, not by a reactance
+    # copied from the original design point (issue #187).
+    assert "series `Cblock` but not the DUT's shunt `Lchoke`" in md
+    assert "issue #116" in md
+    assert "+j1534" not in md and "0.12 %" not in md
 
 
 def test_the_matched_record_states_the_tj_check_and_its_scope(tmp_path):
@@ -306,6 +314,311 @@ def test_the_matched_record_summarizes_its_sharded_backend(tmp_path):
     assert "full per-shard environment capture" in md
 
 
+# --- findings point at the design iteration that tracks them (issue #194) ----
+
+
+def _sweep_waveform(path, pin_w, pout_w):
+    """A settled steady-state trace for one drive point of a matrix cell.
+
+    `v(in)`/`i(bs)` carry ``pin_w`` co-phase, `v(outl)`/`i(vlsense)` carry
+    ``pout_w``; the stress traces are constants (no findings test grades them).
+    Amplitudes come from the powers, so a cell's rungs are set by the spec's
+    own arithmetic on numbers the test chooses, not by retyped voltages.
+    """
+    n = N_PER * PER_STEP + 1
+    t = np.arange(n) / (F0 * PER_STEP)
+    s = np.sin(2 * math.pi * F0 * t)
+    vin = 2 * pin_w / 0.002          # vin * 0.002 / 2 = pin_w
+    voutl = 2 * pout_w / 0.030       # voutl * 0.030 / 2 = pout_w
+    traces = {
+        "v(out)": 0.5 * s,
+        "v(outl)": voutl * s,
+        "v(in)": vin * s,
+        "v(vcc)": np.full(n, VCC),
+        "v(amp)": np.full(n, 1.0),
+        "i(vbsense)": 0.080 * s,
+        "i(vlsense)": 0.030 * s,
+        "i(vcc)": np.full(n, I_VCC),
+        "i(bs)": -0.002 * s,
+        "i(l.xdut.lchoke)": np.full(n, I_CHOKE),
+        "v(xdut.coll)": VCC + 0.5 * s,
+        "v(xdut.vb)": np.full(n, 0.85),
+        "v(xdut.xq1.t)": np.full(n, 0.6),
+    }
+    names = ["time"] + list(traces)
+    cols = [t] + list(traces.values())
+    doc = {"variables": [{"name": nm} for nm in names],
+           "points": np.column_stack(cols).tolist()}
+    with open(path, "w") as fh:
+        json.dump(doc, fh)
+
+
+def _findings_render(tmp_path, specs, remote="n/a", report_dir=None):
+    """Run psat_record.main over a multi-cell report -- the matrix path.
+
+    Each spec: ``proc``/``temp``/``vcc``; ``pins_dbm`` (drive points, P_in at
+    the DUT input); ``gains_db`` per drive point (equal on the 3 lowest points
+    -> a linear region reduce_sweep accepts); ``s11_ratio`` = P_in/P_avail at
+    every point (sets the S11 rung; close to 1 is a good match); a non-pass
+    ``status`` withholds every point in the cell.
+    """
+    corners = []
+    for si, sp in enumerate(specs):
+        for pi, pin_dbm in enumerate(sp["pins_dbm"]):
+            cid = f"{sp['proc']}/pt{pi}"
+            if sp.get("status", "pass") != "pass":
+                corners.append({"corner_id": cid, "process": sp["proc"],
+                                "temperature_c": sp["temp"],
+                                "supply_v": {"vamp": 1.0, "vcc": sp["vcc"]},
+                                "status": sp["status"]})
+                continue
+            pin_w = 10 ** (pin_dbm / 10) / 1000
+            pout_w = pin_w * 10 ** (sp["gains_db"][pi] / 10)
+            vamp = math.sqrt(8 * gdb.RS_OHM * pin_w / sp["s11_ratio"])
+            wav = os.path.join(str(tmp_path), f"mw{si}-{pi}.json")
+            _sweep_waveform(wav, pin_w, pout_w)
+            corners.append({"corner_id": cid, "process": sp["proc"],
+                            "temperature_c": sp["temp"],
+                            "supply_v": {"vamp": vamp, "vcc": sp["vcc"]},
+                            "status": "pass",
+                            "artifacts": {"waveform": wav}})
+    report = {"environment": {"backend": "test", "remote": remote},
+              "corners": corners}
+    rep_dir = report_dir or str(tmp_path)
+    rep_path = os.path.join(rep_dir, "psat_sweep_match.report.json")
+    out_json = os.path.join(str(tmp_path), "rec-matrix.json")
+    with open(rep_path, "w") as fh:
+        json.dump(report, fh)
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = PSAT.main(["psat_record.py", "match", "rid-matrix", "deadbee", "0",
+                        "klt 0.9.1", "ngspice-47", rep_path, out_json])
+    assert rc == 0
+    return buf.getvalue(), json.load(open(out_json))
+
+
+ALL_MET = {"proc": "hbt_typ", "temp": 27.0, "vcc": 0.8,
+           "pins_dbm": [-20, -19, -18, -17], "gains_db": [36] * 4,
+           "s11_ratio": 0.95}
+
+
+def test_the_matrix_record_links_each_finding_to_its_tracker(tmp_path):
+    """Mixed verdicts: every row below its rung names its tracker, a met row
+    acquires no link, and an errored transient unit remains visible without
+    the AC error tracker (issue #194)."""
+    specs = [
+        # all-met cell (Psat +19 dBm, PAE 47 %, S11 -13 dB): no finding may name it
+        dict(ALL_MET),
+        # compressing cell: P1dB reached and missed, Psat/PAE missed, S11 missed
+        {"proc": "hbt_wcs", "temp": 27.0, "vcc": 0.72,
+         "pins_dbm": [-20, -19, -18, -17.5, -17],
+         "gains_db": [20, 20, 20, 19.4, 18.8], "s11_ratio": 0.5},
+        # single drive point: reduction refused, S11 met
+        {"proc": "hbt_bcs", "temp": -40.0, "vcc": 0.72,
+         "pins_dbm": [-10], "gains_db": [20], "s11_ratio": 0.95},
+        # all points withheld by klt status
+        {"proc": "hbt_bcs", "temp": 125.0, "vcc": 0.8,
+         "pins_dbm": [-10, -11], "gains_db": [20, 20], "s11_ratio": 0.5,
+         "status": "error"},
+    ]
+    md, _doc = _findings_render(tmp_path, specs)
+    sec = md.split("## Findings and their trackers", 1)[1].split("## Per-cell detail", 1)[0]
+    assert ("Input match (large-signal S11, worst drive): 1 cell below the Fallback "
+            "rung (`missed`) -- design iteration #172." in sec)
+    for row in ("Psat", "Output P1dB", "Peak PAE"):
+        assert (f"{row}: 1 cell below the Fallback rung (`missed`) "
+                "-- design iteration #192." in sec)
+    assert ("2 sweep units excluded by klt status (`KLT_STATUS_error`) "
+            "-- no design-iteration tracker." in sec)
+    assert "#188" not in sec
+    assert ("1 cell refused a reduction (`SWEEP_TOO_SHORT`) "
+            "-- no design-iteration tracker." in sec)
+    # the all-met cell is named nowhere in the findings section
+    assert "hbt_typ" not in sec
+    # ...and the cell with no extracted points renders a full-width `--` table row (13
+    # columns, like every other row), not a shifted short one
+    err_row = [ln for ln in md.splitlines() if ln.startswith("| `hbt_bcs` / 125 C / 0.8 V")][0]
+    assert err_row.count("|") == 14
+
+
+def test_an_all_met_matrix_record_links_nothing(tmp_path):
+    md, _doc = _findings_render(tmp_path, [dict(ALL_MET),
+                                         dict(ALL_MET, proc="hbt_wcs", vcc=0.88)])
+    sec = md.split("## Findings and their trackers", 1)[1].split("## Per-cell detail", 1)[0]
+    assert "No verdict falls below its rung" in sec
+    assert "#172" not in sec and "#188" not in sec and "#192" not in sec
+
+
+# --- a resumed sharded run describes the whole run, not the last round ------
+
+
+def _write_round_stderr(path, submitted, launched=(), resumed=(), mentions=()):
+    """A round's submit stderr: `submitting` lines name what the round sent;
+    bare status mentions name nothing (a mention is not a launch)."""
+    lines = [f"klt: batch job {j} submitting to s3://<bucket>/jobs/{j}" for j in submitted]
+    lines += [f"klt: batch job {j} launched; re-attach with klt" for j in launched]
+    lines += [f"klt: batch job {j} had been submitted but never launched; launched it" for j in resumed]
+    lines += [f"klt: batch job {j} status RUNNING (attempt 2)" for j in mentions]
+    with open(path, "w") as fh:
+        fh.write("\n".join(lines) + "\n")
+
+
+def _write_receipt(run_dir, bench, job, launched, completed=None):
+    """The launch evidence for one shard: a batch receipt."""
+    d = os.path.join(run_dir, bench, job)
+    os.makedirs(d, exist_ok=True)
+    with open(os.path.join(d, f"batch-receipt-{job}.json"), "w") as fh:
+        json.dump({"job_id": job, "launched_at": launched, "completed_at": completed,
+                   "state": "done" if completed else None}, fh)
+
+
+def _run_dir(tmp_path, declared=None):
+    run = tmp_path / "corners" / "rid"
+    run.mkdir(parents=True)
+    if declared is not None:
+        (run / "psat_sweep_match.request.json").write_text(json.dumps({"remote": {"hosts": declared}}))
+    return run
+
+
+def test_a_resumed_sharded_run_reports_whole_run_provenance(tmp_path):
+    """One job from the initial submission first launches on resume. A status
+    mention, duplicate launch message and submission without launch add no jobs."""
+    run = _run_dir(tmp_path, declared=10)
+    first = [f"klt-sim-{k:04x}" for k in range(5)]
+    second = [f"klt-sim-{k:04x}" for k in range(5, 10)]
+    _write_round_stderr(run / "psat_sweep_match.stderr", first,
+                        launched=[first[0], first[0]], mentions=[first[1]])
+    _write_round_stderr(run / "psat_sweep_match.resume1.stderr", second,
+                        launched=second[:3], resumed=[first[1]], mentions=[second[4]])
+    _write_receipt(run, "psat_sweep_match", first[0],
+                   "2026-11-21T10:00:00Z", "2026-11-21T10:05:00Z")
+    _write_receipt(run, "psat_sweep_match", first[1],
+                   "2026-11-21T12:00:00Z", "2026-11-21T12:05:00Z")
+    _write_receipt(run, "psat_sweep_match", second[0],
+                   "2026-11-21T12:00:00Z", "2026-11-21T12:05:00Z")
+    _write_receipt(run, "psat_sweep_match", second[1],
+                   "2026-11-21T12:00:05Z", "2026-11-21T12:05:05Z")
+    _write_receipt(run, "psat_sweep_match", second[2],
+                   "2026-11-21T12:00:10Z", None)                  # never completed
+    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match", None,
+                               {"fleet": [{"job_id": second[0]}],
+                                "unlaunched_shards": 65, "resumable": True})
+    assert "declares 10 shards per attempt" in out
+    assert "initial: 5 submitted, 1 launch logged" in out
+    assert "resume1: 5 submitted, 4 launches logged" in out
+    assert "5 distinct launched job IDs" in out
+    assert "first evidenced launch 2026-11-21T10:00:00Z" in out
+    assert "last evidenced completion 2026-11-21T12:05:05Z" in out
+    assert "7505 s" in out                      # 10:00:00 -> 12:05:05, gap included
+    assert "launch-to-completion" in out        # not submit-to-terminal
+    assert "no completion timestamp for 1 receipt-backed job" in out
+    assert "round-local" in out and "`unlaunched_shards`" in out and "`resumable`" in out
+
+
+def test_missing_provenance_evidence_is_named_not_papered_over(tmp_path):
+    run = _run_dir(tmp_path)
+    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match", None,
+                               {"fleet": [{"job_id": "klt-sim-0000"}]})
+    assert "declared shards per attempt unknown" in out
+    assert "no submit stderr found" in out
+    assert "no timestamped launch or completion receipts" in out
+
+
+def test_a_sharded_run_without_resumes_says_so(tmp_path):
+    run = _run_dir(tmp_path, declared=3)
+    _write_round_stderr(run / "psat_sweep_match.stderr", ["klt-sim-0000", "klt-sim-0001"],
+                        launched=["klt-sim-0000"])
+    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match", None, {"fleet": []})
+    assert "only the initial submit log is available" in out
+    assert "initial: 2 submitted, 1 launch logged" in out
+    assert "1 distinct launched job ID" in out
+
+
+@pytest.mark.parametrize(("log", "saved", "dry_run", "expected_hosts", "expected_rounds"), [
+    ("resume2", None, 3, "dry-run manifest (`hosts`) declares 3", "missing round logs: initial, resume1"),
+    ("resume", 7, 3, "saved request (`remote.hosts`) declares 7", "unnumbered resume"),
+    ("initial", None, None, "declared shards per attempt unknown", "only the initial submit log"),
+])
+def test_partial_run_evidence_preserves_cell_verdicts(
+        tmp_path, log, saved, dry_run, expected_hosts, expected_rounds):
+    run = _run_dir(tmp_path, declared=saved)
+    if dry_run is not None:
+        (run / "psat_sweep_match.dry-run.json").write_text(json.dumps({"hosts": dry_run}))
+    suffix = "" if log == "initial" else f".{log}"
+    _write_round_stderr(run / f"psat_sweep_match{suffix}.stderr", ["klt-sim-0001"])
+    # A submit and a receipt exist, but there is no message dating this launch to a round.
+    _write_receipt(run, "psat_sweep_match", "klt-sim-0001",
+                   "2026-11-21T10:00:00Z", "2026-11-21T10:01:00Z")
+    one_point = dict(ALL_MET, pins_dbm=[-17], gains_db=[36])
+    cells = [one_point, dict(one_point, proc="hbt_wcs", s11_ratio=0.5)]
+    md, _doc = _findings_render(tmp_path, cells, remote={"fleet": [{"job_id": "klt-sim-0002"}]},
+                                report_dir=run)
+    assert expected_hosts in md and "declares 261" not in md
+    assert expected_rounds in md and "elapsed n/a" in md
+    assert "1 submitted, 0 launches logged" in md
+    assert "2 distinct launched job IDs" in md and "1 with timed receipts" in md
+    assert "no round launch message" in md and "60 s (launch-to-completion" in md
+    assert "describes the whole run" not in md
+    assert "| -- | -- | -- | met |" in md and "| -- | -- | -- | missed |" in md
+
+
+def test_the_round_local_wall_clock_uses_launch_stamps_when_submit_stamps_are_absent():
+    """A fleet block with no `client_submitted_at` still gets a span -- from its
+    launch stamp, labelled as such, never silently narrower (issue #194)."""
+    fleet = [{"provider": "aws-batch-fleet", "job_id": "klt-sim-0000",
+              "client_submitted_at": None,
+              "client_launched_at": "2026-11-21T15:54:31Z",
+              "client_status_terminal_at": "2026-11-21T16:00:31Z",
+              "elapsed_seconds": 30}]
+    out = PSAT._remote_md({"fleet": fleet})
+    assert "360 s" in out
+    assert "first evidenced submit or launch" in out
+    assert "round-local" in out
+
+
+# The #193 run's own committed evidence, re-derived (issue #194 test plan):
+# the dry-run manifest, eight stderr logs, 747 receipts and the final report
+# are all in-tree, so the provenance statements below are checkable forever.
+COMMITTED_MATCH_RUN = os.path.join(
+    REPO, "sim/psat-sweep/corners/20261121-003533-b2746d0-match")
+
+
+def test_the_committed_matched_run_separates_fallback_from_missed():
+    record = Path(COMMITTED_MATCH_RUN).name
+    sidecar = Path(REPO, "sim/psat-sweep/records", f"{record}.json")
+    findings = PSAT._findings_md(json.loads(sidecar.read_text())["cells"])
+    assert ("- Psat: 4 cells below the Fallback rung (`missed`), "
+            "15 cells at the Fallback rung (`fallback`) -- design iteration #192." in findings)
+    assert ("- Peak PAE: 1 cell below the Fallback rung (`missed`), "
+            "13 cells at the Fallback rung (`fallback`) -- design iteration #192." in findings)
+
+
+def test_the_committed_matched_run_provenance_matches_its_artifacts():
+    rep = json.load(open(os.path.join(COMMITTED_MATCH_RUN, "psat_sweep_match.report.json")))
+    remote = rep["environment"]["remote"]
+    out = PSAT._sharded_run_md("20261121-003533-b2746d0-match", COMMITTED_MATCH_RUN,
+                               "psat_sweep_match",
+                               Path(REPO, "sim/psat-sweep/psat_sweep_match.request.json"), remote)
+    assert "dry-run manifest (`hosts`) declares 261 shards per attempt" in out
+    assert "8 identified attempts" in out
+    counts = [(293, 91), (261, 99), (261, 83), (261, 64), (261, 102), (261, 165),
+              (174, 135), (38, 39)]
+    for i, (submitted, launched) in enumerate(counts):
+        label = f"resume{i}" if i else "initial"
+        assert f"{label}: {submitted} submitted, {launched} launches logged" in out
+    assert "778 distinct launched job IDs" in out
+    assert "778 in launch messages, 747 with timed receipts, 39 in final fleet" in out
+    assert "2026-11-21T00:37:50Z" in out and "2026-11-21T16:02:07Z" in out
+    assert "55457 s" in out and "no completion timestamp for 34 receipt-backed jobs" in out
+    assert "38 of 39 final-fleet entries carry `client_submitted_at`" in out
+    assert "launch-to-completion" in out
+    loc = PSAT._remote_md(remote)
+    assert "39 fleet shards in this report's final round (round-local)" in loc
+    assert "478 s" in loc
+
+
 # --- the two facts this record used to retype (issue #119) -----------------
 
 
@@ -335,3 +648,89 @@ def test_the_record_shares_the_watts_to_dbm_conversion_with_the_reducer(tmp_path
     # the one drive point's P_in, as the table prints it, straight from the library
     p_in_w = _doc["points"][0]["p_in_w"]
     assert f"| {rx.dbm(p_in_w):.2f} |" in md
+
+
+# --- the PVT matrix record (issue #173) ------------------------------------
+#
+# A multi-cell report renders per cell: one reduction per cell (never one over
+# points from different cells), the provisional banner, per-cell verdict rungs
+# against the RATIFIED rows, and the 125 C window label. The same synthetic
+# waveform serves every corner -- its P_out/P_in are constant, so each cell's
+# reduction is a flat sweep (linear region found, P1dB not reached), which is
+# enough to exercise the grouping and the grading.
+
+
+def _matrix_render(tmp_path):
+    tmp = str(tmp_path)
+    wav = os.path.join(tmp, "waveform.raw.json")
+    _waveform(wav)
+    corners = []
+    for proc, temp, vcc in (("hbt_typ", 27.0, 0.8), ("hbt_wcs", 125.0, 0.72)):
+        for k in range(6):
+            vamp = 0.01 + 0.001 * k
+            corners.append({
+                "corner_id": gdb.klt_corner_id(proc, {"vamp": vamp, "vcc": vcc}, temp),
+                "process": proc, "temperature_c": temp, "status": "pass",
+                "supply_v": {"vamp": vamp, "vcc": vcc},
+                "artifacts": {"waveform": wav},
+            })
+    report = {"environment": {"backend": "test", "remote": "n/a"}, "corners": corners}
+    rep_path = os.path.join(tmp, "report.json")
+    out_json = os.path.join(tmp, "rec.json")
+    with open(rep_path, "w") as fh:
+        json.dump(report, fh)
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = PSAT.main(["psat_record.py", "match", "rid", "deadbee", "0",
+                        "klt 0.9.1", "ngspice-47", rep_path, out_json])
+    return rc, buf.getvalue(), json.load(open(out_json))
+
+
+def test_a_matrix_report_reduces_per_cell_and_labels_it_provisional(tmp_path):
+    rc, md, doc = _matrix_render(tmp_path)
+    assert rc == 0
+    assert doc["pvt_matrix"] is True
+    assert len(doc["cells"]) == 2
+    for cell in doc["cells"]:
+        assert len(cell["points"]) == 6          # the other cell's points are not in it
+        assert cell["reduction"] is not None      # one reduction PER CELL
+    assert doc["cells"][0]["cell"]["process"] == "hbt_typ"
+    assert doc["cells"][1]["cell"] == {"process": "hbt_wcs", "temperature_c": 125.0,
+                                       "vcc": 0.72}
+    assert "PROVISIONAL: Supply row DRAFT" in md
+    assert "2 of 27 declared cells" in md
+    # The 27 C cell and the 125 C cell are separate detail blocks.
+    assert "`hbt_typ` / 27 C / 0.8 V" in md
+    assert "`hbt_wcs` / 125 C / 0.72 V" in md
+
+
+def test_the_125c_cell_is_labelled_outside_the_window_not_passed(tmp_path):
+    _rc, md, doc = _matrix_render(tmp_path)
+    hot = doc["cells"][1]
+    assert hot["cell"]["temperature_c"] == 125.0
+    # Ambient alone sits at the window top, so Tj (125 + the card's rise) is
+    # outside by construction -- the label must say so.
+    assert hot["worst_stress"]["frac_tj_outside"] > 0
+    block = md.split("`hbt_wcs` / 125 C / 0.72 V", 1)[1]
+    assert "OUTSIDE MODEL WINDOW" in block
+    # The verdict table never passes an outside-window cell: the stress label
+    # column carries the label into the same row.
+    assert "OUTSIDE MODEL WINDOW" in md.split("## Per-cell figures")[1].split("## Per-cell detail")[0]
+
+
+def test_a_matrix_report_grades_ratified_rows_per_cell(tmp_path):
+    _rc, md, doc = _matrix_render(tmp_path)
+    # The synthetic load power is 1.2 V x 30 mA / 2 = 18 mW = 12.55 dBm: above
+    # the +10 dBm Fallback and below the +15 dBm Target, so every cell's Psat
+    # rung is `fallback` -- grading against sim/lib/spec_rows.py, not a retyped
+    # threshold.
+    psat = doc["cells"][0]["reduction"]["psat_dbm"]
+    assert psat == pytest.approx(10 * math.log10(0.018 * 1e3), abs=0.05)
+    assert psat > 10.0 and psat < 15.0
+    figures = md.split("## Per-cell figures")[1].split("## Per-cell detail")[0]
+    assert figures.count("| fallback |") >= 2      # the Psat column, both cells
+    for rung in ("met", "fallback", "missed"):
+        pass  # rungs are from _rung(); the fallback count above pins the grading
+    assert "worst cell over the matrix" in md.lower()

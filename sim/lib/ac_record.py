@@ -3,6 +3,7 @@
 
     ac_record.py {gain|stability} <record-id> <git-sha> <dirty> <klt-version> <ngspice-version> <klt-report.json> > record.md
 """
+from collections import Counter
 import json
 import os
 import sys
@@ -52,9 +53,168 @@ def _load_complex_vectors(path):
     return freq, data
 
 
+def _cell_of(corner):
+    return {"process": corner.get("process", "?"),
+            "temperature_c": float(corner.get("temperature_c", 27)),
+            "vcc": float(corner.get("supply_v", {}).get("vcc", gdb.VCC_NOM_V))}
+
+
+def _cell_md(cell):
+    return f"`{cell['process']}` / {cell['temperature_c']:g} C / {cell['vcc']:g} V"
+
+
+def _rung(ok_target, ok_fallback):
+    return "met" if ok_target else ("fallback" if ok_fallback else "missed")
+
+
+def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
+    """The PVT-matrix record (issue #173): one row per declared cell, graded
+    against the RATIFIED rows, labelled provisional while the Supply row is
+    DRAFT. Full per-frequency sweeps stay in the klt artifacts."""
+    import spec_rows as sr
+    import finding_trackers as ft
+    from finding_trackers import line_md, units_md
+    rows, failures = [], []
+    for c in rep["corners"]:
+        cell = _cell_of(c)
+        if c.get("status") != "pass":
+            failures.append((cell, c.get("corner_id", "?"), c.get("status"), ft.ac_error_tracker(c)))
+            continue
+        freq, d = _load_complex_vectors(c["artifacts"]["complex_vectors"])
+        s = sp.s_from_nodes(d)
+        st = sp.stability(s)
+        rows.append({"cell": cell, "freq": freq, "s": s, "st": st,
+                     "corner_id": c.get("corner_id", "?")})
+    out = []
+    w = out.append
+    # The rungs this record grades, kept for the findings section below: every
+    # verdict below `met` names the design iteration that tracks it (issue
+    # #194) -- computed in the same loop, so the table and the summary cannot
+    # disagree.
+    gain_rungs, s11_rungs, mu_rungs = [], [], []
+    bench_dir = "ac-gain" if kind == "gain" else "ac-stability"
+    w(f"# {'ac-gain' if kind == 'gain' else 'ac-stability'} record {rid} -- PVT matrix, "
+      f"{len(rep['corners'])} cells")
+    w("")
+    w(f"**PROVISIONAL: Supply row DRAFT.** The {gdb.VCC_NOM_V:g} V nominal the "
+      f"{gdb.PVT_VCC_V[0]:g}/{gdb.VCC_NOM_V:g}/{gdb.PVT_VCC_V[2]:g} V supply points hang "
+      "off is DR 0003, PROPOSED -- the spec's Supply row is not ratified, so no verdict "
+      "below is a pass claim; each is a per-cell finding.")
+    w("")
+    w("**Simulated** (ngspice), **through ideal passives** (the DUT's `Lchoke`/`Cblock`/"
+      "`Cin` are lossless, no self-resonance, no inductor model). The network is not "
+      "matched (placeholder passives), so a poor S11 is the honest bench output.")
+    w("")
+    w("## Conditions")
+    w("")
+    w(f"- Bench: `sim/{bench_dir}/` (spec rows: {SPEC})")
+    w(f"- **Declared matrix**: `sim/pvt-matrix.json` -- {len(gdb.PVT_PROCESS_SECTIONS)} HBT "
+      f"sections ({', '.join(gdb.PVT_PROCESS_SECTIONS)}) x {len(gdb.PVT_TEMP_C)} ambient "
+      f"temperatures ({'/'.join(f'{t:g}' for t in gdb.PVT_TEMP_C)} C) x supply "
+      f"{gdb.PVT_VCC_V[0]:g}/{gdb.VCC_NOM_V:g}/{gdb.PVT_VCC_V[2]:g} V (nominal +/-10 %) "
+      f"= **{gdb.pvt_cell_count()} cells**; this report grades {len(rows)} of "
+      f"{gdb.pvt_cell_count()} declared cells (`klt corner-matrix` verdicts committed under "
+      f"`corners/{rid}/`). Quiescent point: the DUT's own mirror bias at the cell's "
+      "Vcc. Self-heating on (card default).")
+    w("- **R/C process sections**: the spec pairs `res_*`/`cap_*` with the HBT corner of "
+      "the same name, but the DUT's passives are ideal ngspice elements, so no R/C "
+      "corner applies to them; only the HBT section moves.")
+    w(f"- Source and load: {_port_z()}, S-parameter reference {gdb.RS_OHM:g} ohm; "
+      "two independent DUT copies (forward and reverse excitation) per cell.")
+    w(commit_line(git_sha, dirty))
+    w(f"- klt {klt_v}; {ng_v}; PDK per `sim/pdk.json`.")
+    w("")
+    if kind == "gain":
+        w("## Per-cell band results (11 points, 2400-2483.5 MHz)")
+        w("")
+        w("| Cell | min S21 dB | worst S11 dB | Power gain | S11 |")
+        w("|---|---|---|---|---|")
+        for r in rows:
+            s21 = sp.db20(r["s"]["s21"])
+            s11 = sp.db20(r["s"]["s11"])
+            mn, wx = float(np.min(s21)), float(np.max(s11))
+            rg = _rung(mn > sr.GAIN_TARGET_DB, mn > sr.GAIN_FALLBACK_DB)
+            rs = _rung(wx < sr.S11_TARGET_DB, wx < sr.S11_FALLBACK_DB)
+            gain_rungs.append(rg)
+            s11_rungs.append(rs)
+            w(f"| {_cell_md(r['cell'])} | {mn:.2f} | {wx:.2f} "
+              f"| {rg} "
+              f"| {rs} |")
+        w("")
+        w(f"Rungs against the RATIFIED rows (Target / Fallback): power gain > "
+          f"{sr.GAIN_TARGET_DB:g} / > {sr.GAIN_FALLBACK_DB:g} dB (min in-band S21); "
+          f"S11 < {sr.S11_TARGET_DB:g} / < {sr.S11_FALLBACK_DB:g} dB (worst in-band). "
+          "The spec binds the worst cell as the figure.")
+        if rows:
+            w("")
+            w(f"**Worst cell over the matrix**: min S21 "
+              f"{min(float(np.min(sp.db20(r['s']['s21']))) for r in rows):.2f} dB, worst "
+              f"S11 {max(float(np.max(sp.db20(r['s']['s11']))) for r in rows):.2f} dB.")
+    else:
+        w(f"## Per-cell stability, {rows[0]['freq'][0] / 1e6:.0f} MHz - "
+          f"{rows[0]['freq'][-1] / 1e9:.0f} GHz" if rows else "## Per-cell stability")
+        w("")
+        w("| Cell | min mu | at GHz | min k | max \\|delta\\| | max \\|S11\\| | max \\|S22\\| | mu > 1 |")
+        w("|---|---|---|---|---|---|---|---|")
+        for r in rows:
+            st, freq = r["st"], r["freq"]
+            imin = int(np.argmin(st["mu"]))
+            mn = float(st["mu"][imin])
+            rg = _rung(mn > sr.MU_MIN, mn > sr.MU_MIN)
+            mu_rungs.append(rg)
+            w(f"| {_cell_md(r['cell'])} | {mn:.4f} | {freq[imin] / 1e9:.4g} "
+              f"| {float(np.min(st['k'])):.3g} | {float(np.max(st['abs_delta'])):.3g} "
+              f"| {st['max_abs_s11']:.4f} | {st['max_abs_s22']:.4f} "
+              f"| {rg} |")
+        w("")
+        w("mu > 1 (Edwards-Sinsky) is the pass metric at every point; k and |delta| are "
+          "reported, not graded (k is ill-conditioned on low-S12 topologies). The spec's "
+          "Fallback column for this row is \"same\" -- there is no relaxed rung. The "
+          "spec binds the worst cell as the figure.")
+        if rows:
+            w("")
+            w("**Worst cell over the matrix**: min mu "
+              f"{min(float(np.min(r['st']['mu'])) for r in rows):.4f}.")
+    w("")
+    if failures:
+        w("## Cells with figures withheld")
+        w("")
+        for cell, cid, status, _tracker in failures:
+            w(f"- {_cell_md(cell)} (`{cid}`): klt status `{status}`, grade withheld.")
+        w("")
+    w("## Findings and their trackers")
+    w("")
+    w("Each finding this run records, with the design iteration that tracks it "
+      "(named only where one exists):")
+    w("")
+    if kind == "gain":
+        fl = [line_md("Input match (S11)", s11_rungs, ft.STABILITY_AND_MATCH),
+              line_md("Power gain", gain_rungs, None)]
+    else:
+        fl = [line_md("Stability (mu > 1)", mu_rungs, ft.STABILITY_AND_MATCH,
+                      rung="the rung")]
+    error_counts = Counter((status, tracker) for _cell, _cid, status, tracker in failures)
+    for (status, tracker), count in error_counts.items():
+        fl.append(units_md(count, "cell", f"with grade withheld (klt status `{status}`)", tracker))
+    fl = [ln for ln in fl if ln]
+    if not fl:
+        fl = ["- No verdict falls below its rung and every cell was graded."]
+    for ln in fl:
+        w(ln)
+    w("")
+    w("Full per-frequency sweeps: klt artifacts under `corners/<id>/`. Points per decade "
+      "and the negative-resistance check are unchanged from the nominal-cell bench "
+      "(spec: >= 40 pts/decade).")
+    w("")
+    print("\n".join(out))
+    return 0 if rows else 1
+
+
 def main(argv):
     kind, rid, git_sha, dirty, klt_v, ng_v, report_path = argv[1:8]
     rep = json.load(open(report_path))
+    if len(rep.get("corners", [])) != 1:
+        return _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep)
     corner = rep["corners"][0]
     if corner.get("status") != "pass":
         print(f"ac_record.py: corner status {corner.get('status')!r}", file=sys.stderr)
@@ -124,18 +284,22 @@ def main(argv):
         verdict = "mu > 1 at every point" if float(np.min(st["mu"])) > 1 else "mu <= 1 at one or more points"
         w(f"- observation (this cell only): {verdict}.")
         w("")
-        w("### Cause of the pre-#172 instability, and what changed")
+        w("### Observations on the pre-#172 instability, and what changed")
         w("")
         w("Before the issue-#172 network (`records/20261118-225926-ef3c005.md`, same cell), "
-          "mu was 0.0228 at 0.176 GHz and below 1 at **every** one of the 174 points. The "
-          f"cause is circuit-level: the array idles with V_CE = {gdb.VCC_NOM_V:g} - V_BE "
-          "≈ 22 mV (the draft supply cannot support 2 V_BE), so the BC junction is "
-          "weakly forward-biased and reverse transmission through the device is only "
-          "~-25 dB; with 17-29 dB of forward gain below the band, the loop product "
-          "|S12*S21| ≈ 0.7 from 60 MHz to 30 GHz. At low frequency the collector "
-          "additionally resonates: `Lchoke` is only j110 ohm at 176 MHz -- not a choke "
-          "there -- and the load it forms with the array capacitance and the port peaks "
-          "the gain at 29 dB around 176 MHz, where mu bottoms.")
+          "mu was 0.0228 at 0.176 GHz and below 1 at **every** one of the 174 points; k "
+          "was also below 1 throughout, while max |delta|, max |S11| and max |S22| were "
+          "all below 1 (no negative-resistance port). What the pre-change run measured at "
+          f"the quiescent point (ngspice operating point, emitter grounded): V_CE = "
+          f"{gdb.VCC_NOM_V:g} V (the collector node sits at the supply) and the base at "
+          "0.778 V, so V_CB = +21.97 mV -- the base-collector junction is reverse-biased by "
+          "only ~22 mV, i.e. near zero bias, not forward-biased. The archived vectors give a "
+          "loop product |S12*S21| of 0.744 at 176.25 MHz and 0.0601 at 30 GHz. At low "
+          "frequency the collector additionally resonates: `Lchoke` is only j110 ohm at "
+          "176 MHz -- not a choke there -- and the load it forms with the array "
+          "capacitance and the port peaks the gain around 176 MHz, where mu bottoms. "
+          "These are observations from the vectors and the log; no device-level "
+          "mechanism is asserted beyond them.")
         w("")
         w("The fix is four ideal resistors (no inductor added, DR 0001 D-1 open): `Rin` "
           "(series at RFIN) and `Rshm` (shunt at the `Cin` tap node) pad the input and "

@@ -68,16 +68,41 @@ what such a host would hit, not the hosts that exist today.
 
 Run against `design/netlist/sg13g2-pa.spice` (topology DR 0003, **PROPOSED**; **ideal
 passives** in the output network, so no output-power or PAE figure is an on-chip result).
-Nominal cell only (`hbt_typ`, 27 C, Vcc 0.8 V): each bench takes the cell as request
-parameters so item 5 can run the matrix later, and each run here proves the bench works
-cold. Cold start, after `scripts/setup-env.sh` and with `python3` + `numpy` available:
+The three characterization benches (`psat --match`, `ac-gain`, `ac-stability`) cover the
+full PVT corner box (issue #173): 3 `cornerHBT.lib` sections (`hbt_typ`, `hbt_bcs`,
+`hbt_wcs`) x -40/27/125 C x supply 0.72/0.8/0.88 V (nominal +/-10 %), declared once in
+`sim/pvt-matrix.json` (the psat drive-crossed variant in
+`sim/psat-sweep/psat_sweep_match.pvt-matrix.json`) and checked against every request and
+report with `klt corner-matrix` before any submit. The bare psat variant stays
+nominal-only: its 50 ohm harmonic terminations differ from the matched bench the ratified
+rows are judged on, so its figures are not comparable across the matrix. Every verdict
+from the matrix benches is **provisional** (Supply row DRAFT, DR 0003 PROPOSED). Cold
+start, after `scripts/setup-env.sh` and with `python3` + `numpy` available:
 
 | Spec rows | Bench | Cold-start command | Where it runs |
 |---|---|---|---|
-| Psat, P1dB, peak PAE, large-signal S11, device stress (peak `V_CE`/`V_CB`/`V_BE`/`I_C`/T_j per device, window labelling), harmonics and back-off PAE reported | `psat-sweep/` | `sim/psat-sweep/run_psat_sweep.sh` | one `klt sim` request, 72 drive points: the batch fleet; a submit refused for capacity is waited out by `klt` (`batch.capacity_wait_s` 600 in the request), never run locally |
-| The same rows, **through an ideal off-chip output match** (study variant, see "The off-chip output match" below) | `psat-sweep/` (`--match`) | `sim/psat-sweep/run_psat_sweep.sh --match` | one `klt sim` request, 106 drive points, `remote.hosts` 10: the batch fleet, same capacity wait |
-| Power gain, small-signal S11 (S22, S12) over the band | `ac-gain/` | `sim/ac-gain/run_ac_gain.sh` | single unit, `--backend local` |
-| Small-signal stability: mu, mu', k, abs(delta), negative-resistance check, 10 MHz-30 GHz at 50 pts/decade | `ac-stability/` | `sim/ac-stability/run_ac_stability.sh` | single unit, `--backend local` |
+| Psat, P1dB, peak PAE, large-signal S11, device stress (peak `V_CE`/`V_CB`/`V_BE`/`I_C`/T_j per device, window labelling), harmonics and back-off PAE reported | `psat-sweep/` | `sim/psat-sweep/run_psat_sweep.sh` | one `klt sim` request, nominal cell only, 72 drive points: the batch fleet; a submit refused for capacity is waited out by `klt` (`batch.capacity_wait_s` 600 in the request), never run locally |
+| The same rows, **through an ideal off-chip output match** (study variant, see "The off-chip output match" below), over the full 27-cell PVT matrix (106 drive points per cell, 2862 units) | `psat-sweep/` (`--match`) | `sim/psat-sweep/run_psat_sweep.sh --match` | one `klt sim` request, `remote.hosts` 261: the batch fleet, same capacity wait; an interrupted run resumes with `--resume` into the same outdir |
+| Power gain, small-signal S11 (S22, S12) over the band, over the full 27-cell PVT matrix | `ac-gain/` | `sim/ac-gain/run_ac_gain.sh` | one `klt sim` request, `remote.hosts` 3: the batch fleet |
+| Small-signal stability: mu, mu', k, abs(delta), negative-resistance check, 10 MHz-30 GHz at 50 pts/decade, over the full 27-cell PVT matrix | `ac-stability/` | `sim/ac-stability/run_ac_stability.sh` | one `klt sim` request, `remote.hosts` 3: the batch fleet |
+
+The provisional matrix's findings, and the design iterations that track them (the
+committed records are the authority -- `psat-sweep/records/20261121-003533-b2746d0-match.md`,
+`ac-gain/records/20261121-010216-b2746d0.md`, `ac-stability/records/20261121-011402-b2746d0.md`;
+`sim/lib/finding_trackers.py` is the one place the map lives, and every record the
+renderers write from here on states the same links in its own findings section):
+
+- Input match (S11, small-signal and large-signal) and small-signal stability below
+  their rungs: #172.
+- In three 125 °C cells on both AC benches, ngspice completed the sweeps and
+  produced finite vectors. The records withhold grades because klt reported
+  `error` with a `singular_matrix` diagnostic. [#188](https://github.com/2AMLogic/sg13g2-pa/issues/188)
+  tracks the validity of the recovered operating points.
+- The large-signal power rows -- output P1dB, Psat, peak PAE -- below their rungs:
+  #192.
+- Reduction refusals (e.g. `SWEEP_STEP_TOO_COARSE`) and units that cannot be
+  extracted (e.g. `UNSETTLED`) are findings no issue tracks yet; the records say so
+  rather than linking to the nearest-sounding issue.
 
 Device stress is extracted from the `psat-sweep/` transients (spec: "all large-signal
 benches"), not a separate bench. The decks are generated by `lib/gen_dut_benches.py`, which

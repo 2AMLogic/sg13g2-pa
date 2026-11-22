@@ -9,8 +9,9 @@
 *   stabilisation resistors Rin/Rshm/Rsho/Rdchoke are ideal and lossy by design) --
 *   no inductor model.
 * P_DC = full supply Vcc power, bias reference included (Iref is an ideal source from Vcc).
-* Per-device I_C closes KCL at COLL as (i(Lchoke) + (v(COLL)-v(VCC))/Rdchoke -
-*   i(Vlsense)) / N_UNITS: Rdchoke (issue #172) is the fourth branch on COLL.
+* Per-device I_C closes KCL at COLL and RFOUT as (i(Lchoke) + (v(VCC)-v(COLL))/Rdchoke -
+*   i(Vlsense) - v(RFOUT)/Rsho) / N_UNITS: Rdchoke (issue #172) is the fourth branch on
+*   COLL and Rsho takes part of Cblock's current before the chip boundary.
 * Load current is measured through the 0 V source Vlsense (into the load);
 * supply current through Vcc (delivered = -i(vcc)); input current is -i(bs).
 

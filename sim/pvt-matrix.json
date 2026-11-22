@@ -1,0 +1,20 @@
+{
+  "description": "sg13g2-pa PVT corner box (spec/target-spec.md), declared once by sim/lib/gen_dut_benches.py: 3 cornerHBT.lib sections x -40/27/125 C x supply nominal +/-10 % (nominal 0.8 V, DR 0003 PROPOSED -- Supply row DRAFT, so results are provisional). Checked against the ac-gain / ac-stability requests and reports with `klt corner-matrix check`.",
+  "process": [
+    "hbt_typ",
+    "hbt_bcs",
+    "hbt_wcs"
+  ],
+  "supply_v": {
+    "vcc": [
+      0.72,
+      0.8,
+      0.88
+    ]
+  },
+  "temperature_c": [
+    -40.0,
+    27.0,
+    125.0
+  ]
+}

@@ -206,28 +206,74 @@ sim_begin_record() {
 # shellcheck disable=SC2120  # the option below is passed by a caller in
 # another file (sim/device-npn13g2/run_device.sh), which shellcheck cannot see.
 sim_gate_logs() {
-  # sim_gate_logs [--tolerate-recovered-gmin]
+  # sim_gate_logs [--tolerate-recovered-gmin] [--skip-errored-from <report.json>]
   #
-  # Per-corner log gate over ${OUT}/*/*/ngspice.log: a log carrying any
+  # Per-corner log gate over every ngspice.log under ${OUT}: a log carrying any
   # model/convergence error pattern fails its point -- the point is named on
   # stderr and the caller's `failed=1` is set. This gate reads logs only; the
   # `klt sim` exit code is gated separately, in sim_run_one.
+  #
+  # `find`, not a fixed-depth glob: the batch backend's sharded collects land
+  # per-corner logs at OUT/<bench>/<klt-sim-shard>/<corner>/ngspice.log (three
+  # levels) while local and resumed collects land them at
+  # OUT/<bench>/<corner>/ngspice.log (two); the one-level-deeper layout is the
+  # committed evidence of every fleet-grid bench (sim/psat-sweep/corners/),
+  # so a glob that matches only the shallow one gates nothing on those runs.
   #
   # --tolerate-recovered-gmin: a "singular matrix" warning that ngspice's
   # dynamic gmin stepping recovered from (klt grades the corner `pass` with a
   # warning diagnostic) is left to the record's solver-diagnostics section
   # instead of failing the gate; every other error pattern still fails it.
   #
+  # --skip-errored-from <report.json>: the characterization-matrix waiver (issue
+  # #173): exactly the logs of corners the report itself grades `status:
+  # "error"` are skipped, each named on stderr as an errored corner -- their
+  # diagnostics are the record's "did not simulate" cells, and failing them
+  # here would refuse the honest record the spec asks for (a failing cell is a
+  # finding, not a reason to narrow the box). NOTHING else is waived: a corner
+  # the report grades pass/fail/inconclusive is still gated strictly, and an
+  # unreadable report waives nothing (every log gates, the strict default). The
+  # error statuses must come from klt's own report, never from a local re-parse
+  # of the log text.
+  #
   # Needs, from the caller: OUT, SIM_SCRIPT_NAME.
-  local tolerate=0 log filtered
+  local tolerate=0 skip_report="" log filtered
   local patterns='Unable to find definition of model|couldn.t be loaded|Unknown model type|no such file|singular matrix|Timestep too small|convergence problem|doAnalyses: .*(failed|error)|Error:'
-  case "${1:-}" in
-    "") ;;
-    --tolerate-recovered-gmin) tolerate=1 ;;
-    *) echo "sim_gate_logs: unknown option '$1'" >&2; exit 2 ;;
-  esac
-  for log in "${OUT}"/*/*/ngspice.log; do
+  while (( $# > 0 )); do
+    case "$1" in
+      "") ;;
+      --tolerate-recovered-gmin) tolerate=1 ;;
+      --skip-errored-from)
+        (( $# >= 2 )) || { echo "sim_gate_logs: --skip-errored-from needs a value" >&2; exit 2; }
+        skip_report="$2"; shift ;;
+      *) echo "sim_gate_logs: unknown option '$1'" >&2; exit 2 ;;
+    esac
+    shift
+  done
+  local -A skip_logs=()
+  if [[ -n "${skip_report}" ]]; then
+    while IFS= read -r __sl; do skip_logs["${__sl}"]=1; done < <(python3 -I - "${skip_report}" <<'PY' || true
+import json
+import sys
+
+try:
+    doc = json.load(open(sys.argv[1]))
+except Exception:
+    sys.exit(0)  # unreadable report: waive nothing, gate everything
+for c in doc.get("corners") or []:
+    if c.get("status") == "error":
+        log = (c.get("artifacts") or {}).get("log")
+        if log:
+            print(log)
+PY
+    )
+  fi
+  while IFS= read -r log; do
     [[ -f "${log}" ]] || continue
+    if [[ -n "${skip_report}" && -n "${skip_logs[${log}]+x}" ]]; then
+      echo "${SIM_SCRIPT_NAME}: errored corner (skipped, recorded as a cell that did not simulate): ${log#"${OUT}/"}" >&2
+      continue
+    fi
     filtered="${log}"
     if (( tolerate )) && grep -q 'Dynamic gmin stepping completed' "${log}"; then
       filtered="$(mktemp)"
@@ -238,7 +284,7 @@ sim_gate_logs() {
       failed=1
     fi
     [[ "${filtered}" == "${log}" ]] || rm -f "${filtered}"
-  done
+  done < <(find "${OUT}" -name ngspice.log -type f 2>/dev/null)
 }
 
 sim_resolve_klt() {
@@ -256,7 +302,7 @@ sim_resolve_klt() {
 }
 
 sim_run_one() {
-  # sim_run_one <name> [extra klt args]
+  # sim_run_one <name> [--allow-errored-corners] [extra klt args]
   #
   # Runs `klt sim` on <name>.request.json (in the caller's SCRIPT_DIR) into
   # ${OUT}/<name>, with the report and stderr beside it. One invocation: a batch
@@ -267,21 +313,164 @@ sim_run_one() {
   # including a capacity refusal that outlasts that wait, is reported and sets
   # the caller's `failed=1`; nothing is ever retried locally.
   #
-  # Any non-zero klt exit is a failure, for every bench. A waveform-only request
-  # sets `options.capture_only: true`, so klt itself grades a run whose corners
-  # all passed `pass` and exits 0 (and refuses the option on a request that
-  # declares measurements); the wrapper carries no per-bench exception.
+  # Any non-zero klt exit is a failure, for every bench -- except exit 4 under
+  # `--allow-errored-corners`: klt exits 4 when corners ERRORED (report
+  # envelope `status: error`, per-corner `status: error` with diagnostics), and
+  # a characterization matrix bench (issue #173) must RECORD those corners as
+  # cells that did not simulate, not refuse the record: the spec forbids
+  # narrowing the box to make cells pass. The waiver is exit-4 only and the
+  # coverage gates the callers run afterwards (sim_gate_logs
+  # --skip-errored-from, sim_corner_matrix_check report mode) still judge the
+  # report; every other exit, and every bench that does not ask, stays strict.
+  # A waveform-only request sets `options.capture_only: true`, so klt itself
+  # grades a run whose corners all passed `pass` and exits 0 (and refuses the
+  # option on a request that declares measurements); the wrapper carries no
+  # per-bench exception.
   #
   # Needs, from the caller: SCRIPT_DIR, OUT, KLT_CMD (sim_resolve_klt), SIM_SCRIPT_NAME.
-  local name="$1" rc=0
+  local name="$1" rc=0 allow_errored=0
   shift
+  if [[ "${1:-}" == "--allow-errored-corners" ]]; then
+    allow_errored=1
+    shift
+  fi
   echo "${SIM_SCRIPT_NAME}: klt sim ${name} $*"
   ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --format json -o "${OUT}/${name}" "$@" \
       "${name}.request.json" > "${OUT}/${name}.report.json" 2> "${OUT}/${name}.stderr" ) || rc=$?
   (( rc == 0 )) && return 0
+  if (( rc == 4 && allow_errored )); then
+    echo "${SIM_SCRIPT_NAME}: ${name}: klt sim exited 4 (errored corners; recorded" \
+         "per corner in the report) -- allowed for this characterization bench;" \
+         "the coverage gates judge the report." >&2
+    return 0
+  fi
   echo "${SIM_SCRIPT_NAME}: ${name}: klt sim exited ${rc} (see ${OUT}/${name}.stderr); no local fallback is attempted." >&2
   # shellcheck disable=SC2034  # read by the sourcing runner
   failed=1
+}
+
+sim_dry_run_corner_ids() {
+  # sim_dry_run_corner_ids <name>
+  #
+  # The pre-submit unit screen for a matrix bench (issue #173): run
+  # `klt sim --dry-run` on <name>.request.json (nothing is simulated or
+  # submitted), then fail unless every expanded unit has a DISTINCT
+  # corner_id. klt names a unit and its artifact directory by that id and
+  # formats supply axis values to three decimals, so two close values
+  # collapse onto one unit (2AMLogic/klayout-tools#5870) -- silently, unless
+  # something counts. This is the authoritative screen (the generator holds a
+  # mirror of the format that fails at generation time); both run before any
+  # fleet submit. Writes ${OUT}/<name>.dry-run.json (committed evidence of
+  # the check).
+  #
+  # Needs, from the caller: SCRIPT_DIR, OUT, KLT_CMD (sim_resolve_klt), SIM_SCRIPT_NAME.
+  local name="$1" rc=0
+  ( cd "${SCRIPT_DIR}" && "${KLT_CMD[@]}" sim --dry-run --format json \
+      "${name}.request.json" > "${OUT}/${name}.dry-run.json" 2> "${OUT}/${name}.dry-run.stderr" ) || rc=$?
+  if (( rc != 0 )); then
+    echo "${SIM_SCRIPT_NAME}: ${name}: klt sim --dry-run exited ${rc} (see ${OUT}/${name}.dry-run.stderr)" >&2
+    return 1
+  fi
+  python3 -I - "${OUT}/${name}.dry-run.json" "${SIM_SCRIPT_NAME}: ${name}" <<'PY' || return 1
+import collections
+import json
+import sys
+
+doc = json.load(open(sys.argv[1]))
+ids = [u.get("corner_id") for u in (doc.get("units") or [])]
+dups = sorted(i for i, n in collections.Counter(ids).items() if n > 1 or i is None)
+if not ids or dups:
+    print(f"{sys.argv[2]}: DRY_RUN_CORNER_ID_COLLISION: {dups[:5]}"
+          f" ({len(dups)} bad of {len(ids)} units) -- klt collapses close supply"
+          " axis values onto one corner id (klayout-tools#5870); not submitting.",
+          file=sys.stderr)
+    sys.exit(1)
+print(f"{sys.argv[2]}: dry run: {len(ids)} units, corner ids distinct")
+PY
+}
+
+sim_corner_matrix_check() {
+  # sim_corner_matrix_check <matrix.json> <request|report> <file> <dest-stem>
+  #
+  # The `klt corner-matrix` gate of a matrix bench (issue #173): diff the
+  # declared matrix against the request BEFORE any submit (conformance:
+  # missing/extra/duplicate tuples) and against the finished report AFTER
+  # (completeness: every tuple once, simulated). Writes the JSON verdict to
+  # ${OUT}/<dest-stem>.corner-matrix-<request|report>.json -- the committed
+  # artifact the record cites.
+  #
+  # What fails the bench is INCOMPLETE COVERAGE, not a failing corner: a
+  # characterization sweep that records a failing or errored corner is the
+  # run's honest output (the spec forbids narrowing the box to make cells
+  # pass). klt's own `complete` cannot say that: its `not_simulated` list
+  # conflates a tuple that never ran with a tuple whose corner ran and errored,
+  # so a matrix whose cells legitimately fail to converge can never check
+  # clean (2AMLogic/klayout-tools#7008). The gate therefore reads the verdict's
+  # tuple sets itself and accepts exactly the errored-cells case: missing /
+  # extra / duplicate all empty (a non-empty one is the tool finding the
+  # bench's own missing/duplicated-cell failure -- still a hard fail) AND
+  # every not_simulated tuple a corner the REPORT itself grades non-pass
+  # (cross-checked against the report, so a tuple that never ran still fails).
+  # Outcome quality is the record's job either way.
+  #
+  # Needs, from the caller: OUT, KLT_CMD (sim_resolve_klt), SIM_SCRIPT_NAME.
+  local matrix="$1" mode="$2" src="$3" dest="$4" rc=0
+  "${KLT_CMD[@]}" corner-matrix check "${matrix}" "--${mode}" "${src}" --format json \
+      > "${OUT}/${dest}.corner-matrix-${mode}.json" 2> "${OUT}/${dest}.corner-matrix-${mode}.stderr" || rc=$?
+  if (( rc != 0 && rc != 3 )); then
+    echo "${SIM_SCRIPT_NAME}: corner-matrix ${mode} check exited ${rc} (see ${OUT}/${dest}.corner-matrix-${mode}.stderr)" >&2
+    return 1
+  fi
+  python3 -I - "${OUT}/${dest}.corner-matrix-${mode}.json" "${SIM_SCRIPT_NAME}" "${src}" <<'PY' || return 1
+import json
+import sys
+
+doc = json.load(open(sys.argv[1]))
+ok = doc.get("coverage_complete")
+if ok is None:
+    ok = doc.get("complete")
+if ok is True:
+    print(f"{sys.argv[2]}: corner-matrix {doc.get('mode')} check: covers all "
+          f"{doc.get('matrix_size')} declared tuples")
+    sys.exit(0)
+
+def report_corner_states(path):
+    try:
+        rep = json.load(open(path))
+    except Exception:
+        return None
+    corners = rep.get("corners")
+    if not isinstance(corners, list):
+        return None
+    return {c.get("corner_id"): c.get("status") for c in corners}
+
+not_simulated = doc.get("not_simulated") or []
+clean_sets = not doc.get("missing") and not doc.get("extra") and not doc.get("duplicate")
+if clean_sets and not_simulated and sys.argv[3]:
+    # The errored-cells case (2AMLogic/klayout-tools#7008): every
+    # not_simulated entry is a matrix tuple, and klt matches report corners to
+    # tuples by corner_id string -- so each one must be a corner the REPORT
+    # itself grades non-pass. An entry with no matching non-pass corner (a
+    # tuple that never ran, or a verdict shape this cross-check cannot
+    # confirm) still fails below.
+    states = report_corner_states(sys.argv[3])
+    if states is not None:
+        observed_non_pass = {cid for cid, st in states.items() if st != "pass"}
+        if set(not_simulated) and set(not_simulated) <= observed_non_pass:
+            print(f"{sys.argv[2]}: corner-matrix {doc.get('mode')} check: all "
+                  f"{doc.get('matrix_size')} declared tuples observed once; "
+                  f"{len(not_simulated)} errored (recorded as cells that did "
+                  "not simulate; klt cannot check this clean, "
+                  "2AMLogic/klayout-tools#7008): "
+                  + ", ".join(sorted(not_simulated)))
+            sys.exit(0)
+print(f"{sys.argv[2]}: CORNER_MATRIX_INCOMPLETE: "
+      + json.dumps({k: doc.get(k) for k in ("missing", "extra", "duplicate",
+                                            "not_simulated")})
+      + " -- the request/report does not cover the declared matrix.",
+      file=sys.stderr)
+sys.exit(1)
+PY
 }
 
 sim_run_ac_bench() {
@@ -290,10 +479,13 @@ sim_run_ac_bench() {
   # The whole body of the two AC bench runners, which differ only in the bench
   # name: <kind> is `gain` or `stability`, the klt request is
   # ac_<kind>.request.json and the bench directory is sim/ac-<kind>/. Holds the
-  # deck-staleness gate, the record prelude, the single local `klt sim` submit,
-  # both gates and the ac_record.py render, so a change to any of them reaches
-  # both benches at once -- a gate applied to one runner and missed on the other
-  # would record one bench's append-only evidence through a weaker gate.
+  # deck-staleness gate, the record prelude, the pre-submit matrix screens
+  # (corner-id distinctness, `klt corner-matrix` conformance), the single
+  # `klt sim` submit (fleet work on the dispatch worker), both run gates, the
+  # post-run matrix completeness check and the ac_record.py render, so a
+  # change to any of them reaches both benches at once -- a gate applied to
+  # one runner and missed on the other would record one bench's append-only
+  # evidence through a weaker gate.
   #
   # sim/psat-sweep/run_psat_sweep.sh is deliberately NOT a caller: it submits to
   # the batch backend, renders through its own psat_record.py with a JSON
@@ -322,12 +514,26 @@ sim_run_ac_bench() {
   sim_begin_record --pathspec sim --pathspec design \
     --pathspec ":!sim/${dir}/records" --pathspec ":!sim/${dir}/corners"
   local failed=0
-  # A single unit, so --backend local. sim_run_one sets failed=1 rather than
-  # exiting, so the gate below is what stops the record.
-  sim_run_one "${bench}" --backend local
+  # A matrix bench (27 cells): screen the per-unit corner ids and check the
+  # request against the declared matrix BEFORE the submit, and the finished
+  # report against it after. sim_run_* set failed=1 rather than exiting, so
+  # the gates below are what stop the record.
+  sim_dry_run_corner_ids "${bench}" || failed=1
+  sim_corner_matrix_check "${SIM_DIR}/pvt-matrix.json" request \
+      "${SCRIPT_DIR}/${bench}.request.json" "${bench}" || failed=1
+  # The backend is the host's (KLT_SIM_BACKEND=batch on the dispatch worker:
+  # a 27-cell grid is fleet work); sim_run_one submits once -- the capacity
+  # wait is the request's batch.capacity_wait_s -- and never reruns locally.
+  # A characterization matrix (issue #173) RECORDS corners that errored (a
+  # cell that did not simulate is a finding, not a reason to narrow the box):
+  # exit 4 is waived and exactly the report's errored-corner logs skip the log
+  # gate, so the record carries them as "did not simulate" rows.
+  sim_run_one "${bench}" --allow-errored-corners
   # shellcheck disable=SC2119  # no --tolerate-recovered-gmin: an AC corner that
   # needed gmin stepping is not evidence these benches record.
-  sim_gate_logs
+  sim_gate_logs --skip-errored-from "${OUT}/${bench}.report.json"
+  sim_corner_matrix_check "${SIM_DIR}/pvt-matrix.json" report \
+      "${OUT}/${bench}.report.json" "${bench}" || failed=1
   (( failed == 0 )) || exit 1
   local rec="${RECORDS_DIR}/${RECORD_ID}.md"
   python3 -I "${SIM_DIR}/lib/ac_record.py" "${kind}" "${RECORD_ID}" "${REPO_GIT_SHA}" "${DIRTY}" \
