@@ -10,6 +10,10 @@
   -36.0
  ],
  "matrix_record_id": "20261121-003533-b2746d0-match",
+ "dut": {
+  "netlist_sha256": "b10bc89410f84bd0051a7009fd1648c1d12a46bda2ffebfc54bd0e6e33f056c6",
+  "deck_content_hash": "sha256:bd42b98366b7cf030c1ea0fc164899f4592de8fad1fbda2a691b0fad51f51123"
+ },
  "cells": [
   {
    "cell": {

@@ -1,0 +1,1 @@
+This non-retained candidate reduced Rb from 1 kΩ to 10 Ω. The matrix refuted the bias-feed hypothesis. The retained design uses the 1 kΩ baseline (record `20261121-003533-b2746d0-match`).

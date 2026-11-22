@@ -5,6 +5,9 @@
 #   scripts/setup-env.sh && sim/psat-sweep/run_psat_sweep.sh
 #   scripts/setup-env.sh && sim/psat-sweep/run_psat_sweep.sh --match
 #
+# Use --candidate "description of the design change" for a matched candidate run.
+# Its description and exact inputs travel with the record.
+#
 # --match runs the `match` bench variant instead of the default `bare` one: the same
 # sweep, but through an IDEAL, LOSSLESS off-chip output match between RFOUT (the stated
 # chip boundary) and the 50 ohm load, so the collector sees the load-line resistance the
@@ -37,8 +40,13 @@ VARIANT=bare
 SUFFIX=""
 case "${1:-}" in
   "") ;;
-  --match) VARIANT=match; SUFFIX="-match" ;;
-  *) echo "run_psat_sweep.sh: unknown argument '$1' (want --match or nothing)" >&2; exit 2 ;;
+  --match)
+    [[ $# == 1 ]] || { echo "--match takes no additional arguments" >&2; exit 2; }
+    VARIANT=match; SUFFIX="-match" ;;
+  --candidate)
+    [[ $# == 2 && -n "${2:-}" ]] || { echo "--candidate requires a description" >&2; exit 2; }
+    VARIANT=match; SUFFIX="-match" ;;
+  *) echo "run_psat_sweep.sh: unknown argument '$1' (want --match, --candidate DESCRIPTION or nothing)" >&2; exit 2 ;;
 esac
 BENCH="psat_sweep"
 [[ "${VARIANT}" == bare ]] || BENCH="psat_sweep_match"
@@ -60,6 +68,11 @@ failed=0
 # the finished report against it after. The bare variant stays nominal-only
 # (no declared matrix; its cold start is the item-9 run).
 if [[ "${VARIANT}" == match ]]; then
+  mkdir "${OUT}/inputs"
+  cp "${SCRIPT_DIR}/${BENCH}.spice" "${REPO_ROOT}/design/netlist/sg13g2-pa.spice" "${OUT}/inputs/"
+  if [[ "$1" == --candidate ]]; then
+    printf '%s\n' "$2" > "${OUT}/inputs/candidate.txt"
+  fi
   sim_dry_run_corner_ids "${BENCH}" || failed=1
   sim_corner_matrix_check "${SCRIPT_DIR}/psat_sweep_match.pvt-matrix.json" request \
       "${SCRIPT_DIR}/${BENCH}.request.json" "${BENCH}" || failed=1

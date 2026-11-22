@@ -15,7 +15,7 @@ therefore stops at
 "drive >= 20 dB below the compressing level" (Output P1dB row). The probe reuses the
 COMMITTED matched deck unchanged (same load, harmonic terminations, extraction nodes)
 and swaps only the drive axis for `gen_dut_benches.P1DBREF_PROBE_GRID_DBM`: 4 dB
-spacing, the coarsest that stays bucket-distinct down to -56 dBm available, whose
+spacing, the finest tested that stays bucket-distinct down to -56 dBm available, whose
 lowest point is 28 dB under the earliest measured compression.
 
 Per cell, against the committed matrix record passed as <matrix-record.json>:
@@ -42,10 +42,12 @@ The probe is NOT a drive sweep: 4 dB steps, no compression bracketed, `reduce_sw
 never runs on it, and no Psat/PAE figure appears here. Nothing in this record is a
 pass claim for any row; the Supply row is DRAFT, so every figure is provisional.
 """
+import hashlib
 import json
 import math
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 
@@ -54,7 +56,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import gen_dut_benches as gdb  # noqa: E402
 import rf_extract as rx  # noqa: E402
 from provenance import commit_line  # noqa: E402
-from psat_record import F0, RS, _cell_md, _remote_md, label, stress  # noqa: E402
+from psat_record import F0, RS, _cell_md, _remote_md, label, stress, verified_dut  # noqa: E402
 
 # `reduce_sweep`'s default reference width: the median gain of this many lowest-drive
 # points. The renderer reads the reference actually used from the matrix record's own
@@ -132,7 +134,7 @@ def fmt(v, spec):
     return "--" if v is None else spec.format(v)
 
 
-def render(rid, git_sha, dirty, klt_v, ng_v, rep, matrix, out_json):
+def render(rid, git_sha, dirty, klt_v, ng_v, rep, matrix, out_json, dut):
     bench = gdb.psat_bench("match")
     points, failures = [], []
     for c in rep.get("corners", []):
@@ -204,7 +206,7 @@ def render(rid, git_sha, dirty, klt_v, ng_v, rep, matrix, out_json):
         rows.append(grp)
 
     json.dump({"record_id": rid, "bench": bench["name"], "probe_grid_dbm": list(gdb.P1DBREF_PROBE_GRID_DBM),
-               "matrix_record_id": matrix.get("record_id"), "cells": rows, "failures": failures},
+               "matrix_record_id": matrix.get("record_id"), "dut": dut, "cells": rows, "failures": failures},
               open(out_json, "w"), indent=1, default=float)
 
     n_cells = gdb.pvt_cell_count()
@@ -230,10 +232,10 @@ def render(rid, git_sha, dirty, klt_v, ng_v, rep, matrix, out_json):
       "source amplitude no <= 1 dB spaced drive grid keeps one bucket per point "
       "(klayout-tools#5870's collision class), and the grid stops at -36.0 dBm "
       "available -- roughly 8-16 dB below each cell's compression. This probe runs "
-      f"the SAME committed matched deck (`{bench['name']}.spice`, byte-identical, "
-      f"sha256 in its header) under a sparse low-drive axis "
+      f"the committed matched deck (`{bench['name']}.spice`, klt input "
+      f"`{dut['deck_content_hash']}`) under a sparse low-drive axis "
       f"({gdb.P1DBREF_PROBE_GRID_DBM[0]:g}..{gdb.P1DBREF_PROBE_GRID_DBM[-1]:g} dBm "
-      "available, 4 dB steps -- the coarsest spacing whose corner ids stay "
+      "available, 4 dB steps -- the finest tested spacing whose corner ids stay "
       "distinct), over every declared cell. It is compared against the committed "
       f"matrix record `{matrix.get('record_id')}`.")
     w("")
@@ -338,21 +340,65 @@ def render(rid, git_sha, dirty, klt_v, ng_v, rep, matrix, out_json):
     return 0 if points else 1
 
 
+def read_reference(path, netlist_sha256):
+    data = path.read_bytes()
+    matrix = json.loads(data)
+    if (not isinstance(matrix, dict) or matrix.get("bench") != "psat_sweep_match"
+            or matrix.get("pvt_matrix") is not True):
+        raise ValueError(f"{path}: expected a matched PVT matrix record")
+    dut = matrix.get("dut")
+    # A companion pins the original bytes of a published, pre-identity record.
+    # Never infer an unknown historical DUT from the current checkout.
+    companion = path.with_suffix(".dut.json")
+    if dut is None and companion.is_file():
+        dut = json.loads(companion.read_bytes())
+        if not isinstance(dut, dict) or dut.get("record_sha256") != hashlib.sha256(data).hexdigest():
+            raise ValueError(f"{path}: DUT companion does not identify these record bytes")
+    if not isinstance(dut, dict) or dut.get("netlist_sha256") != netlist_sha256:
+        raise ValueError(f"{path}: expected DUT netlist SHA-256 {netlist_sha256}")
+    return matrix
+
+
+def select_reference(records, pinned=None):
+    expected = gdb.netlist_sha256()
+    if pinned is not None:
+        read_reference(pinned, expected)
+        return pinned
+    for path in sorted(records.glob("*.json"), reverse=True):
+        try:
+            read_reference(path, expected)
+        except ValueError:
+            continue
+        return path
+    raise ValueError(f"{records}: no matched PVT matrix with DUT netlist SHA-256 {expected}")
+
 
 def main(argv):
+    if argv[1:2] == ["--select-matrix"]:
+        if len(argv) not in (3, 4):
+            print("usage: p1dbref_record.py --select-matrix <records-dir> [record.json]", file=sys.stderr)
+            return 2
+        try:
+            print(select_reference(Path(argv[2]), Path(argv[3]) if len(argv) == 4 else None))
+        except (OSError, ValueError) as exc:
+            print(f"p1dbref_record: {exc}", file=sys.stderr)
+            return 2
+        return 0
     if len(argv) != 9:
         print("usage: p1dbref_record.py <record-id> <git-sha> <dirty> <klt-version> "
               "<ngspice-version> <probe-report.json> <matrix-record.json> <out.json>",
               file=sys.stderr)
         return 2
     rid, git_sha, dirty, klt_v, ng_v, rep_path, matrix_path, out_json = argv[1:9]
-    rep = json.load(open(rep_path))
-    matrix = json.load(open(matrix_path))
-    if matrix.get("bench") != "psat_sweep_match":
-        print(f"p1dbref_record: matrix record {matrix_path} is not a matched-bench "
-              f"record (bench {matrix.get('bench')!r})", file=sys.stderr)
+    try:
+        rep = json.loads(Path(rep_path).read_bytes())
+        deck = Path(__file__).with_name("psat_sweep_match.spice")
+        dut = verified_dut(rep, deck, gdb.NETLIST)
+        matrix = read_reference(Path(matrix_path), dut["netlist_sha256"])
+    except (OSError, ValueError) as exc:
+        print(f"p1dbref_record: {exc}", file=sys.stderr)
         return 2
-    return render(rid, git_sha, dirty, klt_v, ng_v, rep, matrix, out_json)
+    return render(rid, git_sha, dirty, klt_v, ng_v, rep, matrix, out_json, dut)
 
 
 if __name__ == "__main__":

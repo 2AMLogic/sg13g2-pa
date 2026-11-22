@@ -14,6 +14,7 @@ import json
 import math
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -22,6 +23,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 import gen_dut_benches as gdb  # noqa: E402
+from provenance import sha  # noqa: E402
+
+MATCH_DECK_HASH = "sha256:" + sha(Path(REPO) / "sim/psat-sweep/psat_sweep_match.spice")
 
 spec = importlib.util.spec_from_file_location(
     "_p1dbref_record", os.path.join(REPO, "sim", "psat-sweep", "p1dbref_record.py"))
@@ -83,7 +87,8 @@ def _probe_report(tmp_path):
             "supply_v": {"vamp": gdb.amp_v(pav), "vcc": gdb.VCC_NOM_V},
             "temperature_c": 27, "artifacts": {"waveform": wav},
         })
-    return {"environment": {"backend": "test", "remote": "n/a"}, "corners": corners}
+    return {"environment": {"backend": "test", "remote": "n/a"}, "corners": corners,
+            "provenance": {"input": {"content_hash": MATCH_DECK_HASH}}}
 
 
 def _matrix_record(g_ref=G_REF_DB, refused=False, pin_dbm=None, gains=None, stored=None):
@@ -100,7 +105,8 @@ def _matrix_record(g_ref=G_REF_DB, refused=False, pin_dbm=None, gains=None, stor
     red = None if refused else {"gain_linear_db": stored if stored is not None else g_ref,
                                 "p1db_in_dbm": -31.6,
                                 "p1db_out_dbm": -12.6, "psat_dbm": 12.98}
-    return {"record_id": "synthetic-matrix", "bench": "psat_sweep_match",
+    return {"record_id": "synthetic-matrix", "bench": "psat_sweep_match", "pvt_matrix": True,
+            "dut": {"netlist_sha256": gdb.netlist_sha256()},
             "cells": [{"cell": {"process": "hbt_typ", "temperature_c": 27.0,
                                 "vcc": gdb.VCC_NOM_V},
                        "points": [pt(p, g) for p, g in zip(pin, gs)],
@@ -209,16 +215,45 @@ def test_the_quiescent_operating_point_is_reported(tmp_path):
     assert q["p_dc_w"] == pytest.approx(gdb.VCC_NOM_V * 0.210, rel=1e-6)
 
 
-def test_a_non_matched_matrix_record_is_refused(tmp_path):
-    rep_path = os.path.join(tmp_path, "probe-report.json")
-    with open(rep_path, "w") as fh:
-        json.dump(_probe_report(str(tmp_path)), fh)
-    bad = _matrix_record()
-    bad["bench"] = "psat_sweep"             # the bare deck's bench
-    bad_path = os.path.join(tmp_path, "bad-matrix.json")
-    with open(bad_path, "w") as fh:
-        json.dump(bad, fh)
-    out_json = os.path.join(tmp_path, "probe.json")
-    rc = PR.main(["p1dbref_record.py", "synthetic-probe", "deadbee", "0",
-                  "klt 0.9.1", "ngspice-47", rep_path, bad_path, out_json])
+@pytest.mark.parametrize("change", ["bare", "nominal", "other DUT", "unknown DUT", "wrong probe deck"])
+def test_incompatible_matrix_or_probe_is_refused_before_reduction(tmp_path, change):
+    matrix = _matrix_record()
+    report = {"provenance": {"input": {"content_hash": MATCH_DECK_HASH}}}
+    if change == "bare":
+        matrix["bench"] = "psat_sweep"
+    elif change == "nominal":
+        matrix["pvt_matrix"] = False
+    elif change == "other DUT":
+        matrix["dut"]["netlist_sha256"] = "0" * 64
+    elif change == "unknown DUT":
+        del matrix["dut"]
+    else:
+        report["provenance"]["input"]["content_hash"] = "sha256:" + "0" * 64
+    matrix_path, rep_path, out = (tmp_path / name for name in ("matrix.json", "rep.json", "out.json"))
+    matrix_path.write_text(json.dumps(matrix))
+    rep_path.write_text(json.dumps(report))
+    rc = PR.main(["p1dbref_record.py", "probe", "deadbee", "0", "klt", "ngspice",
+                  str(rep_path), str(matrix_path), str(out)])
     assert rc == 2
+    assert not out.exists()
+
+
+def test_default_reference_skips_the_newer_refuted_candidate(tmp_path, capsys, monkeypatch):
+    # Replay the two records and the DUT of the reviewed run, even after later
+    # records arrive or the design advances.
+    records = Path(REPO) / "sim/psat-sweep/records"
+    baseline = tmp_path / "20261121-003533-b2746d0-match.json"
+    candidate = tmp_path / "20261122-020117-8062a122-match.json"
+    companion = baseline.with_suffix(".dut.json")
+    for path in (baseline, candidate, companion):
+        path.symlink_to(records / path.name)
+    baseline_hash = json.loads(companion.read_text())["netlist_sha256"]
+    monkeypatch.setattr(gdb, "netlist_sha256", lambda: baseline_hash)
+
+    assert PR.main(["p1dbref_record.py", "--select-matrix", str(tmp_path)]) == 0
+    assert Path(capsys.readouterr().out.strip()) == baseline
+    assert PR.main(["p1dbref_record.py", "--select-matrix", str(tmp_path), str(candidate)]) == 2
+    # A companion for a different legacy record cannot supply the missing identity.
+    baseline.unlink()
+    baseline.write_text(json.dumps({"bench": "psat_sweep_match", "pvt_matrix": True}))
+    assert PR.main(["p1dbref_record.py", "--select-matrix", str(tmp_path)]) == 2

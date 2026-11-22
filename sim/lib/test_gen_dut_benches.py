@@ -576,7 +576,7 @@ def test_the_reference_probe_grid_reaches_below_the_20dB_reference_line():
     the reference measurement must go for EVERY cell."""
     grid = gdb.P1DBREF_PROBE_GRID_DBM
     assert grid[0] <= gdb.PSAT_MATCH_COARSE_TOP_DBM - 20.0
-    # uniform 4 dB spacing: the coarsest that stays corner-id-distinct down to
+    # uniform 4 dB spacing: the finest tested that stays corner-id-distinct down to
     # the encoding's floor (2 dB collides below -44 dBm available)
     steps = {round(b - a, 6) for a, b in zip(grid, grid[1:])}
     assert steps == {4.0}

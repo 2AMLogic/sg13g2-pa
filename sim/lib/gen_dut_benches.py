@@ -198,7 +198,7 @@ PSAT_MATCH_COARSE_TOP_DBM = -28.0
 #
 # It reuses the committed MATCHED deck unchanged (same load, harmonic terminations and
 # extraction nodes -- it changes no bench fact) and swaps only the drive axis for a
-# SPARSE low-drive one: 4 dB spacing, the coarsest that keeps every corner id distinct
+# SPARSE low-drive one: 4 dB spacing, the finest tested that keeps every corner id distinct
 # down to -56 dBm available (2 dB spacing collides below about -44 dBm: consecutive
 # amplitudes share the `vamp=0.003` bucket). -56 dBm is itself 28 dB below the
 # earliest measured compression, so the probe's own lowest points already satisfy the

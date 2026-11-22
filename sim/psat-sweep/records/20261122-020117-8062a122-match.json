@@ -3,6 +3,12 @@
  "variant": "match",
  "bench": "psat_sweep_match",
  "pvt_matrix": true,
+ "dut": {
+  "netlist_sha256": "a6d5a5e6aaac6ecc8a9d4ad606e351c5c9d8cb3a96abf1ae8861a7661338d945",
+  "deck_content_hash": "sha256:2dffa2235b1bf826068fd3344c8c2377dcc0aec8733d17909804d425e08ec06a",
+  "role": "candidate",
+  "description": "This non-retained candidate reduced Rb from 1 k\u03a9 to 10 \u03a9. The matrix refuted the bias-feed hypothesis. The retained design uses the 1 k\u03a9 baseline (record `20261121-003533-b2746d0-match`)."
+ },
  "output_network": {
   "n_units": 14,
   "nx": 10,

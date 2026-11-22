@@ -17,12 +17,9 @@
 #   * the bracket's measured step against the row's 0.5 dB limit,
 #   * the quiescent operating point (P_DC, total supply current) per cell.
 #
-# The matrix record defaults to the newest records/*.json whose bench is the
-# matched deck and whose shape is the PVT matrix (pvt_matrix: true); pass a path
-# to pin one explicitly. The probe reuses the committed deck, so both must be
-# reduced from the SAME DUT netlist -- the deck-staleness gate below refuses a
-# deck that drifted from design/netlist/sg13g2-pa.spice, and the record states
-# the matrix record's id it compared against.
+# The reference defaults to the newest matched PVT matrix with the same DUT
+# netlist SHA-256. An explicit reference passes the same check before submit.
+# The reducer independently verifies the probe report's deck and the matrix DUT.
 #
 # NOT a matrix bench: no `klt corner-matrix` gate runs here (the probe's
 # coverage is its own low-drive axis, not the declared 27-cell box); the
@@ -47,29 +44,8 @@ BENCH="psat_sweep_match_p1dbref"
 python3 -I "${SCRIPT_DIR}/../lib/gen_dut_benches.py" --check
 
 # The committed matrix record this probe verifies against.
-MATRIX_RECORD="${1:-}"
-if [[ -z "${MATRIX_RECORD}" ]]; then
-  MATRIX_RECORD="$(python3 -I - "${SCRIPT_DIR}/records" <<'PY'
-import glob, json, os, sys
-
-records = []
-for path in glob.glob(os.path.join(sys.argv[1], "*.json")):
-    try:
-        doc = json.load(open(path))
-    except Exception:
-        continue
-    if doc.get("bench") == "psat_sweep_match" and doc.get("pvt_matrix"):
-        records.append(path)
-if not records:
-    sys.exit("run_p1dbref_probe.sh: no committed matched matrix record under "
-             f"{sys.argv[1]}/ (need a records/*.json with bench 'psat_sweep_match' "
-             "and pvt_matrix true); pass one explicitly.")
-print(sorted(records)[-1])
-PY
-)" || exit 1
-fi
-[[ -f "${MATRIX_RECORD}" ]] || {
-  echo "run_p1dbref_probe.sh: matrix record '${MATRIX_RECORD}' not found" >&2; exit 1; }
+MATRIX_RECORD="$(python3 -I "${SCRIPT_DIR}/p1dbref_record.py" --select-matrix \
+    "${SCRIPT_DIR}/records" "$@")" || exit 1
 
 sim_begin_record --suffix "-p1dbref" --pathspec sim --pathspec design \
     --pathspec ':!sim/psat-sweep/records' --pathspec ':!sim/psat-sweep/corners'

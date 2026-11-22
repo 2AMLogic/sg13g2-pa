@@ -205,7 +205,7 @@ filed with klayout-tools (friction protocol): klayout-tools#7132.
 
 Until it closes, `run_p1dbref_probe.sh` measures what the grid cannot: the SAME
 committed matched deck (byte-identical, no bench fact changes) under a sparse low-drive
-axis -- `P1DBREF_PROBE_GRID_DBM`, -56..-36 dBm available at 4 dB steps, the coarsest
+axis -- `P1DBREF_PROBE_GRID_DBM`, -56..-36 dBm available at 4 dB steps, the finest tested
 spacing whose corner ids stay distinct down to the encoding's floor -- over every
 declared cell (one fleet submit, 162 units; request committed as
 `psat_sweep_match_p1dbref.request.json`). Its append-only record
@@ -219,6 +219,16 @@ is not a drive sweep -- 4 dB steps bracket no compression, `reduce_sweep` never 
 it, no Psat/PAE figure appears -- and like the matched deck it is a study bench outside
 the item-9 inventory. Like every grid it is never hand-launched: one `klt sim` request,
 batch fleet, the request's own capacity wait.
+
+The probe selects the newest matched matrix with the same DUT netlist SHA-256.
+An explicit matrix path passes the same check. The reducer verifies the probe
+deck against klt's input hash before comparing the cells. For a matrix that
+predates DUT metadata, a sibling `<record-id>.dut.json` pins the original record
+bytes and the DUT identity verified from its run.
+
+For candidate measurements, `run_psat_sweep.sh --candidate "description"` runs
+the matched matrix and identifies the candidate in both record formats. Matched
+runs save the generated deck and DUT netlist under `corners/<record-id>/inputs/`.
 
 ## Running grids
 
