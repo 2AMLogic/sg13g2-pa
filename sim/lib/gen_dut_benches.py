@@ -57,6 +57,7 @@ of the DUT is ideal passives (see `design/README.md`), and every bench says so.
 import cmath
 import hashlib
 import json
+import collections
 import math
 import os
 import pathlib
@@ -121,7 +122,7 @@ TRAN_STOP_S = (N_PERIODS + 0.1) * T_PERIOD_S
 # Nothing here is tuned to a result. The resistance comes from the load-line record's
 # nominal cell and the DUT's own array size; the two element values are the closed-form
 # L-section for that resistance, with the DUT's on-chip `Cblock` absorbed into the
-# series branch so the COLLECTOR, not RFOUT, sees a real load-line resistance.
+# series branch to cancel its reactance at f0 before accounting for DUT shunts.
 LOADLINE_RECORD = (REPO / "sim" / "device-npn13g2" / "records"
                    / "20261107-125027-93cf5ae.loadline.json")
 # The load-line cell to size against: the nominal supply, nominal tolerance,
@@ -526,6 +527,70 @@ def cblock_farads(text=None):
     return _spice_value(hits[0])
 
 
+# The DUT's bias-feed damping resistor, across Lchoke (VCC-COLL). Issue #172 added it
+# so the collector's low-frequency resonance with Lchoke is damped; the psat stress
+# extractor closes KCL at COLL through its branch current, derived from the saved node
+# pair as (v(VCC)-v(COLL))/Rdchoke, so its VALUE is read from the netlist here for the
+# same reason Cblock's is: a hand-copied resistance silently mis-reports per-device I_C.
+_RDCHOKE_RE = re.compile(
+    r"^Rdchoke\s+(?:VCC\s+COLL|COLL\s+VCC)\s+(\S+)", re.IGNORECASE | re.MULTILINE)
+
+
+def rdchoke_ohms(text=None):
+    """The DUT's ``Rdchoke`` (across Lchoke) in ohms, read from the netlist.
+
+    Either node order matches (xschem emits ``VCC COLL`` today; the resistor is
+    symmetric). Exactly one line is required: with the damping branch absent the
+    extractor's KCL at COLL is silently wrong for every RF sample, and with two it
+    is not the circuit that was simulated.
+    """
+    hits = _RDCHOKE_RE.findall(netlist_text() if text is None else text)
+    if len(hits) != 1:
+        raise ValueError(f"expected exactly one `Rdchoke VCC COLL <value>` line in "
+                         f"{NETLIST}, found {len(hits)}; the psat stress extractor "
+                         "closes KCL at COLL through the bias-feed damping branch and "
+                         "cannot be derived without it")
+    return _spice_value(hits[0])
+
+
+_RSHO_RE = re.compile(
+    r"^Rsho\s+(?:RFOUT\s+GND|GND\s+RFOUT)\s+(\S+)", re.IGNORECASE | re.MULTILINE)
+
+
+def rsho_ohms(text=None):
+    """The DUT's ``Rsho`` (RFOUT to GND shunt) in ohms, read from the netlist.
+
+    The psat stress extractor closes KCL at RFOUT as well as COLL: the current
+    Cblock delivers to RFOUT splits between the chip boundary and this shunt, so
+    its value is read here, never hand-copied.
+    """
+    hits = _RSHO_RE.findall(netlist_text() if text is None else text)
+    if len(hits) != 1:
+        raise ValueError(f"expected exactly one `Rsho RFOUT GND <value>` line in "
+                         f"{NETLIST}, found {len(hits)}; the psat stress extractor "
+                         "closes KCL at RFOUT through it and cannot be derived without it")
+    return _spice_value(hits[0])
+
+
+_LCHOKE_RE = re.compile(
+    r"^Lchoke\s+(?:VCC\s+COLL|COLL\s+VCC)\s+(\S+)", re.IGNORECASE | re.MULTILINE)
+
+
+def lchoke_henries(text=None):
+    """The DUT's ``Lchoke`` (VCC-COLL bias feed) in henries, read from the netlist.
+
+    Needed to state the load the collector actually sees: Lchoke (with Rdchoke across
+    it) is a shunt branch on COLL, so the load is not just the external network
+    through Cblock.
+    """
+    hits = _LCHOKE_RE.findall(netlist_text() if text is None else text)
+    if len(hits) != 1:
+        raise ValueError(f"expected exactly one `Lchoke VCC COLL <value>` line in "
+                         f"{NETLIST}, found {len(hits)}; the collector load cannot "
+                         "be stated without it")
+    return _spice_value(hits[0])
+
+
 def loadline_cell(doc=None):
     """The load-line study's nominal cell, from the committed record.
 
@@ -566,8 +631,8 @@ def match_network(text=None, cell=None):
                                                             GND
 
     ``ls_h`` carries the plain L-section reactance ``q*ropt`` **plus** ``Cblock``'s
-    ``1/(w0*Cblock)``, so at f0 the collector sees ``ropt_ohm`` with no residual
-    reactance. That absorption is closed form, not a tuned cancellation.
+    ``1/(w0*Cblock)``, so the external network in series with Cblock gives
+    ``ropt_ohm`` at f0. ``match_impedances`` includes the DUT's shunt branches.
     """
     n_units, nx = output_array(text)
     cell = loadline_cell() if cell is None else cell
@@ -616,14 +681,27 @@ def match_network(text=None, cell=None):
     }
 
 
-def match_impedances(net=None, freqs=None):
-    """``[(label, f_hz, z_into_network_at_RFOUT, z_seen_by_COLL), ...]``.
+ImpedanceRow = collections.namedtuple(
+    "ImpedanceRow", "label f_hz z_external z_rfout z_coll_target z_coll")
 
-    Both are needed and they are not the same number: ``Cblock`` is a third of the
-    load line at f0, so a record that quoted only one of them would not say what the
-    array is actually loaded by. Arithmetic over ideal elements, not simulated.
+
+def match_impedances(net=None, freqs=None):
+    """``[ImpedanceRow, ...]``: the impedances that differ between the nodes.
+
+    Four are kept distinct, because a record that quoted only one would not say what
+    the array is actually loaded by (arithmetic over ideal elements, not simulated):
+
+    - ``z_external``: the off-chip termination alone (Lmatch + Cmatch || Rl), looking
+      into the chip boundary from RFOUT's far side.
+    - ``z_rfout``: that termination with the DUT's ``Rsho`` shunt in parallel at RFOUT.
+    - ``z_coll_target``: ``z_external`` in series with ``Cblock`` -- the design target
+      the L-section is derived to make real ``ropt_ohm`` at f0. NOT the collector load.
+    - ``z_coll``: the load actually presented to the collector: ``z_rfout`` in series
+      with ``Cblock``, then in parallel with the shunt branches on COLL (``Rdchoke``
+      and ``Lchoke``, both across VCC-COLL, VCC being an AC ground).
     """
     net = match_network() if net is None else net
+    rsho, rdchoke, lchoke = rsho_ohms(), rdchoke_ohms(), lchoke_henries()
     rows = freqs if freqs is not None else [
         ("f0", F0_HZ), ("2 f0", 2.0 * F0_HZ), ("3 f0", 3.0 * F0_HZ),
         ("band low", BAND_LO_HZ), ("band high", BAND_HI_HZ)]
@@ -631,9 +709,12 @@ def match_impedances(net=None, freqs=None):
     for label, f in rows:
         w = 2.0 * math.pi * f
         z_c = 1.0 / (1j * w * net["cp_f"])
-        z_rfout = 1j * w * net["ls_h"] + (RL_OHM * z_c) / (RL_OHM + z_c)
-        z_coll = z_rfout + 1.0 / (1j * w * net["cblock_f"])
-        out.append((label, f, z_rfout, z_coll))
+        z_cb = 1.0 / (1j * w * net["cblock_f"])
+        z_ext = 1j * w * net["ls_h"] + (RL_OHM * z_c) / (RL_OHM + z_c)
+        z_rfout = 1.0 / (1.0 / z_ext + 1.0 / rsho)
+        z_series = z_rfout + z_cb
+        z_coll = 1.0 / (1.0 / z_series + 1.0 / rdchoke + 1.0 / (1j * w * lchoke))
+        out.append(ImpedanceRow(label, f, z_ext, z_rfout, z_ext + z_cb, z_coll))
     return out
 
 
@@ -667,13 +748,10 @@ def psat_bench(variant="bare"):
     """Every fact the deck and the record must agree on, for one psat variant.
 
     ``psat_record.py`` reads the bench name, the load and harmonic-termination prose
-    and the three extraction node names from here. That is the point: the two variants
-    put the load power and the chip-boundary current on DIFFERENT nodes, and both
-    moves fail silently if the reducer keeps its own copy. `i(vlsense)` is `Cblock`'s
-    current in the bare deck (nothing else sits on `out`) and the *load* current in the
-    matched one, so a reducer that kept using it for per-device `I_C` would print a
-    wrong `Ic pk mA` column with no error raised; and `v(out) * i(vlsense)` is a power
-    only while the two are the same node, which the matched deck's network breaks.
+    and the extraction nodes from here. `i(vlsense)` measures the load current
+    in both variants. The matched bench also needs `i(vbsense)` at the input
+    of the L-section. Adding the current through the on-chip Rsho to either
+    variant's boundary current gives the current through Cblock.
     """
     if variant not in PSAT_VARIANTS:
         raise ValueError(f"unknown psat variant {variant!r} (want one of {PSAT_VARIANTS})")
@@ -682,11 +760,13 @@ def psat_bench(variant="bare"):
             "variant": "bare",
             "name": "psat_sweep",
             "suffix": "",
-            # The load branch is the only other element on `out`, so one 0 V source
-            # serves as both the load sense and the chip-boundary sense.
+            # The bare external load is directly at the chip boundary.
             "p_out_v": "v(out)", "p_out_i": "i(vlsense)",
             "ic_sense_i": "i(vlsense)",
             "ic_sense_md": "i(load)",
+            "rdchoke_ohm": rdchoke_ohms(),
+            "rsho_ohm": rsho_ohms(),
+            "ic_formula_md": "(i(Lchoke) + (v(VCC)-v(COLL))/Rdchoke - i(load) - v(RFOUT)/Rsho)",
             "network": None,
             "load_md": f"Load: {RL_OHM:g} ohm resistive.",
             "terminations_md": (
@@ -704,15 +784,19 @@ def psat_bench(variant="bare"):
         "p_out_v": "v(outl)", "p_out_i": "i(vlsense)",
         "ic_sense_i": "i(vbsense)",
         "ic_sense_md": "i(RFOUT boundary)",
+        "rdchoke_ohm": rdchoke_ohms(),
+        "rsho_ohm": rsho_ohms(),
+        "ic_formula_md": "(i(Lchoke) + (v(VCC)-v(COLL))/Rdchoke - i(RFOUT boundary) - v(RFOUT)/Rsho)",
         "network": net,
         "load_md": (
             f"Load: {RL_OHM:g} ohm resistive **through an ideal, lossless off-chip "
             f"L-section** (Ls {1e9 * net['ls_h']:.4f} nH series, Cp "
-            f"{1e12 * net['cp_f']:.4f} pF shunt, Q {net['q']:.3f}), so the collector "
-            f"sees {net['ropt_ohm']:.4f} ohm at f0."),
+            f"{1e12 * net['cp_f']:.4f} pF shunt, Q {net['q']:.3f}), so the "
+            f"design target at the collector is {net['ropt_ohm']:.4f} ohm at f0 (the "
+            "actual load, with the DUT's shunt branches, is tabulated in the record)."),
         "terminations_md": (
             "**Harmonic terminations are NOT the labelled ideal-50-ohm default: the "
-            "output network sets them.** The collector sees "
+            "output network sets them.** The load actually presented to the collector is "
             f"{_z_md(net, '2 f0')} at 2 f0 and {_z_md(net, '3 f0')} at 3 f0. Per "
             "`spec/target-spec.md` (\"Harmonic terminations\"), a bench that changes "
             "them says so and its P_out or PAE **is not compared** with a run under "
@@ -721,9 +805,9 @@ def psat_bench(variant="bare"):
 
 
 def _z_md(net, label):
-    for lab, _f, _z_rfout, z_coll in match_impedances(net):
-        if lab == label:
-            return f"{z_coll.real:.2f} {z_coll.imag:+.2f}j ohm"
+    for row in match_impedances(net):
+        if row.label == label:
+            return f"{row.z_coll.real:.2f} {row.z_coll.imag:+.2f}j ohm"
     raise ValueError(f"no impedance row labelled {label!r}")
 
 
@@ -737,8 +821,13 @@ def psat_deck(variant="bare"):
                 "  klt sim corners.supply_v (`alter vamp=`), f0 = 2.44175 GHz (band centre).",
                 f"Load: {RL_OHM:g} ohm resistive at f0 and, being a flat resistor, at 2 f0 and 3 f0",
                 "  (the DEFAULT harmonic terminations: ideal 50 ohm, labelled so).",
-                "Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT) -- no inductor model.",
+                "Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT; the",
+                "  stabilisation resistors Rin/Rshm/Rsho/Rdchoke are ideal and lossy by design) --",
+                "  no inductor model.",
                 "P_DC = full supply Vcc power, bias reference included (Iref is an ideal source from Vcc).",
+                "Per-device I_C closes KCL at COLL and RFOUT as (i(Lchoke) + (v(VCC)-v(COLL))/Rdchoke -",
+                "  i(Vlsense) - v(RFOUT)/Rsho) / N_UNITS: Rdchoke (issue #172) is the fourth branch on",
+                "  COLL and Rsho takes part of Cblock's current before the chip boundary.",
                 "Load current is measured through the 0 V source Vlsense (into the load);",
                 "supply current through Vcc (delivered = -i(vcc)); input current is -i(bs).",
             ],
@@ -759,7 +848,6 @@ Rl outl 0 {RL_OHM:g}
 
     net = b["network"]
     zrows = match_impedances(net)
-    z = {lab: (zr, zc) for lab, _f, zr, zc in zrows}
     h = _header(
         "Psat / P1dB / PAE drive sweep through an IDEAL OFF-CHIP OUTPUT MATCH "
         "(simulated bench, not a result)",
@@ -771,7 +859,8 @@ Rl outl 0 {RL_OHM:g}
             f"  `alter vcc=` per unit, the deck's own Vcc line is the {VCC_NOM_V:g} V nominal.",
             "",
             "CHIP BOUNDARY IS RFOUT (node `out`; design/README.md). On the chip side:",
-            "  the DUT only (Lchoke, Cblock, Cin). Off chip: Vbsense, Lmatch, Cmatch,",
+            "  the DUT only (Lchoke, Cblock, Cin, plus the ideal stabilisation resistors",
+            "  Rin/Rshm/Rsho/Rdchoke). Off chip: Vbsense, Lmatch, Cmatch,",
             f"  Vlsense and the {RL_OHM:g} ohm load below -- all IDEAL and LOSSLESS (no Q, no",
             "  self-resonance, no inductor model). This bench evidences the spec's FALLBACK",
             "  Output-port cell (`50 ohm, off-chip output match (stated boundary)`) and its",
@@ -803,18 +892,23 @@ Rl outl 0 {RL_OHM:g}
             f"{1e9 * (net['ls_h'] - net['ls_plain_h']):.6f} nH absorbing Cblock",
             f"  Cblock is {net['cblock_x_ohm']:.4f} ohm reactive at f0 -- "
             f"{100 * abs(net['cblock_x_ohm']) / net['ropt_ohm']:.0f}% of Ropt, so it is",
-            "        absorbed in closed form rather than neglected; that is why the",
-            "        COLLECTOR, not RFOUT, sees a real Ropt. That impedance includes",
-            "        the series Cblock but not the DUT's shunt Lchoke at COLL; the",
-            "        numerical case for leaving Lchoke alone, at the original design",
+            "        absorbed in closed form rather than neglected. Ropt is the DESIGN",
+            "        TARGET: the external network in series with Cblock. It is NOT the",
+            "        load the collector sees. That one also has Rsho in parallel at RFOUT",
+            "        and Rdchoke || Lchoke in parallel at COLL, tabulated below as COLL;",
+            "        the numerical case for leaving Lchoke alone, at the original design",
             "        point, is issue #116.",
             "",
             "HARMONIC TERMINATIONS ARE NO LONGER THE LABELLED IDEAL-50-OHM DEFAULT:",
-            f"  at RFOUT / at COLL through Cblock (arithmetic over ideal elements):",
+            "  external termination (Lmatch + Cmatch || Rl) / design target (external in series",
+            "  with Cblock, what the L-section is derived to make real Ropt) / ACTUAL collector",
+            "  load (Rsho in parallel at RFOUT, series Cblock, then Rdchoke || Lchoke in",
+            "  parallel at COLL) -- arithmetic over ideal elements:",
         ] + [
-            f"    {lab:9s} {f / 1e9:7.5f} GHz   {zr.real:8.4f} {zr.imag:+8.4f}j   "
-            f"{zc.real:8.4f} {zc.imag:+8.4f}j ohm"
-            for lab, f, zr, zc in zrows
+            f"    {r.label:9s} {r.f_hz / 1e9:7.5f} GHz   ext {r.z_external.real:8.4f} {r.z_external.imag:+8.4f}j"
+            f"   target {r.z_coll_target.real:8.4f} {r.z_coll_target.imag:+8.4f}j"
+            f"   COLL {r.z_coll.real:8.4f} {r.z_coll.imag:+8.4f}j ohm"
+            for r in zrows
         ] + [
             "  Per spec/target-spec.md (\"Harmonic terminations\"), P_out and PAE from this",
             "  bench are NOT comparable with a run under other terminations.",
@@ -824,7 +918,8 @@ Rl outl 0 {RL_OHM:g}
             "    the spec's `DFT of the load voltage/current`. Vlsense is 0 V, so",
             "    v(outl) == v(oload) and the pair is co-located at the resistor.",
             f"  Per-device I_C from the CHIP BOUNDARY ({b['ic_sense_i']}, through Vbsense at",
-            "    RFOUT) = Cblock's current, so KCL at COLL is (i(Lchoke) - i(Vbsense)) / "
+            "    RFOUT) = the current past Rsho, so KCL at COLL and RFOUT is (i(Lchoke) + ",
+            "    (v(VCC)-v(COLL))/Rdchoke - i(Vbsense) - v(RFOUT)/Rsho) / "
             f"{net['n_units']}.",
             "    The load branch is NOT that current here: Cmatch shunts part of it.",
             "",
@@ -882,7 +977,8 @@ def _ac_deck(title, extra_header):
         f"  matrix: {len(PVT_PROCESS_SECTIONS)} HBT sections x {len(PVT_TEMP_C)} temperatures x "
         f"{len(PVT_VCC_V)} supplies = {pvt_cell_count()} cells, klt `alter vcc=`; the deck's",
         f"  own Vcc line is the {VCC_NOM_V:g} V nominal). The bias is the DUT's own mirror.",
-        "Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT).",
+        "Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT; the",
+        "stabilisation resistors Rin/Rshm/Rsho/Rdchoke are ideal, lossy by design).",
     ])
     body = f"""Vcc vcc 0 dc {VCC_NOM_V}
 Vs1 s1 0 dc 0 ac 1

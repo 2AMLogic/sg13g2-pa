@@ -57,22 +57,28 @@ N_UNITS, NX = gdb.output_array()   # output-array devices sharing COLL/VB, and t
 IC_MAX_PER_DEVICE = IC_WIN_PER_NX * NX
 
 
-def stress(t, s, ex, ambient_c, ic_sense):
+def stress(t, s, ex, ambient_c, bench):
     """Peaks and window fractions over the extraction's integer-period window.
 
-    ``ic_sense`` names the trace carrying the current leaving RFOUT into whatever is
-    on the far side of the chip boundary -- i.e. `Cblock`'s current, which is what makes
-    the per-device I_C below a KCL balance at COLL. In the bare deck the load branch IS
-    that current; through an output network it is not (a shunt branch takes part of it),
-    so the bench declares the node and this never guesses it. Getting it wrong would
-    move every `Ic pk mA` and `frac_ic_outside` with nothing raised.
+    ``bench`` is the variant's own ``psat_bench()`` fact dict. Per-device ``I_C`` is a
+    KCL balance at COLL and RFOUT:
+    ``(i(Lchoke) + (v(VCC)-v(COLL))/Rdchoke - <boundary> - v(RFOUT)/Rsho) / N``.
+    The bias-feed damping resistor ``Rdchoke`` (issue #172) is a fourth branch on
+    COLL alongside Lchoke, Cblock and the devices; its current is derived from the
+    already-saved node pair ``v(xdut.coll)``/``v(vcc)`` rather than an extra saved
+    vector, so its value is read from the netlist (``bench['rdchoke_ohm']``), never
+    hand-copied. ``ic_sense_i`` names the trace carrying the current leaving RFOUT
+    into the external load or matching network. At RFOUT this current and the
+    on-chip shunt current together account for the current arriving through Cblock.
     """
     t0 = ex["window_start_s"]
     t1 = t0 + ex["window_periods"] / F0
     m = (t >= t0 * (1 - 1e-9)) & (t <= t1 * (1 + 1e-9))
     vc = s["v(xdut.coll)"][m]
     vb = s["v(xdut.vb)"][m]
-    ic = (s["i(l.xdut.lchoke)"][m] - s[ic_sense][m]) / N_UNITS
+    i_rdchoke = (s["v(vcc)"][m] - s["v(xdut.coll)"][m]) / bench["rdchoke_ohm"]
+    i_rsho = s["v(out)"][m] / bench["rsho_ohm"]
+    ic = (s["i(l.xdut.lchoke)"][m] + i_rdchoke - s[bench["ic_sense_i"]][m] - i_rsho) / N_UNITS
     tj_rise = s["v(xdut.xq1.t)"][m]
     vcb = vc - vb
     tj = ambient_c + tj_rise
@@ -383,6 +389,19 @@ def _cell_md(cell):
     return f"`{cell['process']}` / {cell['temperature_c']:g} C / {cell['vcc']:g} V"
 
 
+def _match_table(net):
+    rows = [
+        "| Frequency | External termination | Design target (external + `Cblock`) "
+        "| Into the network at `RFOUT` | Seen by `COLL` through `Cblock` |",
+        "|---|---|---|---|---|",
+    ]
+    for r in gdb.match_impedances(net):
+        impedances = (r.z_external, r.z_coll_target, r.z_rfout, r.z_coll)
+        values = " | ".join(f"{z.real:.3f} {z.imag:+.3f}j ohm" for z in impedances)
+        rows.append(f"| {r.label} ({r.f_hz / 1e9:.5f} GHz) | {values} |")
+    return rows
+
+
 def _rung(ok_target, ok_fallback):
     """A row verdict rung: met (Target), fallback, or missed (below Fallback)."""
     return "met" if ok_target else ("fallback" if ok_fallback else "missed")
@@ -400,6 +419,17 @@ def _worst_stress(pts):
     out["outside_window"] = any(p["stress"]["outside_window"] for p in pts)
     out["at_p_avail_dbm"] = worst_pt["p_avail_dbm"]
     return out
+
+
+def _stress_table(points):
+    yield "| Pavail dBm | Vce pk V | Vce min V | Vcb pk V | Vbe pk V | Ic pk mA | Tj max C | outside window (Vce / Vbe / Ic / Tj) | label |"
+    yield "|---|---|---|---|---|---|---|---|---|"
+    for p in points:
+        st = p["stress"]
+        yield (f"| {p['p_avail_dbm']:.1f} | {st['vce_pk_v']:.3f} | {st['vce_min_v']:.3f} | {st['vcb_pk_v']:.3f} | "
+               f"{st['vbe_pk_v']:.3f} | {1e3 * st['ic_pk_a']:.2f} | {st['tj_max_c']:.1f} | "
+               f"{100 * st['frac_vce_outside']:.0f} % / {100 * st['frac_vbe_outside']:.0f} % / "
+               f"{100 * st['frac_ic_outside']:.0f} % / {100 * st['frac_tj_outside']:.0f} % | {label(st)} |")
 
 
 def verified_dut(rep, deck, netlist):
@@ -541,6 +571,14 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
       "power A^2/(8 Rs); P_in computed from the measured input V and I (mismatch "
       "counted). Self-heating on (card default `selft=1`); the ambient is the cell's.")
     w(f"- {bench['load_md']} {bench['terminations_md']}")
+    if net is not None:
+        w("")
+        w("Calculated from ideal elements. The actual collector load includes `Rsho` "
+          "at RFOUT and the parallel `Rdchoke` and `Lchoke` branches at COLL.")
+        w("")
+        o.extend(_match_table(net))
+        w("")
+    w(f"- Per-device collector current = {bench['ic_formula_md']} / {N_UNITS}.")
     w("- PAE = (P_out,f0 - P_in,f0) / P_DC; P_DC = total Vcc supply power, bias "
       "reference included; integrated over an integer number of RF periods "
       "(rectangular-window coherent DFT, step T/400), same extractor as the "
@@ -621,6 +659,7 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
                  if red.get("p1db_out_dbm") is not None else
                  "P1dB not reached within the sweep (no extrapolation); ")
               + f"linear gain {red['gain_linear_db']:.2f} dB.")
+            w(f"- Large-signal S11 at Psat = {c['points'][red['psat_index']]['s11_large_db']:.2f} dB.")
         else:
             e = c["reduction_error"]
             w(f"- Reduction refused: `{e['code']}` -- {e['message']}")
@@ -636,6 +675,13 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
           + (f"; {len(fl)} could not be: " + ", ".join(sorted({f_['code'] for f_ in fl})) + "."
              if fl else "."))
         w("")
+        if c["points"] and c["cell"] == {"process": gdb.PROCESS_NOM,
+                                         "temperature_c": gdb.TEMP_NOM_C,
+                                         "vcc": gdb.VCC_NOM_V}:
+            w("Device stress at each drive of the nominal cell:")
+            w("")
+            o.extend(_stress_table(c["points"]))
+            w("")
     w(f"Device stress limits and labels per `sim/lib/device_limits.py`: BVCEO(min) "
       f"{BVCEO_MIN:.1f} V, BVCBO(min) {BVCBO_MIN:.1f} V (process spec); window V_CE "
       f"{VCE_WIN[0]:.1f}-{VCE_WIN[1]:.1f} V, V_BE {VBE_WIN[0]:.2f}-{VBE_WIN[1]:.2f} V, "
@@ -689,7 +735,7 @@ def main(argv):
             ex = {k: (float(v) if isinstance(v, (np.floating,)) else v) for k, v in ex.items()}
             ex["p_avail_dbm"] = rx.dbm(pav)
             ex["s11_large_db"] = 10 * math.log10(max(1 - ex["p_in_w"] / pav, 1e-12))
-            ex["stress"] = stress(t, s, ex, c.get("temperature_c", 27), bench["ic_sense_i"])
+            ex["stress"] = stress(t, s, ex, c.get("temperature_c", 27), bench)
             ex["corner_id"] = cid
             ex["cell"] = cell
             points.append(ex)
@@ -738,7 +784,8 @@ def main(argv):
     if net is None:
         w("**Simulated** (ngspice transient), nominal cell only, **through ideal passives** "
           "(`Lchoke`, `Cblock`, `Cin` of the DUT are lossless with no self-resonance; no inductor model "
-          "is used). P_out, PAE and the harmonics below are not quotable as an on-chip output-network "
+          "is used; the issue-#172 stabilisation resistors `Rin`/`Rshm`/`Rsho`/`Rdchoke` are ideal and "
+          "lossy by design). P_out, PAE and the harmonics below are not quotable as an on-chip output-network "
           "result (spec: Output port / match, Inductor / passive models). Not a pass/fail claim; this "
           "record shows the bench runs cold. Topology DR 0003 is PROPOSED, Supply is DRAFT.")
     else:
@@ -787,7 +834,9 @@ def main(argv):
         w("")
         w("**The chip boundary is `RFOUT`** (`design/README.md`: \"`RFOUT` is the off-chip "
           "match boundary\"). On the **chip** side: the DUT only -- its output array and "
-          f"`Lchoke`, `Cblock`, `Cin`. **Off** chip: the sense source `Vbsense`, `Lmatch`, "
+          f"`Lchoke`, `Cblock`, `Cin`, plus the ideal stabilisation resistors "
+          "`Rin`/`Rshm`/`Rsho`/`Rdchoke` (issue #172, lossy by design). **Off** chip: the "
+          f"sense source `Vbsense`, `Lmatch`, "
           f"`Cmatch`, `Vlsense` and the {gdb.RL_OHM:g} ohm load. Every off-chip element is "
           "ideal and lossless.")
         w("")
@@ -805,7 +854,7 @@ def main(argv):
           f"`vswing_v / iq_per_nx_a` = {ll['vswing_v']:g} / {ll['iq_per_nx_a']:g} = "
           f"{net['r_per_nx_ohm']:.4f} ohm per Nx -- over the array **this netlist has** "
           f"({net['n_units']} devices x Nx={net['nx']} = {net['nx_total']} Nx), giving "
-          f"**Ropt = {net['ropt_ohm']:.4f} ohm at the collector**. Source: "
+          f"**collector design target Ropt = {net['ropt_ohm']:.4f} ohm**. Source: "
           f"`{net['loadline_record']}`, cell `supply_nominal_v "
           f"{ll['supply_nominal_v']:g}` / `tolerance {ll['tolerance']}` / `swing_mode "
           f"{ll['swing_mode']}`. That record's own `nx_needed.load_ohm_ideal` "
@@ -819,11 +868,10 @@ def main(argv):
           f"{100 * abs(net['cblock_x_ohm']) / net['ropt_ohm']:.0f} % of Ropt, so it is "
           f"**absorbed in closed form** into `Lmatch` "
           f"({1e9 * net['ls_plain_h']:.4f} nH L-section + "
-          f"{1e9 * (net['ls_h'] - net['ls_plain_h']):.4f} nH for `Cblock`), which is why the "
-          "**collector**, not `RFOUT`, sees a real Ropt. That impedance includes the "
-          "series `Cblock` but not the DUT's shunt `Lchoke` at `COLL`; the numerical "
-          "case for leaving `Lchoke` alone, at the original design point, is issue "
-          "#116. Both are ideal, so neither has a self-resonance.")
+          f"{1e9 * (net['ls_h'] - net['ls_plain_h']):.4f} nH for `Cblock`). The external "
+          "network in series with `Cblock` gives the real design target at f0. The "
+          "actual collector load includes the DUT shunts tabulated below. Issue #116 "
+          "documents the choice of `Lchoke` at the original design point.")
         w(f"- Analytic ceiling for this load line: {net['nx_total']} Nx x "
           f"{ll['pout_per_nx_w']:g} W = {net['pout_ceiling_w']:g} W = "
           f"**{rx.dbm(net['pout_ceiling_w']):.2f} dBm**. Hand arithmetic over the load-line "
@@ -832,11 +880,13 @@ def main(argv):
         w("**Impedance presented, at the two nodes that differ** (arithmetic over ideal "
           "elements, not simulated):")
         w("")
-        w("| Frequency | Into the network at `RFOUT` | Seen by `COLL` through `Cblock` |")
-        w("|---|---|---|")
-        for lab, f, z_rfout, z_coll in gdb.match_impedances(net):
-            w(f"| {lab} ({f / 1e9:.5f} GHz) | {z_rfout.real:.3f} {z_rfout.imag:+.3f}j ohm "
-              f"| {z_coll.real:.3f} {z_coll.imag:+.3f}j ohm |")
+        w("`External termination` is the off-chip network alone; `Design target` is that "
+          "network in series with `Cblock` (the Ropt the L-section is derived for); "
+          "`Into the network at RFOUT` adds the DUT's `Rsho` shunt; and `Seen by COLL` is "
+          "the **actual load** -- that, through `Cblock`, in parallel with `Rdchoke` and "
+          "`Lchoke` at `COLL`.")
+        w("")
+        o.extend(_match_table(net))
         w("")
         w("**The harmonic terminations are therefore no longer the labelled ideal-50-ohm "
           "default** -- the collector sees "
@@ -856,6 +906,7 @@ def main(argv):
         w(f"- Linear gain (median of the 3 lowest-drive points): {red['gain_linear_db']:.2f} dB")
         w(f"- **Psat = {red['psat_dbm']:.2f} dBm** (fundamental; sweep end reached: {red['psat_at_sweep_end']}), "
           f"PAE at Psat {100 * (red['pae_at_psat'] or 0):.1f} %")
+        w(f"- Large-signal S11 at Psat = {points[red['psat_index']]['s11_large_db']:.2f} dB.")
         if red["p1db_status"] == "reached":
             w(f"- **P1dB (output) = {red['p1db_out_dbm']:.2f} dBm** at P_in = {red['p1db_in_dbm']:.2f} dBm")
         else:
@@ -880,17 +931,17 @@ def main(argv):
     w(f"The {N_UNITS} array devices share the collector and base nodes and are identical, so one device's "
       "terminals are quoted for each. `V_CE`/`V_CB`/`V_BE` are the **external terminal** voltages (emitter "
       "at ground; the internal collector/base nodes sit inside the card's series resistances). `I_C` per "
-      f"device = (i(Lchoke) - {bench['ic_sense_md']}) / {N_UNITS}. Junction temperature = ambient + the card's thermal "
+      f"device = {bench['ic_formula_md']} / {N_UNITS}. Junction temperature = ambient + the card's thermal "
       f"node. Limits: BVCEO(min) {BVCEO_MIN:.1f} V, BVCBO(min) {BVCBO_MIN:.1f} V (process spec Rev. 1.2); "
       f"window V_CE {VCE_WIN[0]:.1f}-{VCE_WIN[1]:.1f} V, V_BE {VBE_WIN[0]:.2f}-{VBE_WIN[1]:.2f} V, "
       f"I_C < {1e3 * IC_MAX_PER_DEVICE:g} mA/device, T_j <= {TJ_MAX:g} C (model card). Fractions are of "
       "the samples in the window.")
     w("")
     if net is not None:
-        w(f"`I_C` is taken from the **chip boundary** (`{bench['ic_sense_i']}`, the 0 V source "
-          "`Vbsense` at `RFOUT`), which is `Cblock`'s own current and so closes KCL at `COLL`. "
-          "It is deliberately **not** the load-branch current: `Cmatch` shunts part of that, so "
-          "the load current would under-report every `I_C` below with nothing raised.")
+        w(f"The boundary sense `{bench['ic_sense_i']}` measures the current entering the "
+          "off-chip network. Adding the on-chip `Rsho` branch gives the current leaving "
+          "the collector through `Cblock`. Off chip, the boundary current splits again "
+          "between `Cmatch` and the load.")
         w("")
         w("**The self-heating thermal node this `Tj max C` column comes from is "
           "known-answer checked** in `sim/known-answer-thermal/` (issue #115; record "
@@ -903,14 +954,7 @@ def main(argv):
           "large-signal extractor (power, P_DC, harmonics). Read the `Tj` column as "
           "checked within that scope.")
         w("")
-    w("| Pavail dBm | Vce pk V | Vce min V | Vcb pk V | Vbe pk V | Ic pk mA | Tj max C | outside window (Vce / Vbe / Ic / Tj) | label |")
-    w("|---|---|---|---|---|---|---|---|---|")
-    for p in points:
-        st = p["stress"]
-        w(f"| {p['p_avail_dbm']:.1f} | {st['vce_pk_v']:.3f} | {st['vce_min_v']:.3f} | {st['vcb_pk_v']:.3f} | "
-          f"{st['vbe_pk_v']:.3f} | {1e3 * st['ic_pk_a']:.2f} | {st['tj_max_c']:.1f} | "
-          f"{100 * st['frac_vce_outside']:.0f} % / {100 * st['frac_vbe_outside']:.0f} % / "
-          f"{100 * st['frac_ic_outside']:.0f} % / {100 * st['frac_tj_outside']:.0f} % | {label(st)} |")
+    o.extend(_stress_table(points))
     w("")
     if points:
         worst = max(points, key=lambda p: p["stress"]["vce_pk_v"])

@@ -1,0 +1,135 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "sim/ac-stability/ac_stability.spice",
+    "scope": "repo"
+  },
+  "status": "pass",
+  "corner_count": 1,
+  "passed": 1,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 1,
+    "sim__corner__passed_count": 1,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "47",
+    "ngspice_binary": "/usr/local/bin/ngspice",
+    "engine_build": {
+      "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******",
+      "binary_sha256": "ac0358a190b4e7349223b0d49eb2e090a5a832275146ff7fa679e878e9ad39eb",
+      "probe": "ok",
+      "reason": null
+    },
+    "models_lib": {
+      "path": null,
+      "scope": "absent"
+    },
+    "models_lib_sha256": null,
+    "models_lib_sha256_scope": "local",
+    "netlist_sha256": "1332c01023d8cfc59b4f3da18a599fa98bba5f8c6ccd333aa096f8ef95c1221d",
+    "netlist_closure": [
+      {
+        "path": "sim/ac-stability/ac_stability.spice",
+        "scope": "repo",
+        "sha256": "1332c01023d8cfc59b4f3da18a599fa98bba5f8c6ccd333aa096f8ef95c1221d"
+      }
+    ],
+    "netlist_identity": "sha256:9d0927f0919bd5c2b4a294fad1621aa3bb00abcd2e4e4ab92b060e45d3b97594",
+    "corner_section_libs": [
+      {
+        "name": "cornerHBT.lib",
+        "path": null,
+        "scope": "external",
+        "sha256": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462"
+      }
+    ],
+    "engine_host": "local",
+    "backend": {
+      "resolved": "local",
+      "source": "flag",
+      "requested": "local"
+    }
+  },
+  "coverage": {
+    "corners_simulated": 1,
+    "measurements_declared": 0,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "corner:[0,\"hbt_typ/0.800V/27C\"]/waveform_capture"
+    ],
+    "skipped": [],
+    "inapplicable": [],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": [],
+    "capture_only": true
+  },
+  "provenance": {
+    "klt_version": "0.9.0",
+    "klt_git_commit": "5dbbad05ff42265c92a6f3d2f20d1bbcd2957d49",
+    "klt_reinstall_spec": "klayout-tools==0.9.0",
+    "klayout_version": "0.30.13",
+    "pdk": {
+      "name": "ihp-sg13g2",
+      "source": "PDK_ROOT environment variable",
+      "version": "fetched:0.3.0"
+    },
+    "deck": null,
+    "input": {
+      "content_hash": "sha256:1332c01023d8cfc59b4f3da18a599fa98bba5f8c6ccd333aa096f8ef95c1221d",
+      "role": "netlist"
+    }
+  },
+  "measurements": [],
+  "corners": [
+    {
+      "corner_id": "hbt_typ/0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vcc": 0.8
+      },
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.034,
+      "peak_rss_bytes": 49512448,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/workspace/work/2amlogic-sg13g2-pa-5be34baf/.loom/worktrees/2amlogic-sg13g2-pa-5be34baf/issue-172/sim/ac-stability/corners/20261122-220051-68a3fd38/ac_stability/hbt_typ_0p800V_27C/ngspice.log",
+        "raw": "/workspace/work/2amlogic-sg13g2-pa-5be34baf/.loom/worktrees/2amlogic-sg13g2-pa-5be34baf/issue-172/sim/ac-stability/corners/20261122-220051-68a3fd38/ac_stability/hbt_typ_0p800V_27C/waveform.raw",
+        "waveform": "/workspace/work/2amlogic-sg13g2-pa-5be34baf/.loom/worktrees/2amlogic-sg13g2-pa-5be34baf/issue-172/sim/ac-stability/corners/20261122-220051-68a3fd38/ac_stability/hbt_typ_0p800V_27C/waveform.raw.json",
+        "deck": "/workspace/work/2amlogic-sg13g2-pa-5be34baf/.loom/worktrees/2amlogic-sg13g2-pa-5be34baf/issue-172/sim/ac-stability/corners/20261122-220051-68a3fd38/ac_stability/hbt_typ_0p800V_27C/corner.cir",
+        "complex_vectors": "/workspace/work/2amlogic-sg13g2-pa-5be34baf/.loom/worktrees/2amlogic-sg13g2-pa-5be34baf/issue-172/sim/ac-stability/corners/20261122-220051-68a3fd38/ac_stability/hbt_typ_0p800V_27C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    }
+  ]
+}

@@ -148,19 +148,28 @@ def test_match_network_refuses_an_array_too_large_to_step_down_from_50_ohm():
         gdb.match_network(text=_array(1, 2), cell=_LL_CELL)   # 266.667/2 = 133 ohm
 
 
-def test_match_network_absorbs_cblock_so_the_collector_sees_a_real_load():
-    """The point of the absorption: COLL, not RFOUT, is purely resistive at f0."""
+def test_match_network_absorbs_cblock_so_the_design_target_is_real():
+    """The point of the absorption: external + Cblock is purely resistive at f0.
+
+    That is the DESIGN TARGET, not the collector load: Rsho at RFOUT and Rdchoke ||
+    Lchoke at COLL also load the collector, so ``z_coll`` differs from it.
+    """
     net = gdb.match_network()
-    rows = {lab: (zr, zc) for lab, _f, zr, zc in gdb.match_impedances(net)}
-    z_rfout, z_coll = rows["f0"]
-    assert z_coll.real == pytest.approx(net["ropt_ohm"], rel=1e-9)
-    assert z_coll.imag == pytest.approx(0.0, abs=1e-9)
+    rows = {r.label: r for r in gdb.match_impedances(net)}
+    r0 = rows["f0"]
+    assert r0.z_coll_target.real == pytest.approx(net["ropt_ohm"], rel=1e-9)
+    assert r0.z_coll_target.imag == pytest.approx(0.0, abs=1e-9)
+    # The actual collector load is a different number (the shunt branches load it).
+    assert r0.z_coll != pytest.approx(r0.z_coll_target, rel=1e-3)
+    assert r0.z_coll.real == pytest.approx(1.878, abs=2e-3)
     # RFOUT is NOT the same number -- Cblock's reactance is still in series there.
-    assert z_rfout.imag == pytest.approx(-net["cblock_x_ohm"], rel=1e-9)
-    assert abs(z_rfout.imag) > 0.3 * net["ropt_ohm"]
+    assert r0.z_external.imag == pytest.approx(-net["cblock_x_ohm"], rel=1e-9)
+    assert abs(r0.z_external.imag) > 0.3 * net["ropt_ohm"]
+    z3 = rows["3 f0"].z_coll
+    assert z3.real == pytest.approx(5.56, abs=0.01) and z3.imag == pytest.approx(25.80, abs=0.01)
     # 2 f0 / 3 f0 are nothing like 50 ohm, which is why the record must say so.
     for lab in ("2 f0", "3 f0"):
-        assert abs(rows[lab][1] - 50.0) > 20.0
+        assert abs(rows[lab].z_coll - 50.0) > 20.0
 
 
 def test_match_network_reads_cblock_from_the_netlist(tmp_path, monkeypatch):
@@ -176,7 +185,8 @@ def test_match_network_reads_cblock_from_the_netlist(tmp_path, monkeypatch):
     # read the same netlist, so both carry the changed value -- a hand-copied
     # `100p` in the diagram would stay behind while the DUT moved (issue #187).
     alt = tmp_path / "dut-50p.spice"
-    alt.write_text(_array(14, 10, cblock="50p"))
+    alt.write_text(_array(14, 10, cblock="50p")
+                   + "Rdchoke VCC COLL 150 m=1\nRsho RFOUT GND 1k m=1\nLchoke VCC COLL 100n m=1\n")
     monkeypatch.setattr(gdb, "NETLIST", alt)
     header, embedded = gdb.psat_deck("match").split("* ---- DUT", 1)
     assert "Cblock 50p, ON CHIP" in header
@@ -190,6 +200,27 @@ def test_match_network_reads_cblock_from_the_netlist(tmp_path, monkeypatch):
 def test_cblock_farads_refuses_anything_but_one_cblock_line(text, count):
     with pytest.raises(ValueError, match=f"found {count}"):
         gdb.cblock_farads(text)
+
+
+def test_rdchoke_ohms_reads_the_committed_netlist():
+    """`Rdchoke` (across Lchoke, issue #172) feeds the psat KCL; its value is read,
+    never hand-copied, for the same reason `cblock_farads` is."""
+    assert gdb.rdchoke_ohms() == pytest.approx(150.0, rel=1e-12)
+
+
+@pytest.mark.parametrize("line", ["Rdchoke VCC COLL 220 m=1\n", "Rdchoke COLL VCC 220 m=1\n"])
+def test_rdchoke_ohms_accepts_either_node_order(line):
+    assert gdb.rdchoke_ohms(_array(1, 10) + line) == pytest.approx(220.0, rel=1e-12)
+
+
+@pytest.mark.parametrize("text,count", [
+    (_array(1, 10), 0),
+    (_array(1, 10) + "Rdchoke VCC COLL 150 m=1\nRdchoke COLL VCC 150 m=1\n", 2),
+])
+def test_rdchoke_ohms_refuses_absent_or_duplicated_damping(text, count):
+    """A missing damping branch would silently break KCL at COLL, not error out."""
+    with pytest.raises(ValueError, match=f"found {count}"):
+        gdb.rdchoke_ohms(text)
 
 
 @pytest.mark.parametrize("text,want", [
@@ -302,7 +333,7 @@ def test_the_matched_deck_header_restates_the_topology_and_its_provenance():
     assert "NO LONGER THE LABELLED IDEAL-50-OHM DEFAULT" in header
     # The choke is described by what the arithmetic covers, not by a reactance
     # copied from the original design point (issue #187).
-    assert "series Cblock but not the DUT's shunt Lchoke" in header
+    assert "DESIGN" in header and "NOT the" in header and "Rdchoke || Lchoke" in header
     assert "issue #116" in header
     assert "+j1534" not in header and "0.12%" not in header
 

@@ -1,0 +1,19 @@
+* klt sim -- generated corner deck, do not edit
+.lib /home/ubuntu/.cache/sg13g2-pa/pdk-root/ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib hbt_typ
+.include /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-172/sim/ac-gain/ac_gain.spice
+.temp 27
+.control
+save v(s1) v(in1) v(out1) v(in2) v(out2) v(s2)
+set filetype=ascii
+ac lin 11 2.4e+09 2.4835e+09
+write /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-172/sim/ac-gain/corners/20261121-075225-2057a6d/ac_gain/hbt_typ_novdd_27C/waveform.raw
+let __klt_cv_0 = v(s1)
+let __klt_cv_1 = v(in1)
+let __klt_cv_2 = v(out1)
+let __klt_cv_3 = v(in2)
+let __klt_cv_4 = v(out2)
+let __klt_cv_5 = v(s2)
+write /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-172/sim/ac-gain/corners/20261121-075225-2057a6d/ac_gain/hbt_typ_novdd_27C/complex_vectors.raw __klt_cv_0 __klt_cv_1 __klt_cv_2 __klt_cv_3 __klt_cv_4 __klt_cv_5
+quit
+.endc
+.end

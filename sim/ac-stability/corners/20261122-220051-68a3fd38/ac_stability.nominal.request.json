@@ -1,0 +1,53 @@
+{
+  "netlist": "../../ac_stability.spice",
+  "models": {
+    "pdk": "ihp-sg13g2"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "hbt_typ",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_typ"
+          }
+        ]
+      }
+    ],
+    "temperature_c": [
+      27.0
+    ],
+    "supply_v": {
+      "vcc": [
+        0.8
+      ]
+    }
+  },
+  "analysis": {
+    "kind": "ac",
+    "args": "dec 50 10Meg 30G"
+  },
+  "options": {
+    "timeout_s": 300,
+    "keep_artifacts": true,
+    "waveforms": true,
+    "capture_only": true,
+    "complex_vectors": [
+      "v(s1)",
+      "v(in1)",
+      "v(out1)",
+      "v(in2)",
+      "v(out2)",
+      "v(s2)"
+    ],
+    "save_vectors": [
+      "v(s1)",
+      "v(in1)",
+      "v(out1)",
+      "v(in2)",
+      "v(out2)",
+      "v(s2)"
+    ]
+  }
+}

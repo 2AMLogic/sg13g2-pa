@@ -9,6 +9,7 @@ E {}
 T {sg13g2-pa  single-stage npn13G2 array PA core, bias and ideal match boundary} -600 -700 0 0 0.6 0.6 {}
 T {Topology: DR 0003 (PROPOSED, not ratified): 14 x npn13G2 Nx=10 in parallel (140 Nx units), single common-emitter stage, no stack, 0.8 V nominal} -600 -650 0 0 0.35 0.35 {}
 T {Passives are IDEAL (no loss, no self-resonance). Any Pout/PAE derived from this netlist is 'through ideal passives'. No inductor model is used (DR 0001 D-1 open)} -600 -620 0 0 0.35 0.35 {}
+T {Stabilisation + input match (issue #172, ideal resistors, lossy by design): Rin 33R series at RFIN, Rshm 56R shunt at INM (input damping + resistive match), Rsho 1k shunt at RFOUT (low-frequency output damping), Rdchoke 150R in parallel with Lchoke (bias-feed damping)} -600 -590 0 0 0.35 0.35 {}
 C {devices/ipin.sym} -600 -500 0 0 {name=p1 lab=RFIN}
 C {devices/opin.sym} -600 -460 0 0 {name=p2 lab=RFOUT}
 C {devices/iopin.sym} -600 -420 0 0 {name=p3 lab=VCC}
@@ -96,13 +97,25 @@ C {devices/lab_pin.sym} -520 450 0 0 {name=lq4 sig_type=std_logic lab=GND}
 C {devices/res.sym} -300 330 1 0 {name=Rb value=1k m=1}
 C {devices/lab_pin.sym} -330 330 0 0 {name=lr1 sig_type=std_logic lab=VREF}
 C {devices/lab_pin.sym} -270 330 0 0 {name=lr2 sig_type=std_logic lab=VB}
-T {MATCHING / BIAS FEED: ideal passives only, off-chip match boundary at RFOUT. Values are non-tuned placeholders, not a match} 200 200 0 0 0.4 0.4 {}
+T {MATCHING / BIAS FEED: ideal passives, off-chip match boundary at RFOUT. Lchoke/Cblock/Cin are placeholders; the input network Rin/Rshm is the issue-172 lossy resistive match (no inductor added, DR 0001 D-1 open)} 200 200 0 0 0.4 0.4 {}
 C {devices/ind.sym} 260 330 0 0 {name=Lchoke value=100n m=1}
 C {devices/lab_pin.sym} 260 300 0 0 {name=lm1 sig_type=std_logic lab=VCC}
 C {devices/lab_pin.sym} 260 360 0 0 {name=lm2 sig_type=std_logic lab=COLL}
+C {devices/res.sym} 260 470 1 0 {name=Rdchoke value=150 m=1}
+C {devices/lab_pin.sym} 230 470 0 0 {name=ldc1 sig_type=std_logic lab=COLL}
+C {devices/lab_pin.sym} 290 470 0 0 {name=ldc2 sig_type=std_logic lab=VCC}
 C {devices/capa.sym} 500 330 1 0 {name=Cblock value=100p m=1}
 C {devices/lab_pin.sym} 470 330 0 0 {name=lm3 sig_type=std_logic lab=COLL}
 C {devices/lab_pin.sym} 530 330 0 0 {name=lm4 sig_type=std_logic lab=RFOUT}
+C {devices/res.sym} 440 450 1 0 {name=Rsho value=1k m=1}
+C {devices/lab_pin.sym} 410 450 0 0 {name=lso1 sig_type=std_logic lab=GND}
+C {devices/lab_pin.sym} 470 450 0 0 {name=lso2 sig_type=std_logic lab=RFOUT}
+C {devices/res.sym} 600 330 1 0 {name=Rin value=33 m=1}
+C {devices/lab_pin.sym} 570 330 0 0 {name=lin1 sig_type=std_logic lab=INM}
+C {devices/lab_pin.sym} 630 330 0 0 {name=lin2 sig_type=std_logic lab=RFIN}
+C {devices/res.sym} 600 450 1 0 {name=Rshm value=56 m=1}
+C {devices/lab_pin.sym} 570 450 0 0 {name=lsh1 sig_type=std_logic lab=GND}
+C {devices/lab_pin.sym} 630 450 0 0 {name=lsh2 sig_type=std_logic lab=INM}
 C {devices/capa.sym} 760 330 1 0 {name=Cin value=100p m=1}
-C {devices/lab_pin.sym} 730 330 0 0 {name=lm5 sig_type=std_logic lab=RFIN}
+C {devices/lab_pin.sym} 730 330 0 0 {name=lm5 sig_type=std_logic lab=INM}
 C {devices/lab_pin.sym} 790 330 0 0 {name=lm6 sig_type=std_logic lab=VB}

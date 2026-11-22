@@ -1,0 +1,3508 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "sim/psat-sweep/psat_sweep_match.spice",
+    "scope": "repo"
+  },
+  "status": "error",
+  "corner_count": 106,
+  "passed": 0,
+  "failed": 0,
+  "errored": 106,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {
+      "lost_shard": 106
+    },
+    "by_severity": {
+      "error": 106
+    },
+    "corners_with_diagnostics": 106
+  },
+  "metrics": {
+    "sim__corner__count": 106,
+    "sim__corner__passed_count": 0,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 106,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": null,
+    "ngspice_binary": null,
+    "engine_build": {
+      "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******",
+      "binary_sha256": "39ca1adb826660324c3626f72bd946ec40704f0f3fc8e243c623f76e24b3eee2",
+      "probe": "ok",
+      "reason": null
+    },
+    "models_lib": {
+      "path": null,
+      "scope": "absent"
+    },
+    "models_lib_sha256": null,
+    "models_lib_sha256_scope": "client",
+    "netlist_sha256": "dfaf9893c08b6fc39311b9dfc9af0825edb87b5d0a2f18c65b7f65d52443488d",
+    "netlist_closure": [
+      {
+        "path": "sim/psat-sweep/psat_sweep_match.spice",
+        "scope": "repo",
+        "sha256": "dfaf9893c08b6fc39311b9dfc9af0825edb87b5d0a2f18c65b7f65d52443488d"
+      }
+    ],
+    "netlist_identity": "sha256:fa12dfee7b2aeff98a86ceb23c02d364591d1156c84b6c6f2fd2aca795064f07",
+    "corner_section_libs": [
+      {
+        "name": "cornerHBT.lib",
+        "path": null,
+        "scope": "external",
+        "sha256": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462"
+      }
+    ],
+    "remote": {
+      "unlaunched_shards": 10,
+      "resumable": true,
+      "shard_map": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-172/sim/psat-sweep/corners/20261121-081100-2057a6d-match/psat_sweep_match/batch-shards.json"
+    },
+    "engine_host": "worker",
+    "client_ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "backend": {
+      "resolved": "batch",
+      "source": "env",
+      "requested": "batch"
+    },
+    "timeout_preflight_warning": "options.timeout_s (300s) looks implausible for a tran analysis with ~1.02e+05 timepoints (2p step, 204.812n window) -- even 50 timepoints/s (a generous floor, not a real engine-rate estimate) would need 2.05e+03s per corner. This is only a coarse, advisory pre-grid heuristic -- it does not block the sweep, and a plausible-looking budget can still turn out to be too short in practice."
+  },
+  "coverage": {
+    "corners_simulated": 106,
+    "measurements_declared": 0,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [],
+    "skipped": [
+      {
+        "id": "corner:[0,\"hbt_typ/vamp=0.010_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[1,\"hbt_typ/vamp=0.011_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[10,\"hbt_typ/vamp=0.025_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[100,\"hbt_typ/vamp=1.589_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[101,\"hbt_typ/vamp=1.664_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[102,\"hbt_typ/vamp=1.742_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[103,\"hbt_typ/vamp=1.824_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[104,\"hbt_typ/vamp=1.910_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[105,\"hbt_typ/vamp=2.000_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[11,\"hbt_typ/vamp=0.026_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[12,\"hbt_typ/vamp=0.028_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[13,\"hbt_typ/vamp=0.029_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[14,\"hbt_typ/vamp=0.030_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[15,\"hbt_typ/vamp=0.032_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[16,\"hbt_typ/vamp=0.033_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[17,\"hbt_typ/vamp=0.035_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[18,\"hbt_typ/vamp=0.036_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[19,\"hbt_typ/vamp=0.038_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[2,\"hbt_typ/vamp=0.012_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[20,\"hbt_typ/vamp=0.040_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[21,\"hbt_typ/vamp=0.042_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[22,\"hbt_typ/vamp=0.044_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[23,\"hbt_typ/vamp=0.046_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[24,\"hbt_typ/vamp=0.048_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[25,\"hbt_typ/vamp=0.050_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[26,\"hbt_typ/vamp=0.053_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[27,\"hbt_typ/vamp=0.055_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[28,\"hbt_typ/vamp=0.058_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[29,\"hbt_typ/vamp=0.060_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[3,\"hbt_typ/vamp=0.013_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[30,\"hbt_typ/vamp=0.063_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[31,\"hbt_typ/vamp=0.066_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[32,\"hbt_typ/vamp=0.069_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[33,\"hbt_typ/vamp=0.073_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[34,\"hbt_typ/vamp=0.076_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[35,\"hbt_typ/vamp=0.080_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[36,\"hbt_typ/vamp=0.083_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[37,\"hbt_typ/vamp=0.087_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[38,\"hbt_typ/vamp=0.091_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[39,\"hbt_typ/vamp=0.096_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[4,\"hbt_typ/vamp=0.014_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[40,\"hbt_typ/vamp=0.100_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[41,\"hbt_typ/vamp=0.105_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[42,\"hbt_typ/vamp=0.110_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[43,\"hbt_typ/vamp=0.115_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[44,\"hbt_typ/vamp=0.121_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[45,\"hbt_typ/vamp=0.126_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[46,\"hbt_typ/vamp=0.132_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[47,\"hbt_typ/vamp=0.138_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[48,\"hbt_typ/vamp=0.145_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[49,\"hbt_typ/vamp=0.152_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[5,\"hbt_typ/vamp=0.016_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[50,\"hbt_typ/vamp=0.159_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[51,\"hbt_typ/vamp=0.166_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[52,\"hbt_typ/vamp=0.174_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[53,\"hbt_typ/vamp=0.182_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[54,\"hbt_typ/vamp=0.191_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[55,\"hbt_typ/vamp=0.200_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[56,\"hbt_typ/vamp=0.209_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[57,\"hbt_typ/vamp=0.219_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[58,\"hbt_typ/vamp=0.230_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[59,\"hbt_typ/vamp=0.240_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[6,\"hbt_typ/vamp=0.017_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[60,\"hbt_typ/vamp=0.252_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[61,\"hbt_typ/vamp=0.264_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[62,\"hbt_typ/vamp=0.276_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[63,\"hbt_typ/vamp=0.289_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[64,\"hbt_typ/vamp=0.303_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[65,\"hbt_typ/vamp=0.317_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[66,\"hbt_typ/vamp=0.332_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[67,\"hbt_typ/vamp=0.348_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[68,\"hbt_typ/vamp=0.364_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[69,\"hbt_typ/vamp=0.381_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[7,\"hbt_typ/vamp=0.019_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[70,\"hbt_typ/vamp=0.399_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[71,\"hbt_typ/vamp=0.418_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[72,\"hbt_typ/vamp=0.438_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[73,\"hbt_typ/vamp=0.458_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[74,\"hbt_typ/vamp=0.480_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[75,\"hbt_typ/vamp=0.502_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[76,\"hbt_typ/vamp=0.526_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[77,\"hbt_typ/vamp=0.551_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[78,\"hbt_typ/vamp=0.577_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[79,\"hbt_typ/vamp=0.604_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[8,\"hbt_typ/vamp=0.021_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[80,\"hbt_typ/vamp=0.632_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[81,\"hbt_typ/vamp=0.662_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[82,\"hbt_typ/vamp=0.693_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[83,\"hbt_typ/vamp=0.726_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[84,\"hbt_typ/vamp=0.760_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[85,\"hbt_typ/vamp=0.796_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[86,\"hbt_typ/vamp=0.834_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[87,\"hbt_typ/vamp=0.873_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[88,\"hbt_typ/vamp=0.914_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[89,\"hbt_typ/vamp=0.957_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[9,\"hbt_typ/vamp=0.023_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[90,\"hbt_typ/vamp=1.002_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[91,\"hbt_typ/vamp=1.050_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[92,\"hbt_typ/vamp=1.099_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[93,\"hbt_typ/vamp=1.151_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[94,\"hbt_typ/vamp=1.205_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[95,\"hbt_typ/vamp=1.262_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[96,\"hbt_typ/vamp=1.321_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[97,\"hbt_typ/vamp=1.384_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[98,\"hbt_typ/vamp=1.449_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      },
+      {
+        "id": "corner:[99,\"hbt_typ/vamp=1.517_vcc=0.800V/27C\"]",
+        "reason": "no_requested_measurements"
+      }
+    ],
+    "inapplicable": [],
+    "unknown": [],
+    "nothing_checked": true,
+    "nothing_checked_reasons": [
+      "no_requested_measurements"
+    ],
+    "capture_only": true
+  },
+  "provenance": {
+    "klt_version": "0.9.0",
+    "klt_git_commit": "5dbbad05ff42265c92a6f3d2f20d1bbcd2957d49",
+    "klt_reinstall_spec": "klayout-tools==0.9.0",
+    "klayout_version": "0.30.13",
+    "pdk": {
+      "name": "ihp-sg13g2",
+      "source": "PDK_ROOT environment variable",
+      "version": "fetched:0.3.0",
+      "ambiguous_sources": [
+        "search root: ~/share/pdk"
+      ]
+    },
+    "deck": null,
+    "input": {
+      "content_hash": "sha256:dfaf9893c08b6fc39311b9dfc9af0825edb87b5d0a2f18c65b7f65d52443488d",
+      "role": "netlist"
+    }
+  },
+  "measurements": [],
+  "corners": [
+    {
+      "corner_id": "hbt_typ/vamp=0.010_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.010023745,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-ecd25f92373d: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.011_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.010990817,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-ecd25f92373d: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.012_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.012051192,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-ecd25f92373d: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.013_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.013213869,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-ecd25f92373d: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.014_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.014488719,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-ecd25f92373d: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.016_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.015886565,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-ecd25f92373d: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.017_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.017419272,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-ecd25f92373d: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.019_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.019099852,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-ecd25f92373d: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.021_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.020942571,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-ecd25f92373d: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.023_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.022963072,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-ecd25f92373d: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.025_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.025178508,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-ecd25f92373d: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.026_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.026365135,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-03671cec11aa: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.028_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.027607685,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-03671cec11aa: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.029_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.028908795,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-03671cec11aa: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.030_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.030271225,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-03671cec11aa: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.032_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.031697864,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-03671cec11aa: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.033_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.033191738,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-03671cec11aa: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.035_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.034756017,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-03671cec11aa: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.036_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.036394017,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-03671cec11aa: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.038_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.038109214,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-03671cec11aa: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.040_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.039905246,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-03671cec11aa: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.042_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.041785923,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.999s exhausted after 6 launch attempt(s)) [remote job klt-sim-03671cec11aa: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.044_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.043755232,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.998s exhausted after 6 launch attempt(s)) [remote job klt-sim-2eabdca56321: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.046_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.045817353,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.998s exhausted after 6 launch attempt(s)) [remote job klt-sim-2eabdca56321: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.048_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.047976658,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.998s exhausted after 6 launch attempt(s)) [remote job klt-sim-2eabdca56321: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.050_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.050237729,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.998s exhausted after 6 launch attempt(s)) [remote job klt-sim-2eabdca56321: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.053_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.05260536,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.998s exhausted after 6 launch attempt(s)) [remote job klt-sim-2eabdca56321: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.055_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.055084574,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.998s exhausted after 6 launch attempt(s)) [remote job klt-sim-2eabdca56321: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.058_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.05768063,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.998s exhausted after 6 launch attempt(s)) [remote job klt-sim-2eabdca56321: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.060_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.060399034,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.998s exhausted after 6 launch attempt(s)) [remote job klt-sim-2eabdca56321: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.063_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.063245553,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.998s exhausted after 6 launch attempt(s)) [remote job klt-sim-2eabdca56321: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.066_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.066226224,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.998s exhausted after 6 launch attempt(s)) [remote job klt-sim-2eabdca56321: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.069_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.06934737,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.998s exhausted after 6 launch attempt(s)) [remote job klt-sim-2eabdca56321: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.073_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.072615611,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.997s exhausted after 6 launch attempt(s)) [remote job klt-sim-30a64e189cc1: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.076_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.076037879,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.997s exhausted after 6 launch attempt(s)) [remote job klt-sim-30a64e189cc1: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.080_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.079621434,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.997s exhausted after 6 launch attempt(s)) [remote job klt-sim-30a64e189cc1: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.083_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.083373877,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.997s exhausted after 6 launch attempt(s)) [remote job klt-sim-30a64e189cc1: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.087_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.087303166,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.997s exhausted after 6 launch attempt(s)) [remote job klt-sim-30a64e189cc1: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.091_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.091417638,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.997s exhausted after 6 launch attempt(s)) [remote job klt-sim-30a64e189cc1: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.096_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.095726018,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.997s exhausted after 6 launch attempt(s)) [remote job klt-sim-30a64e189cc1: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.100_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.100237447,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.997s exhausted after 6 launch attempt(s)) [remote job klt-sim-30a64e189cc1: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.105_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.104961492,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.997s exhausted after 6 launch attempt(s)) [remote job klt-sim-30a64e189cc1: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.110_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.109908175,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.997s exhausted after 6 launch attempt(s)) [remote job klt-sim-30a64e189cc1: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.115_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.115087987,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.997s exhausted after 6 launch attempt(s)) [remote job klt-sim-30a64e189cc1: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.121_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.120511917,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.996s exhausted after 6 launch attempt(s)) [remote job klt-sim-0cc18c3e51f9: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.126_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.126191469,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.996s exhausted after 6 launch attempt(s)) [remote job klt-sim-0cc18c3e51f9: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.132_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.13213869,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.996s exhausted after 6 launch attempt(s)) [remote job klt-sim-0cc18c3e51f9: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.138_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.138366194,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.996s exhausted after 6 launch attempt(s)) [remote job klt-sim-0cc18c3e51f9: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.145_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.144887192,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.996s exhausted after 6 launch attempt(s)) [remote job klt-sim-0cc18c3e51f9: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.152_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.151715515,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.996s exhausted after 6 launch attempt(s)) [remote job klt-sim-0cc18c3e51f9: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.159_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.158865647,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.996s exhausted after 6 launch attempt(s)) [remote job klt-sim-0cc18c3e51f9: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.166_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.166352754,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.996s exhausted after 6 launch attempt(s)) [remote job klt-sim-0cc18c3e51f9: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.174_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.174192718,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.996s exhausted after 6 launch attempt(s)) [remote job klt-sim-0cc18c3e51f9: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.182_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.182402168,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.996s exhausted after 6 launch attempt(s)) [remote job klt-sim-0cc18c3e51f9: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.191_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.190998517,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.996s exhausted after 6 launch attempt(s)) [remote job klt-sim-0cc18c3e51f9: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.200_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.2,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.993s exhausted after 7 launch attempt(s)) [remote job klt-sim-458f0c1a3b1a: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.209_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.20942571,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.993s exhausted after 7 launch attempt(s)) [remote job klt-sim-458f0c1a3b1a: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.219_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.219295639,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.993s exhausted after 7 launch attempt(s)) [remote job klt-sim-458f0c1a3b1a: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.230_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.229630724,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.993s exhausted after 7 launch attempt(s)) [remote job klt-sim-458f0c1a3b1a: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.240_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.240452887,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.993s exhausted after 7 launch attempt(s)) [remote job klt-sim-458f0c1a3b1a: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.252_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.251785082,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.993s exhausted after 7 launch attempt(s)) [remote job klt-sim-458f0c1a3b1a: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.264_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.263651348,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.993s exhausted after 7 launch attempt(s)) [remote job klt-sim-458f0c1a3b1a: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.276_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.276076853,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.993s exhausted after 7 launch attempt(s)) [remote job klt-sim-458f0c1a3b1a: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.289_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.289087954,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.993s exhausted after 7 launch attempt(s)) [remote job klt-sim-458f0c1a3b1a: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.303_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.30271225,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.993s exhausted after 7 launch attempt(s)) [remote job klt-sim-458f0c1a3b1a: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.317_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.316978638,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.993s exhausted after 7 launch attempt(s)) [remote job klt-sim-458f0c1a3b1a: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.332_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.331917381,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-171fce10e501: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.348_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.347560166,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-171fce10e501: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.364_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.363940172,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-171fce10e501: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.381_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.381092144,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-171fce10e501: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.399_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.399052463,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-171fce10e501: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.418_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.417859226,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-171fce10e501: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.438_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.437552325,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-171fce10e501: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.458_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.458173531,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-171fce10e501: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.480_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.479766584,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-171fce10e501: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.502_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.502377286,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-171fce10e501: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.526_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.526053598,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-8cb5c18bc313: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.551_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.550845741,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-8cb5c18bc313: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.577_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.576806301,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-8cb5c18bc313: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.604_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.603990344,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-8cb5c18bc313: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.632_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.632455532,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-8cb5c18bc313: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.662_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.662262243,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-8cb5c18bc313: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.693_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.693473701,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-8cb5c18bc313: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.726_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.72615611,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-8cb5c18bc313: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.760_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.760378793,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-8cb5c18bc313: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.796_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.796214341,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.992s exhausted after 6 launch attempt(s)) [remote job klt-sim-8cb5c18bc313: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.834_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.833738767,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.991s exhausted after 6 launch attempt(s)) [remote job klt-sim-98872e1604ec: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.873_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.873031664,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.991s exhausted after 6 launch attempt(s)) [remote job klt-sim-98872e1604ec: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.914_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.914176379,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.991s exhausted after 6 launch attempt(s)) [remote job klt-sim-98872e1604ec: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.957_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 0.957260185,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.991s exhausted after 6 launch attempt(s)) [remote job klt-sim-98872e1604ec: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.002_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.002374467,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.991s exhausted after 6 launch attempt(s)) [remote job klt-sim-98872e1604ec: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.050_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.04961492,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.991s exhausted after 6 launch attempt(s)) [remote job klt-sim-98872e1604ec: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.099_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.099081748,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.991s exhausted after 6 launch attempt(s)) [remote job klt-sim-98872e1604ec: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.151_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.150879875,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.991s exhausted after 6 launch attempt(s)) [remote job klt-sim-98872e1604ec: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.205_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.205119172,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.991s exhausted after 6 launch attempt(s)) [remote job klt-sim-98872e1604ec: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.262_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.261914689,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 224 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the 0 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.991s exhausted after 6 launch attempt(s)) [remote job klt-sim-98872e1604ec: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.321_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.321386896,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.988s exhausted after 6 launch attempt(s)) [remote job klt-sim-a3d42202a7cc: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.384_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.383661942,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.988s exhausted after 6 launch attempt(s)) [remote job klt-sim-a3d42202a7cc: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.449_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.44887192,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.988s exhausted after 6 launch attempt(s)) [remote job klt-sim-a3d42202a7cc: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.517_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.51715515,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.988s exhausted after 6 launch attempt(s)) [remote job klt-sim-a3d42202a7cc: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.589_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.588656469,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.988s exhausted after 6 launch attempt(s)) [remote job klt-sim-a3d42202a7cc: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.664_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.663527542,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.988s exhausted after 6 launch attempt(s)) [remote job klt-sim-a3d42202a7cc: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.742_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.74192718,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.988s exhausted after 6 launch attempt(s)) [remote job klt-sim-a3d42202a7cc: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.824_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.824021679,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.988s exhausted after 6 launch attempt(s)) [remote job klt-sim-a3d42202a7cc: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=1.910_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 1.909985172,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.988s exhausted after 6 launch attempt(s)) [remote job klt-sim-a3d42202a7cc: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "hbt_typ/vamp=2.000_vcc=0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vamp": 2.0,
+        "vcc": 0.8
+      },
+      "temperature_c": 27,
+      "status": "error",
+      "runtime_s": 0.0,
+      "engine_exit_code": null,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [
+        {
+          "severity": "error",
+          "code": "lost_shard",
+          "message": "shard lost: batch-fleet-provision.sh launch failed (exit 75): error: 240 vCPU already running + 1 instance(s) of up to 32 vCPU exceeds BATCH_MAX_VCPU=224, and only 0 type(s) fit the -16 vCPU left (floor 2) \u2014 the spot quota is shared with ci-spot (batch-fleet.md \u00a7vCPU budget) (capacity wait budget of 599.988s exhausted after 6 launch attempt(s)) [remote job klt-sim-a3d42202a7cc: unknown] [batch_no_capacity]"
+        }
+      ],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    }
+  ]
+}
