@@ -5,6 +5,8 @@ triage role. Newest first.
 
 ### 2026-11-21
 
+- **Issue #173** (closed): T1 item 5: provisional PVT corner matrix on the three DUT benches (3 HBT corners x -40/27/125 C x supply +/-10 %)
+- **PR #193**: Provisional 27-cell PVT matrix on the three DUT benches: psat-matched record, item-9 re-attest, per-row findings (#173)
 - **Issue #187** (closed): Remove hand-copied Cblock and Lchoke values from matched Psat bench commentary
 - **PR #189**: fix: stop hand-copying Cblock and Lchoke values in the matched Psat bench
 - **Issue #176** (closed): Remove the unusable manual recovery recipe for missing dpkg-deb

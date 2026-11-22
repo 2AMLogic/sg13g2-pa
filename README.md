@@ -6,8 +6,8 @@ A SiGe HBT power amplifier on
 [klayout-tools](https://github.com/2AMLogic/klayout-tools) and the
 open-source xschem + ngspice flow.
 
-**Status: spec ratified; a first topology benched at one cell.** What exists
-today, and what it does not yet establish:
+**The core spec is ratified. The first topology has provisional results across a
+27-cell process, voltage and temperature (PVT) matrix.**
 
 - **Spec.** The core rows of [`spec/target-spec.md`](spec/target-spec.md) are
   ratified by
@@ -25,14 +25,14 @@ today, and what it does not yet establish:
   wired, no pads, and `XQref`, `Rb`, `Cin`, `Cblock` and `Lchoke` not drawn
   ([`layout/README.md`](layout/README.md)). DRC is clean on that stream;
   **LVS has not been run.**
-- **Simulation.** The three DUT benches ([`sim/README.md`](sim/README.md)) have
-  run at the **nominal cell only** (`hbt_typ`, 27 °C, Vcc 0.8 V) and **through
-  ideal passives** — there is **no PVT matrix**. One psat variant transforms
-  the load through an **ideal, lossless off-chip L-section**, which benches the
-  boundary convention of the spec's *Fallback* output-port cell; the *Target*
-  on-chip match stays **unevidenced** while DR 0001 D-1 is open. No
-  output-power, PAE or efficiency figure in this repo is an on-chip result, and
-  no bench run so far is a pass claim against the ratified spec.
+- **Simulation.** The AC gain and stability benches each produced results for
+  24 of 27 cells. The same three cells failed to converge at 125 °C. The
+  matched Psat bench simulated all 27 cells and extracted figures for 25.
+  At two cold cells the drive steps were too coarse to extract the figures.
+  All three benches use ideal passives, and the Supply row is still DRAFT.
+  The matched bench uses an ideal, lossless off-chip L-section at the spec's
+  *Fallback* output boundary. The *Target* on-chip match awaits the passive
+  model decision in DR 0001 D-1. See [bench conditions and records](sim/README.md).
 
 Per-item state is the signoff record's to report, not this file's — see **T1
 status** just below. The near-term plan is [`WORK_PLAN.md`](WORK_PLAN.md).
@@ -117,10 +117,9 @@ are *targets*, not results. The band follows the sibling LNA's ratified band
 Maturity ladder: spec ratified → device and passive characterization →
 schematic simulated across PVT → layout DRC/LVS-clean → post-layout
 re-verification → shuttle seat → measured silicon.
-**Current position: spec ratified; the `npn13g2` load line studied and passive
-characterization not started (inductor source deferred, DR 0001 D-1); schematic
-benched at the nominal cell only, not across PVT; layout placement-only and
-DRC-clean, LVS not run.**
+The `npn13g2` load-line study and provisional schematic PVT runs are recorded.
+Passive characterization awaits the inductor-source decision (DR 0001 D-1).
+The placement-only layout is DRC-clean. LVS is pending.
 
 ## Tool flow
 
@@ -143,7 +142,7 @@ through `klt sim` (the Spot batch fleet on dispatch workers via
 | Toolchain smoke (inverter corners, one `npn13g2` operating point) | `sim/smoke/run_smoke.sh` | `sim/smoke/records/` |
 | Known-answer check of `sim/lib/rf_extract.py` | `sim/known-answer/run.sh` (`--wrong-load` is the negative control and is expected to exit 1) | `sim/known-answer/records/` |
 | `npn13g2` device load-line study | `sim/device-npn13g2/run_device.sh` | `sim/device-npn13g2/records/` |
-| Psat, P1dB, peak PAE, large-signal S11, device stress and harmonics (nominal cell, ideal passives) | `sim/psat-sweep/run_psat_sweep.sh` (add `--match` for the same sweep through an ideal, lossless off-chip L-section) | `sim/psat-sweep/records/` |
+| Psat, P1dB, peak PAE, large-signal S11, device stress and harmonics | `sim/psat-sweep/run_psat_sweep.sh` for the bare 50 Ω nominal cell, or `sim/psat-sweep/run_psat_sweep.sh --match` for the 27-cell off-chip match | `sim/psat-sweep/records/` |
 | Power gain and small-signal S11 over the band | `sim/ac-gain/run_ac_gain.sh` | `sim/ac-gain/records/` |
 | Small-signal stability (μ, μ', k, \|Δ\|, negative-resistance check, 10 MHz–30 GHz) | `sim/ac-stability/run_ac_stability.sh` | `sim/ac-stability/records/` |
 | PA layout reproduces from the committed netlist | `layout/pa/generate.sh --check` | pass/fail on stdout; binds `layout/pa/sg13g2_pa.gds` and `layout/pa/provenance.json` |
@@ -155,10 +154,9 @@ through `klt sim` (the Spot batch fleet on dispatch workers via
 The environment, smoke, known-answer, device load-line, layout-smoke, tier
 verdict and unit-test rows are toolchain, characterization or hygiene checks,
 not PA design results. The five rows for the DUT benches, the layout generator
-and the PA DRC report **are** PA results — but at the nominal cell only,
-through ideal passives, under a PROPOSED topology, so none of them is a pass
-claim against the ratified spec. Each record says which corner and testbench it
-came from. The three bench scripts and `layout/pa/generate.sh --check` need the
+and the PA DRC report cover the proposed PA. Each simulation record states
+its corner, testbench and findings. The DRC report covers the placement-only
+layout. The three bench scripts and `layout/pa/generate.sh --check` need the
 PDK (`scripts/setup-env.sh` first); `klt drc --check`, the tier verdict and the
 unit tests do not.
 
