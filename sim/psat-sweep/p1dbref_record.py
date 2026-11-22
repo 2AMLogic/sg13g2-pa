@@ -155,7 +155,7 @@ def render(rid, git_sha, dirty, klt_v, ng_v, rep, matrix, out_json, dut):
             ex = {k: (float(v) if isinstance(v, (np.floating,)) else v) for k, v in ex.items()}
             ex["p_avail_dbm"] = rx.dbm(pav)
             ex["s11_large_db"] = 10 * math.log10(max(1 - ex["p_in_w"] / pav, 1e-12))
-            ex["stress"] = stress(t, s, ex, c.get("temperature_c", 27), bench["ic_sense_i"])
+            ex["stress"] = stress(t, s, ex, c.get("temperature_c", 27), bench)
             ex["corner_id"] = cid
             ex["cell"] = cell
             points.append(ex)

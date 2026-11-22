@@ -419,6 +419,9 @@ def test_s11_at_psat_uses_the_peak_output_point(tmp_path, cell_count):
         assert cell["points"][index]["s11_large_db"] == pytest.approx(-10, abs=0.001)
     assert md.count("Large-signal S11 at Psat = -10.00 dB") == cell_count
     assert "Seen by `COLL` through `Cblock`" in md
+    nominal = doc["cells"][0] if cell_count == 2 else doc
+    assert "\n".join(PSAT._stress_table(nominal["points"])) in md
+    assert md.count("Ic pk mA | Tj max C | outside window") == 1
 
 
 def test_the_matrix_record_links_each_finding_to_its_tracker(tmp_path):

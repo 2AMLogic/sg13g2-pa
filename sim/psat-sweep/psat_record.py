@@ -421,6 +421,17 @@ def _worst_stress(pts):
     return out
 
 
+def _stress_table(points):
+    yield "| Pavail dBm | Vce pk V | Vce min V | Vcb pk V | Vbe pk V | Ic pk mA | Tj max C | outside window (Vce / Vbe / Ic / Tj) | label |"
+    yield "|---|---|---|---|---|---|---|---|---|"
+    for p in points:
+        st = p["stress"]
+        yield (f"| {p['p_avail_dbm']:.1f} | {st['vce_pk_v']:.3f} | {st['vce_min_v']:.3f} | {st['vcb_pk_v']:.3f} | "
+               f"{st['vbe_pk_v']:.3f} | {1e3 * st['ic_pk_a']:.2f} | {st['tj_max_c']:.1f} | "
+               f"{100 * st['frac_vce_outside']:.0f} % / {100 * st['frac_vbe_outside']:.0f} % / "
+               f"{100 * st['frac_ic_outside']:.0f} % / {100 * st['frac_tj_outside']:.0f} % | {label(st)} |")
+
+
 def verified_dut(rep, deck, netlist):
     """Tie the DUT bytes to the generated deck klt actually simulated."""
     content = deck.read_bytes()
@@ -664,6 +675,13 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
           + (f"; {len(fl)} could not be: " + ", ".join(sorted({f_['code'] for f_ in fl})) + "."
              if fl else "."))
         w("")
+        if c["points"] and c["cell"] == {"process": gdb.PROCESS_NOM,
+                                         "temperature_c": gdb.TEMP_NOM_C,
+                                         "vcc": gdb.VCC_NOM_V}:
+            w("Device stress at each drive of the nominal cell:")
+            w("")
+            o.extend(_stress_table(c["points"]))
+            w("")
     w(f"Device stress limits and labels per `sim/lib/device_limits.py`: BVCEO(min) "
       f"{BVCEO_MIN:.1f} V, BVCBO(min) {BVCBO_MIN:.1f} V (process spec); window V_CE "
       f"{VCE_WIN[0]:.1f}-{VCE_WIN[1]:.1f} V, V_BE {VBE_WIN[0]:.2f}-{VBE_WIN[1]:.2f} V, "
@@ -936,14 +954,7 @@ def main(argv):
           "large-signal extractor (power, P_DC, harmonics). Read the `Tj` column as "
           "checked within that scope.")
         w("")
-    w("| Pavail dBm | Vce pk V | Vce min V | Vcb pk V | Vbe pk V | Ic pk mA | Tj max C | outside window (Vce / Vbe / Ic / Tj) | label |")
-    w("|---|---|---|---|---|---|---|---|---|")
-    for p in points:
-        st = p["stress"]
-        w(f"| {p['p_avail_dbm']:.1f} | {st['vce_pk_v']:.3f} | {st['vce_min_v']:.3f} | {st['vcb_pk_v']:.3f} | "
-          f"{st['vbe_pk_v']:.3f} | {1e3 * st['ic_pk_a']:.2f} | {st['tj_max_c']:.1f} | "
-          f"{100 * st['frac_vce_outside']:.0f} % / {100 * st['frac_vbe_outside']:.0f} % / "
-          f"{100 * st['frac_ic_outside']:.0f} % / {100 * st['frac_tj_outside']:.0f} % | {label(st)} |")
+    o.extend(_stress_table(points))
     w("")
     if points:
         worst = max(points, key=lambda p: p["stress"]["vce_pk_v"])
