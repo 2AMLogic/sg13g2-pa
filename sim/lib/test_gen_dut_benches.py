@@ -24,6 +24,20 @@ AC_BUILDER_IDS = [f.__name__ for f in AC_BUILDERS]
 
 
 @pytest.mark.parametrize("build", AC_BUILDERS, ids=AC_BUILDER_IDS)
+def test_ac_decks_carry_the_gmin_convergence_aid(build):
+    """The DC-solve option is formatted from `AC_GMIN`, never retyped (issue #188).
+
+    Raising gmin above ngspice's 1e-12 default is what keeps the 125 C PVT
+    cells' operating-point stepping free of the singular-matrix warning klt
+    grades `error` on, so the deck line and the constant must not diverge --
+    and neither may drift back to the default, which re-breaks the three cells.
+    """
+    deck = build()
+    assert f".options gmin={gdb.AC_GMIN:g}\n" in deck
+    assert gdb.AC_GMIN > 1e-12
+
+
+@pytest.mark.parametrize("build", AC_BUILDERS, ids=AC_BUILDER_IDS)
 def test_unequal_port_impedances_refuse_to_build_an_ac_deck(build, monkeypatch):
     """Both AC decks come from `_ac_deck`, so both must refuse."""
     monkeypatch.setattr(gdb, "RL_OHM", 2 * gdb.RS_OHM)
