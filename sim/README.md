@@ -201,7 +201,7 @@ klayout-tools#5870 collision class; `assert_pvt_corner_ids_distinct` refuses it 
 generation time), and `reduce_sweep` forbids steps above 1 dB before Psat. The grid
 bottom of -36.0 dBm is therefore an **encoding floor**, and the matrix record's
 reference points sit only ~8-16 dB below each cell's compression. The encoding gap is
-filed with klayout-tools (friction protocol).
+filed with klayout-tools (friction protocol): klayout-tools#7132.
 
 Until it closes, `run_p1dbref_probe.sh` measures what the grid cannot: the SAME
 committed matched deck (byte-identical, no bench fact changes) under a sparse low-drive

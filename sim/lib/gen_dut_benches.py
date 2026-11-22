@@ -193,7 +193,7 @@ PSAT_MATCH_COARSE_TOP_DBM = -28.0
 # that compresses above -48 dBm available. Every cell of the matrix record does: the
 # earliest measured 1 dB point is at Pavail -25.6 dBm (nominal cell), which leaves the
 # committed reference points only ~8-16 dB below compression depending on the cell.
-# The encoding gap is filed with klayout-tools (friction protocol); until it closes,
+# The encoding gap is klayout-tools#7132 (friction protocol); until it closes,
 # this probe is the bench that measures what the committed grid cannot.
 #
 # It reuses the committed MATCHED deck unchanged (same load, harmonic terminations and

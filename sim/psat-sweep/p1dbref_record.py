@@ -9,7 +9,8 @@ gain-vs-drive curve of every declared PVT cell at drives the committed matched g
 cannot reach. klt names a unit by a corner id whose supply-axis values are formatted to
 three decimals, so below ~10 mV of source amplitude no <= 1 dB spaced drive grid keeps
 one bucket per point (klayout-tools#5870's collision class; the gap is filed with
-klayout-tools under the friction protocol). The committed grid therefore stops at
+klayout-tools under the friction protocol, klayout-tools#7132). The committed grid
+therefore stops at
 -36.0 dBm available -- roughly 8-16 dB below each cell's compression, against the spec's
 "drive >= 20 dB below the compressing level" (Output P1dB row). The probe reuses the
 COMMITTED matched deck unchanged (same load, harmonic terminations, extraction nodes)
