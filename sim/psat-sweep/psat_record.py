@@ -24,13 +24,13 @@ deck), including the array size read from the DUT netlist, the deck name, the ex
 node names and the harmonic-termination sentence. The record prose is formatted from
 them, so it cannot fall behind the constants that produced its labels.
 """
-import glob
 import json
 import math
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
+from pathlib import Path
 
 import numpy as np
 
@@ -38,8 +38,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import gen_dut_benches as gdb  # noqa: E402
 import rf_extract as rx  # noqa: E402
 import spec_rows as sr  # noqa: E402
-from finding_trackers import (DID_NOT_SIMULATE, POWER_ROWS,  # noqa: E402
-                              STABILITY_AND_MATCH, line_md, units_md)
+from finding_trackers import POWER_ROWS, STABILITY_AND_MATCH, line_md, plural, units_md  # noqa: E402
 from provenance import commit_line  # noqa: E402
 # The (P) breakdown minima and the (M) model window live once, in sim/lib/device_limits.py
 # (provenance marked there); the bench facts live once in gen_dut_benches.py, which
@@ -122,165 +121,170 @@ def _remote_md(remote):
         ids = ", ".join(str(s.get("job_id", "?")) for s in fleet[:20]) \
             + f", ... (+{len(fleet) - 20} more)"
     elapsed = [s.get("elapsed_seconds") for s in fleet if s.get("elapsed_seconds") is not None]
+    elapsed_range = f"{min(elapsed)}-{max(elapsed)} s" if elapsed else "n/a"
     # Round-local wall clock from the fleet blocks' own client timestamps: first
     # submit (launch stamp where a block carries no submit stamp -- that happens
     # on resumed shards) to last terminal state, within THIS round only.
     wall = "n/a"
-    subs = [s.get("client_submitted_at") or s.get("client_launched_at")
-            for s in fleet]
-    subs = [x for x in subs if x]
-    terms = [s.get("client_status_terminal_at") for s in fleet if s.get("client_status_terminal_at")]
-    if subs and terms:
-        try:
-            wall = f"{(_ts(max(terms)) - _ts(min(subs))).total_seconds():.0f} s"
-        except ValueError:
-            pass
+    starts = [_ts(s.get("client_submitted_at")) or _ts(s.get("client_launched_at"))
+              for s in fleet]
+    starts = [t for t in starts if t is not None]
+    ends = [t for s in fleet if (t := _ts(s.get("client_status_terminal_at"))) is not None]
+    if starts and ends:
+        wall = f"{(max(ends) - min(starts)).total_seconds():.0f} s"
     return (f"{len(fleet)} fleet shards in this report's final round (round-local); "
             f"provider {uniq('provider')}; "
             f"region {uniq('region')}; instance_type {uniq('instance_type')}; "
             f"lifecycle {uniq('lifecycle')}; runner klt {uniq('runner_klt_version')}; "
-            f"elapsed {min(elapsed)}-{max(elapsed)} s; round-local wall clock (first "
-            f"submit or launch to last terminal, capacity waits included) {wall}; "
+            f"elapsed {elapsed_range}; round-local wall clock (first evidenced "
+            f"submit or launch to last evidenced terminal) {wall}; "
             f"job ids: {ids}"
             + "  -- full per-shard environment capture in corners/<id>/*.report.json")
 
 
 def _ts(x):
-    """An ISO-8601 client/receipt timestamp as a datetime (Z-suffixed allowed)."""
-    return datetime.fromisoformat(x.replace("Z", "+00:00"))
+    """Read an offset-aware artifact timestamp in UTC, if present and usable."""
+    if not isinstance(x, str):
+        return None
+    try:
+        timestamp = datetime.fromisoformat(x.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return timestamp.astimezone(timezone.utc) if timestamp.tzinfo else None
 
 
-# A round's stderr carries each submission as its own line; the same job id can
-# appear in a dozen later status lines, which establish nothing (issue #194).
-_SUBMIT_RE = re.compile(r"batch job (klt-sim-[0-9a-f]+) submitting")
+# Only these messages establish the action. A status mention, capacity refusal
+# or submission in an earlier attempt does not date a job's launch.
+_JOB_EVENT = re.compile(
+    r"batch job (klt-sim-[0-9a-f]+) "
+    r"(submitting\b|launched; re-attach\b|had been submitted but never launched; launched it\b)"
+)
 
 
-def _submit_ids(path):
-    """Distinct job ids one round's stderr shows being SUBMITTED (not mentioned)."""
-    ids = set()
-    with open(path, errors="replace") as fh:
-        for ln in fh:
-            m = _SUBMIT_RE.search(ln)
-            if m:
-                ids.add(m.group(1))
-    return ids
+def _rounds_md(run, bench):
+    """Group distinct submissions and launches by the log that records the event."""
+    numbered = {}
+    unnumbered = []
+    initial = run / f"{bench}.stderr"
+    if initial.is_file():
+        numbered[0] = [initial]
+    for path in sorted(run.glob(f"{bench}.resume*.stderr")):
+        match = re.fullmatch(r"resume([1-9][0-9]*)(?:\..+)?\.stderr",
+                             path.name[len(bench) + 1:])
+        if match:
+            numbered.setdefault(int(match[1]), []).append(path)
+        else:
+            unnumbered.append(path)
+
+    def label(i):
+        return f"resume{i}" if i else "initial"
+
+    groups = [(label(i), numbered[i]) for i in sorted(numbered)]
+    groups.extend((f"unnumbered resume (`{p.name}`)", [p]) for p in unnumbered)
+    if not groups:
+        return ["no submit stderr found for the initial or resume rounds"], set()
+
+    lines = []
+    all_launched = set()
+    for name, paths in groups:
+        submitted, launched = set(), set()
+        for path in paths:
+            with path.open(errors="replace") as fh:
+                for line in fh:
+                    event = _JOB_EVENT.search(line)
+                    if event:
+                        ids = submitted if event[2] == "submitting" else launched
+                        ids.add(event[1])
+        launch_word = "launch" if len(launched) == 1 else "launches"
+        lines.append(f"{name}: {len(submitted)} submitted, {len(launched)} {launch_word} logged")
+        all_launched.update(launched)
+
+    summary = [f"{plural(len(numbered), 'identified attempt')} evidenced by stderr ({'; '.join(lines)})"]
+    missing = []
+    if 0 not in numbered:
+        missing.append("initial")
+    previous = 0
+    for i in sorted(numbered):
+        if i > previous + 1:
+            first, last = label(previous + 1), label(i - 1)
+            missing.append(first if first == last else f"{first} through {last}")
+        previous = i
+    if missing:
+        summary.append(f"missing round logs: {', '.join(missing)}")
+    if unnumbered:
+        summary.append("the unnumbered resume logs do not establish their round numbers")
+    elif len(numbered) == 1 and 0 in numbered:
+        summary.append("only the initial submit log is available")
+    return summary, all_launched
 
 
-def _round_logs(run_dir, bench):
-    """[(label, path)] -- the initial submit and the numbered resume rounds.
-
-    The resume logs are operator-named (`<bench>.resume1.stderr`,
-    `<bench>.resume2.pass.stderr`, ...); the number is the sort key.
-    """
-    logs = []
-    init = os.path.join(run_dir, f"{bench}.stderr")
-    if os.path.isfile(init):
-        logs.append(("initial", init))
-    def _num(p):
-        m = re.search(r"\.resume(\d+)", os.path.basename(p))
-        return int(m.group(1)) if m else 0
-    for p in sorted(glob.glob(os.path.join(run_dir, f"{bench}.resume*.stderr")), key=_num):
-        m = re.search(r"\.resume(\d+)", os.path.basename(p))
-        logs.append((f"resume{m.group(1)}", p))
-    return logs
-
-
-def _load_receipts(run_dir, bench):
-    """{job_id: receipt} for every batch receipt under the run's shard dirs.
-
-    A receipt is the launch evidence: capacity refusals, repeated status lines
-    and the submit lines themselves establish nothing about a launch -- a
-    receipt with `launched_at` does.
-    """
-    out = {}
-    for p in glob.glob(os.path.join(run_dir, bench, "*", "batch-receipt-*.json")):
-        try:
-            r = json.load(open(p))
-        except (OSError, ValueError):
-            continue
-        if r.get("job_id"):
-            out[r["job_id"]] = r
-    return out
+def _artifact(path):
+    try:
+        with path.open() as fh:
+            record = json.load(fh)
+    except (OSError, ValueError):
+        return {}
+    return record if isinstance(record, dict) else {}
 
 
 def _sharded_run_md(rid, run_dir, bench, request_path, remote):
-    """Whole-run provenance for a sharded `klt sim` run, from committed evidence.
+    """Describe the run using only the artifacts saved alongside its report."""
+    run = Path(run_dir)
+    saved_request = run / f"{bench}.request.json"
+    if request_path and Path(request_path).resolve().parent == run.resolve():
+        saved_request = Path(request_path)
+    request_remote = _artifact(saved_request).get("remote")
+    declared = request_remote.get("hosts") if isinstance(request_remote, dict) else None
+    source = "saved request (`remote.hosts`)"
+    if declared is None:
+        declared = _artifact(run / f"{bench}.dry-run.json").get("hosts")
+        source = "run's dry-run manifest (`hosts`)"
+    if declared is None:
+        o = ["declared shards per attempt unknown (no host count in the saved request or dry-run manifest)"]
+    else:
+        o = [f"the {source} declares {declared} shards per attempt"]
 
-    The final report's `environment.remote` block describes the LAST round: its
-    `fleet` is that round's launched set, and after a `--resume` run its
-    `unlaunched_shards` / `resumable` can read stale against a finished whole
-    (all corners present, corner-matrix verdict clean). What the whole run
-    actually did lives in three committed artifacts: the request (the declared
-    `remote.hosts`), the per-round submit stderr under `corners/<rid>/` (which
-    jobs each round sent), and the batch receipts under
-    `corners/<rid>/<bench>/` (which of those launched, and when). Where a piece
-    is missing, the missing piece is named -- a narrower interval is never
-    passed off as the whole run's.
+    rounds, logged_ids = _rounds_md(run, bench)
+    o.extend(rounds)
+    receipts, launches, completions = set(), [], {}
+    for path in (run / bench).glob("*/batch-receipt-*.json"):
+        receipt = _artifact(path)
+        job = receipt.get("job_id")
+        start, end = _ts(receipt.get("launched_at")), _ts(receipt.get("completed_at"))
+        if job and (start or end):
+            receipts.add(job)
+            if start:
+                launches.append(start)
+            if end:
+                completions[job] = max(end, completions.get(job, end))
 
-    `request_path` is the request that generated the report: a per-run copy in
-    `run_dir` wins, else the committed bench request next to this script.
-    """
-    o = []
-    # -- what the request declared ------------------------------------------
-    declared = None
-    try:
-        with open(request_path) as fh:
-            declared = json.load(fh).get("remote", {}).get("hosts")
-    except (OSError, ValueError):
-        pass
-    if declared is not None:
-        o.append(f"the request declares {declared} shards per attempt "
-                 f"(`remote.hosts`)")
+    fleet = remote.get("fleet", [])
+    fleet_ids = {s["job_id"] for s in fleet if s.get("job_id")}
+    distinct = logged_ids | receipts | fleet_ids
+    o.append(f"{plural(len(distinct), 'distinct launched job ID')} evidenced across round logs, "
+             f"timed receipts and final fleet ({len(logged_ids)} in launch messages, "
+             f"{len(receipts)} with timed receipts, {len(fleet_ids)} in final fleet)")
+    if receipts - logged_ids:
+        o.append(f"no round launch message for {plural(len(receipts - logged_ids), 'receipt-backed job ID')}")
+    if not receipts:
+        o.append(f"no timestamped launch or completion receipts found under `corners/{rid}/{bench}/`")
+
+    if launches and completions:
+        start, end = min(launches), max(completions.values())
+        o.append(f"receipt interval, first evidenced launch {start:%Y-%m-%dT%H:%M:%SZ} "
+                 f"to last evidenced completion {end:%Y-%m-%dT%H:%M:%SZ} = "
+                 f"{(end - start).total_seconds():.0f} s (launch-to-completion, "
+                 f"idle gaps included)")
     else:
-        o.append(f"the request was not found at `{request_path}`; the declared "
-                 f"per-attempt shard count is not evidenced here")
-    # -- the rounds the stderr evidences, and what each launched -------------
-    logs = _round_logs(run_dir, bench)
-    receipts = _load_receipts(run_dir, bench)
-    rounds_txt = []
-    launched_ids = set()
-    for label, path in logs:
-        ids = _submit_ids(path)
-        launched_ids |= ids & set(receipts)
-        rounds_txt.append(f"{label}: {len(ids & set(receipts))} launched of "
-                          f"{len(ids)} submitted")
-    if logs:
-        attempts = (f"{len(logs)} attempts evidenced by submit stderr under "
-                    f"`corners/{rid}/` ({', '.join(rounds_txt)})")
-        if len(logs) == 1:
-            attempts += (f" -- a single submit round, so the round-local fleet "
-                         f"line above describes the whole run")
-        o.append(attempts)
-    else:
-        o.append(f"no submit stderr found (want `{bench}.stderr` / "
-                 f"`{bench}.resume*.stderr` under `corners/{rid}/`); the attempt "
-                 f"count and per-round launches are not evidenced")
-    if receipts:
-        o.append(f"{len(launched_ids)} distinct job ids with launch receipts under "
-                 f"`corners/{rid}/{bench}/`")
-    else:
-        o.append(f"no launch receipts found under `corners/{rid}/{bench}/`; "
-                 f"launched shard counts are not evidenced (a submission line "
-                 f"alone does not establish a launch)")
-    # -- the whole-run span, endpoints labelled for what they are ------------
-    laun = sorted(_ts(r["launched_at"]) for r in receipts.values() if r.get("launched_at"))
-    comp = sorted(_ts(r["completed_at"]) for r in receipts.values() if r.get("completed_at"))
-    if laun and comp:
-        span = (comp[-1] - laun[0]).total_seconds()
-        no_comp = len(receipts) - len(comp)
-        tail = f"; {no_comp} receipt records no completion" if no_comp else ""
-        o.append(f"whole-run elapsed, first evidenced launch "
-                 f"{laun[0].strftime('%Y-%m-%dT%H:%M:%SZ')} to last evidenced "
-                 f"completion {comp[-1].strftime('%Y-%m-%dT%H:%M:%SZ')} = "
-                 f"{span:.0f} s, idle gaps between attempts included (submit "
-                 f"timestamps are not among the committed artifacts, so this is "
-                 f"launch-to-completion, not submit-to-terminal{tail})")
-    elif receipts:
-        o.append("the whole-run elapsed span is not evidenced (the receipts carry "
-                 "no usable `launched_at`/`completed_at` pair)")
+        o.append("the launch-to-completion span is unknown without both receipt endpoints")
+    incomplete = len(receipts - completions.keys())
+    if incomplete:
+        o.append(f"no completion timestamp for {plural(incomplete, 'receipt-backed job')}")
+    submitted = sum(_ts(s.get("client_submitted_at")) is not None for s in fleet)
+    o.append(f"{submitted} of {len(fleet)} final-fleet entries carry `client_submitted_at`; "
+             "final-round stamps alone cannot date the whole run's first submission")
     # -- the stale tail flags the final report can carry after a resume -------
-    if isinstance(remote, dict) and (remote.get("resumable")
-                                     or remote.get("unlaunched_shards")):
+    if remote.get("resumable") or remote.get("unlaunched_shards"):
         o.append("the final report's fleet line above is round-local -- the LAST "
                  "round's launched set -- and its `unlaunched_shards` / "
                  "`resumable` fields describe that round's tail, not the whole "
@@ -319,7 +323,7 @@ def _findings_md(cells):
 
     Rungs are recomputed with the same `_rung_*` the verdict table uses, so a
     count here can never disagree with the table above it. A cell that refused
-    its reduction or never simulated grades nothing -- it is a finding of its
+    its reduction or yielded no extracted points grades nothing -- it is a finding of its
     own class, never folded into a row's shortfall count.
     """
     lines = []
@@ -340,8 +344,8 @@ def _findings_md(cells):
         codes = sorted({f["code"] for c in cells for f in c["failures"]
                         if f["code"].startswith("KLT_STATUS_")})
         lines.append(units_md(n_status, "sweep unit",
-                              f"did not simulate ({', '.join(f'`{c}`' for c in codes)})",
-                              DID_NOT_SIMULATE))
+                              f"excluded by klt status ({', '.join(f'`{c}`' for c in codes)})",
+                              None))
     refused = [c for c in cells
                if c["reduction"] is None and c["reduction_error"] and c["points"]]
     if refused:
@@ -401,8 +405,8 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
                   cell_order, by_cell, out_json, run_dir=None, request_path=None):
     """The PVT-matrix record (issue #173): one reduction per cell, per-cell
     ratified-row verdicts, per-cell breakdown/window labels -- all provisional
-    while the Supply row is DRAFT. ``run_dir``/``request_path`` (issue #194)
-    locate the run's committed artifacts for the whole-run provenance bullet."""
+    while the Supply row is DRAFT. ``run_dir`` (issue #194)
+    locates the run's committed artifacts for the whole-run provenance bullet."""
     n_cells_declared = gdb.pvt_cell_count()
     cells = []
     for key in cell_order:
@@ -502,16 +506,16 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
     w(f"- Backend: `{rep.get('environment', {}).get('backend', 'see report')}`; "
       f"remote: `{_remote_md(rep.get('environment', {}).get('remote', 'n/a'))}`.")
     _remote = rep.get("environment", {}).get("remote")
-    if (run_dir and request_path and isinstance(_remote, dict)
-            and isinstance(_remote.get("fleet"), list) and _remote["fleet"]):
+    if (run_dir and isinstance(_remote, dict)
+            and isinstance(_remote.get("fleet"), list)):
         w(f"- {_sharded_run_md(rid, run_dir, bench['name'], request_path, _remote)}")
     w("")
     w("## Per-cell figures and ratified-row verdicts")
     w("")
     w("Worst stress over the cell's whole sweep. A cell whose reduction was refused "
       "has no figure and no verdict rung -- `--` -- which is a finding, not a pass; "
-      "the refusal code is in the cell's detail block below. A cell none of whose "
-      "units simulated carries `--` throughout: also a finding, never a pass.")
+      "the refusal code is in the cell's detail block below. A cell with no "
+      "extracted units carries `--` throughout: also a finding, never a pass.")
     w("")
     w("| Cell | Psat dBm | P1dB out dBm | Peak PAE % | S11 large worst dB | "
       "Vce pk V | Vcb pk V | Tj max C | Stress label | Psat | P1dB | PAE | S11 |")
@@ -611,21 +615,14 @@ def main(argv):
     bench = gdb.psat_bench(variant)       # raises ValueError on an unknown variant
     net = bench["network"]
     rep = json.load(open(report_path))
-    # The committed artifacts this run left beside the report (issue #194): the
-    # submit stderr per round and the batch receipts live under the report's own
-    # directory, and the request is a per-run copy there if one exists, else the
-    # committed bench request next to this script.
     run_dir = os.path.dirname(os.path.abspath(report_path))
-    _cand = os.path.join(run_dir, f"{bench['name']}.request.json")
-    request_path = _cand if os.path.isfile(_cand) else os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), f"{bench['name']}.request.json")
     points, failures = [], []
     for c in rep["corners"]:
         cid = c.get("corner_id", "?")
         if c.get("status") != "pass":
             # The cell is carried on the failure (the report names process/
             # temperature/supply even for an errored corner), so a cell none of
-            # whose units simulated still appears below -- as a finding, never
+            # whose units produced figures still appears below -- as a finding, never
             # as a silent absence.
             failures.append({"corner_id": cid, "code": f"KLT_STATUS_{c.get('status')}",
                              "cell": {"process": c.get("process", "?"),
@@ -676,7 +673,7 @@ def main(argv):
     if len(cell_order) > 1:
         return render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
                              cell_order, by_cell, out_json,
-                             run_dir=run_dir, request_path=request_path)
+                             run_dir=run_dir)
 
     points.sort(key=lambda p: p["p_in_w"])
     red, red_err = None, None

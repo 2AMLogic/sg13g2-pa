@@ -3,6 +3,7 @@
 
     ac_record.py {gain|stability} <record-id> <git-sha> <dirty> <klt-version> <ngspice-version> <klt-report.json> > record.md
 """
+from collections import Counter
 import json
 import os
 import sys
@@ -77,7 +78,7 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
     for c in rep["corners"]:
         cell = _cell_of(c)
         if c.get("status") != "pass":
-            failures.append((cell, c.get("corner_id", "?"), c.get("status")))
+            failures.append((cell, c.get("corner_id", "?"), c.get("status"), ft.ac_error_tracker(c)))
             continue
         freq, d = _load_complex_vectors(c["artifacts"]["complex_vectors"])
         s = sp.s_from_nodes(d)
@@ -93,7 +94,7 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
     gain_rungs, s11_rungs, mu_rungs = [], [], []
     bench_dir = "ac-gain" if kind == "gain" else "ac-stability"
     w(f"# {'ac-gain' if kind == 'gain' else 'ac-stability'} record {rid} -- PVT matrix, "
-      f"{len(rows)} cells")
+      f"{len(rep['corners'])} cells")
     w("")
     w(f"**PROVISIONAL: Supply row DRAFT.** The {gdb.VCC_NOM_V:g} V nominal the "
       f"{gdb.PVT_VCC_V[0]:g}/{gdb.VCC_NOM_V:g}/{gdb.PVT_VCC_V[2]:g} V supply points hang "
@@ -111,7 +112,7 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
       f"sections ({', '.join(gdb.PVT_PROCESS_SECTIONS)}) x {len(gdb.PVT_TEMP_C)} ambient "
       f"temperatures ({'/'.join(f'{t:g}' for t in gdb.PVT_TEMP_C)} C) x supply "
       f"{gdb.PVT_VCC_V[0]:g}/{gdb.VCC_NOM_V:g}/{gdb.PVT_VCC_V[2]:g} V (nominal +/-10 %) "
-      f"= **{gdb.pvt_cell_count()} cells**; this report covers {len(rows)} of "
+      f"= **{gdb.pvt_cell_count()} cells**; this report grades {len(rows)} of "
       f"{gdb.pvt_cell_count()} declared cells (`klt corner-matrix` verdicts committed under "
       f"`corners/{rid}/`). Quiescent point: the DUT's own mirror bias at the cell's "
       "Vcc. Self-heating on (card default).")
@@ -176,10 +177,10 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
               f"{min(float(np.min(r['st']['mu'])) for r in rows):.4f}.")
     w("")
     if failures:
-        w("## Cells that did not simulate")
+        w("## Cells with figures withheld")
         w("")
-        for cell, cid, status in failures:
-            w(f"- {_cell_md(cell)} (`{cid}`): status `{status}` -- no figure, not a pass.")
+        for cell, cid, status, _tracker in failures:
+            w(f"- {_cell_md(cell)} (`{cid}`): klt status `{status}`, grade withheld.")
         w("")
     w("## Findings and their trackers")
     w("")
@@ -192,15 +193,12 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
     else:
         fl = [line_md("Stability (mu > 1)", mu_rungs, ft.STABILITY_AND_MATCH,
                       rung="the rung")]
-    if failures:
-        sts = sorted({st for _cell, _cid, st in failures})
-        fl.append(units_md(len(failures), "cell",
-                           "did not simulate (status "
-                           + ", ".join(f"`{s}`" for s in sts) + ")",
-                           ft.DID_NOT_SIMULATE))
+    error_counts = Counter((status, tracker) for _cell, _cid, status, tracker in failures)
+    for (status, tracker), count in error_counts.items():
+        fl.append(units_md(count, "cell", f"with grade withheld (klt status `{status}`)", tracker))
     fl = [ln for ln in fl if ln]
     if not fl:
-        fl = ["- No verdict falls below its rung and no cell failed to simulate."]
+        fl = ["- No verdict falls below its rung and every cell was graded."]
     for ln in fl:
         w(ln)
     w("")

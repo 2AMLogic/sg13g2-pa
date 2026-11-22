@@ -94,8 +94,10 @@ renderers write from here on states the same links in its own findings section):
 
 - Input match (S11, small-signal and large-signal) and small-signal stability below
   their rungs: #172.
-- PVT cells that do not simulate at all (the three 125 C singular-matrix cells on the
-  AC benches): #188.
+- In three 125 °C cells on both AC benches, ngspice completed the sweeps and
+  produced finite vectors. The records withhold grades because klt reported
+  `error` with a `singular_matrix` diagnostic. [#188](https://github.com/2AMLogic/sg13g2-pa/issues/188)
+  tracks the validity of the recovered operating points.
 - The large-signal power rows -- output P1dB, Psat, peak PAE -- below their rungs:
   #192.
 - Reduction refusals (e.g. `SWEEP_STEP_TOO_COARSE`) and units that cannot be

@@ -23,6 +23,7 @@ import importlib.util
 import json
 import math
 import os
+from pathlib import Path
 import sys
 
 import numpy as np
@@ -342,8 +343,8 @@ def _findings_render(tmp_path, specs, remote="n/a", report_dir=None):
     Each spec: ``proc``/``temp``/``vcc``; ``pins_dbm`` (drive points, P_in at
     the DUT input); ``gains_db`` per drive point (equal on the 3 lowest points
     -> a linear region reduce_sweep accepts); ``s11_ratio`` = P_in/P_avail at
-    every point (sets the S11 rung; close to 1 is a good match); ``status``
-    makes the whole cell one that did not simulate.
+    every point (sets the S11 rung; close to 1 is a good match); a non-pass
+    ``status`` withholds every point in the cell.
     """
     corners = []
     for si, sp in enumerate(specs):
@@ -389,8 +390,8 @@ ALL_MET = {"proc": "hbt_typ", "temp": 27.0, "vcc": 0.8,
 
 def test_the_matrix_record_links_each_finding_to_its_tracker(tmp_path):
     """Mixed verdicts: every row below its rung names its tracker, a met row
-    acquires no link, and a cell that did not simulate is a recorded finding
-    with a tracker, not a silent absence (issue #194)."""
+    acquires no link, and an errored transient unit remains visible without
+    the AC error tracker (issue #194)."""
     specs = [
         # all-met cell (Psat +19 dBm, PAE 47 %, S11 -13 dB): no finding may name it
         dict(ALL_MET),
@@ -401,7 +402,7 @@ def test_the_matrix_record_links_each_finding_to_its_tracker(tmp_path):
         # single drive point: reduction refused, S11 met
         {"proc": "hbt_bcs", "temp": -40.0, "vcc": 0.72,
          "pins_dbm": [-10], "gains_db": [20], "s11_ratio": 0.95},
-        # did not simulate at all
+        # all points withheld by klt status
         {"proc": "hbt_bcs", "temp": 125.0, "vcc": 0.8,
          "pins_dbm": [-10, -11], "gains_db": [20, 20], "s11_ratio": 0.5,
          "status": "error"},
@@ -409,17 +410,18 @@ def test_the_matrix_record_links_each_finding_to_its_tracker(tmp_path):
     md, _doc = _findings_render(tmp_path, specs)
     sec = md.split("## Findings and their trackers", 1)[1].split("## Per-cell detail", 1)[0]
     assert ("Input match (large-signal S11, worst drive): 1 cell below the Fallback "
-            "rung (1 `missed`) -- design iteration #172." in sec)
+            "rung (`missed`) -- design iteration #172." in sec)
     for row in ("Psat", "Output P1dB", "Peak PAE"):
-        assert (f"{row}: 1 cell below the Fallback rung (1 `missed`) "
+        assert (f"{row}: 1 cell below the Fallback rung (`missed`) "
                 "-- design iteration #192." in sec)
-    assert ("2 sweep units did not simulate (`KLT_STATUS_error`) "
-            "-- design iteration #188." in sec)
+    assert ("2 sweep units excluded by klt status (`KLT_STATUS_error`) "
+            "-- no design-iteration tracker." in sec)
+    assert "#188" not in sec
     assert ("1 cell refused a reduction (`SWEEP_TOO_SHORT`) "
             "-- no design-iteration tracker." in sec)
     # the all-met cell is named nowhere in the findings section
     assert "hbt_typ" not in sec
-    # ...and the did-not-simulate cell renders a full-width `--` table row (13
+    # ...and the cell with no extracted points renders a full-width `--` table row (13
     # columns, like every other row), not a shifted short one
     err_row = [ln for ln in md.splitlines() if ln.startswith("| `hbt_bcs` / 125 C / 0.8 V")][0]
     assert err_row.count("|") == 14
@@ -436,10 +438,12 @@ def test_an_all_met_matrix_record_links_nothing(tmp_path):
 # --- a resumed sharded run describes the whole run, not the last round ------
 
 
-def _write_round_stderr(path, submitted, mentions=()):
+def _write_round_stderr(path, submitted, launched=(), resumed=(), mentions=()):
     """A round's submit stderr: `submitting` lines name what the round sent;
     bare status mentions name nothing (a mention is not a launch)."""
     lines = [f"klt: batch job {j} submitting to s3://<bucket>/jobs/{j}" for j in submitted]
+    lines += [f"klt: batch job {j} launched; re-attach with klt" for j in launched]
+    lines += [f"klt: batch job {j} had been submitted but never launched; launched it" for j in resumed]
     lines += [f"klt: batch job {j} status RUNNING (attempt 2)" for j in mentions]
     with open(path, "w") as fh:
         fh.write("\n".join(lines) + "\n")
@@ -455,91 +459,93 @@ def _write_receipt(run_dir, bench, job, launched, completed=None):
 
 
 def _run_dir(tmp_path, declared=None):
-    run = os.path.join(str(tmp_path), "corners", "rid")
-    os.makedirs(run, exist_ok=True)
-    req = os.path.join(run, "psat_sweep_match.request.json")
+    run = tmp_path / "corners" / "rid"
+    run.mkdir(parents=True)
     if declared is not None:
-        with open(req, "w") as fh:
-            json.dump({"remote": {"hosts": declared}}, fh)
-    return run, req
+        (run / "psat_sweep_match.request.json").write_text(json.dumps({"remote": {"hosts": declared}}))
+    return run
 
 
 def test_a_resumed_sharded_run_reports_whole_run_provenance(tmp_path):
-    """Declared 10 per attempt; initial submits 5 (2 launch), resume1 submits 5
-    (3 launch, one never completes); a 2 h gap sits between the rounds. The
-    provenance must state per-round counts, the whole-run span and the
-    final-round span independently (issue #194)."""
-    run, req = _run_dir(tmp_path, declared=10)
+    """One job from the initial submission first launches on resume. A status
+    mention, duplicate launch message and submission without launch add no jobs."""
+    run = _run_dir(tmp_path, declared=10)
     first = [f"klt-sim-{k:04x}" for k in range(5)]
     second = [f"klt-sim-{k:04x}" for k in range(5, 10)]
-    _write_round_stderr(os.path.join(run, "psat_sweep_match.stderr"),
-                        first, mentions=[first[0], second[0]])    # repeats: no launch
-    _write_round_stderr(os.path.join(run, "psat_sweep_match.resume1.stderr"),
-                        second, mentions=[second[0]])
+    _write_round_stderr(run / "psat_sweep_match.stderr", first,
+                        launched=[first[0], first[0]], mentions=[first[1]])
+    _write_round_stderr(run / "psat_sweep_match.resume1.stderr", second,
+                        launched=second[:3], resumed=[first[1]], mentions=[second[4]])
     _write_receipt(run, "psat_sweep_match", first[0],
                    "2026-11-21T10:00:00Z", "2026-11-21T10:05:00Z")
     _write_receipt(run, "psat_sweep_match", first[1],
-                   "2026-11-21T10:00:30Z", "2026-11-21T10:05:30Z")
+                   "2026-11-21T12:00:00Z", "2026-11-21T12:05:00Z")
     _write_receipt(run, "psat_sweep_match", second[0],
                    "2026-11-21T12:00:00Z", "2026-11-21T12:05:00Z")
     _write_receipt(run, "psat_sweep_match", second[1],
                    "2026-11-21T12:00:05Z", "2026-11-21T12:05:05Z")
     _write_receipt(run, "psat_sweep_match", second[2],
                    "2026-11-21T12:00:10Z", None)                  # never completed
-    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match", req,
+    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match", None,
                                {"fleet": [{"job_id": second[0]}],
                                 "unlaunched_shards": 65, "resumable": True})
     assert "declares 10 shards per attempt" in out
-    assert "initial: 2 launched of 5 submitted" in out
-    assert "resume1: 3 launched of 5 submitted" in out
-    assert "5 distinct job ids with launch receipts" in out
+    assert "initial: 5 submitted, 1 launch logged" in out
+    assert "resume1: 5 submitted, 4 launches logged" in out
+    assert "5 distinct launched job IDs" in out
     assert "first evidenced launch 2026-11-21T10:00:00Z" in out
     assert "last evidenced completion 2026-11-21T12:05:05Z" in out
     assert "7505 s" in out                      # 10:00:00 -> 12:05:05, gap included
     assert "launch-to-completion" in out        # not submit-to-terminal
-    assert "1 receipt records no completion" in out
+    assert "no completion timestamp for 1 receipt-backed job" in out
     assert "round-local" in out and "`unlaunched_shards`" in out and "`resumable`" in out
 
 
 def test_missing_provenance_evidence_is_named_not_papered_over(tmp_path):
-    run, _req = _run_dir(tmp_path)      # no request, no stderr, no receipts
-    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match",
-                               os.path.join(run, "nope.request.json"),
+    run = _run_dir(tmp_path)
+    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match", None,
                                {"fleet": [{"job_id": "klt-sim-0000"}]})
-    assert "was not found" in out                     # the request
-    assert "no submit stderr found" in out            # the rounds
-    assert "no launch receipts found" in out          # the launches
+    assert "declared shards per attempt unknown" in out
+    assert "no submit stderr found" in out
+    assert "no timestamped launch or completion receipts" in out
 
 
 def test_a_sharded_run_without_resumes_says_so(tmp_path):
-    run, req = _run_dir(tmp_path, declared=3)
-    _write_round_stderr(os.path.join(run, "psat_sweep_match.stderr"),
-                        ["klt-sim-0000", "klt-sim-0001"])
-    _write_receipt(run, "psat_sweep_match", "klt-sim-0000",
-                   "2026-11-21T10:00:00Z", "2026-11-21T10:01:00Z")
-    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match", req, {"fleet": []})
-    assert "single submit round" in out
-    assert "initial: 1 launched of 2 submitted" in out
+    run = _run_dir(tmp_path, declared=3)
+    _write_round_stderr(run / "psat_sweep_match.stderr", ["klt-sim-0000", "klt-sim-0001"],
+                        launched=["klt-sim-0000"])
+    out = PSAT._sharded_run_md("rid", run, "psat_sweep_match", None, {"fleet": []})
+    assert "only the initial submit log is available" in out
+    assert "initial: 2 submitted, 1 launch logged" in out
+    assert "1 distinct launched job ID" in out
 
 
-def test_the_matrix_record_carries_the_sharded_run_provenance(tmp_path):
-    run, _req = _run_dir(tmp_path, declared=3)
-    _write_round_stderr(os.path.join(run, "psat_sweep_match.stderr"),
-                        ["klt-sim-0000", "klt-sim-0001"])
-    _write_receipt(run, "psat_sweep_match", "klt-sim-0000",
+@pytest.mark.parametrize(("log", "saved", "dry_run", "expected_hosts", "expected_rounds"), [
+    ("resume2", None, 3, "dry-run manifest (`hosts`) declares 3", "missing round logs: initial, resume1"),
+    ("resume", 7, 3, "saved request (`remote.hosts`) declares 7", "unnumbered resume"),
+    ("initial", None, None, "declared shards per attempt unknown", "only the initial submit log"),
+])
+def test_partial_run_evidence_preserves_cell_verdicts(
+        tmp_path, log, saved, dry_run, expected_hosts, expected_rounds):
+    run = _run_dir(tmp_path, declared=saved)
+    if dry_run is not None:
+        (run / "psat_sweep_match.dry-run.json").write_text(json.dumps({"hosts": dry_run}))
+    suffix = "" if log == "initial" else f".{log}"
+    _write_round_stderr(run / f"psat_sweep_match{suffix}.stderr", ["klt-sim-0001"])
+    # A submit and a receipt exist, but there is no message dating this launch to a round.
+    _write_receipt(run, "psat_sweep_match", "klt-sim-0001",
                    "2026-11-21T10:00:00Z", "2026-11-21T10:01:00Z")
-    fleet = [{"provider": "aws-batch-fleet", "job_id": "klt-sim-0000",
-              "region": "us-east-1", "instance_type": "m7i.4xlarge",
-              "lifecycle": "spot", "runner_klt_version": "0.9.0",
-              "elapsed_seconds": 30}]
-    md, _doc = _findings_render(tmp_path, [dict(ALL_MET),
-                                         dict(ALL_MET, proc="hbt_wcs", s11_ratio=0.5)],
-                              remote={"fleet": fleet}, report_dir=run)
-    assert "round-local" in md
-    assert "Sharded run provenance" in md
-    assert "declares 3 shards per attempt" in md
-    assert "initial: 1 launched of 2 submitted" in md
-    assert "single submit round" in md
+    one_point = dict(ALL_MET, pins_dbm=[-17], gains_db=[36])
+    cells = [one_point, dict(one_point, proc="hbt_wcs", s11_ratio=0.5)]
+    md, _doc = _findings_render(tmp_path, cells, remote={"fleet": [{"job_id": "klt-sim-0002"}]},
+                                report_dir=run)
+    assert expected_hosts in md and "declares 261" not in md
+    assert expected_rounds in md and "elapsed n/a" in md
+    assert "1 submitted, 0 launches logged" in md
+    assert "2 distinct launched job IDs" in md and "1 with timed receipts" in md
+    assert "no round launch message" in md and "60 s (launch-to-completion" in md
+    assert "describes the whole run" not in md
+    assert "| -- | -- | -- | met |" in md and "| -- | -- | -- | missed |" in md
 
 
 def test_the_round_local_wall_clock_uses_launch_stamps_when_submit_stamps_are_absent():
@@ -552,15 +558,25 @@ def test_the_round_local_wall_clock_uses_launch_stamps_when_submit_stamps_are_ab
               "elapsed_seconds": 30}]
     out = PSAT._remote_md({"fleet": fleet})
     assert "360 s" in out
-    assert "first submit or launch" in out
+    assert "first evidenced submit or launch" in out
     assert "round-local" in out
 
 
 # The #193 run's own committed evidence, re-derived (issue #194 test plan):
-# the request, the eight stderr logs, the 747 receipts and the final report
+# the dry-run manifest, eight stderr logs, 747 receipts and the final report
 # are all in-tree, so the provenance statements below are checkable forever.
 COMMITTED_MATCH_RUN = os.path.join(
     REPO, "sim/psat-sweep/corners/20261121-003533-b2746d0-match")
+
+
+def test_the_committed_matched_run_separates_fallback_from_missed():
+    record = Path(COMMITTED_MATCH_RUN).name
+    sidecar = Path(REPO, "sim/psat-sweep/records", f"{record}.json")
+    findings = PSAT._findings_md(json.loads(sidecar.read_text())["cells"])
+    assert ("- Psat: 4 cells below the Fallback rung (`missed`), "
+            "15 cells at the Fallback rung (`fallback`) -- design iteration #192." in findings)
+    assert ("- Peak PAE: 1 cell below the Fallback rung (`missed`), "
+            "13 cells at the Fallback rung (`fallback`) -- design iteration #192." in findings)
 
 
 def test_the_committed_matched_run_provenance_matches_its_artifacts():
@@ -568,17 +584,19 @@ def test_the_committed_matched_run_provenance_matches_its_artifacts():
     remote = rep["environment"]["remote"]
     out = PSAT._sharded_run_md("20261121-003533-b2746d0-match", COMMITTED_MATCH_RUN,
                                "psat_sweep_match",
-                               os.path.join(REPO, "sim/psat-sweep",
-                                            "psat_sweep_match.request.json"),
-                               remote)
-    assert "declares 261 shards per attempt" in out
-    assert "8 attempts evidenced" in out
-    assert "initial: 61 launched of 293 submitted" in out
-    assert "resume1: 99 launched of 261 submitted" in out
-    assert "resume7: 38 launched of 38 submitted" in out
-    assert "747 distinct job ids with launch receipts" in out
+                               Path(REPO, "sim/psat-sweep/psat_sweep_match.request.json"), remote)
+    assert "dry-run manifest (`hosts`) declares 261 shards per attempt" in out
+    assert "8 identified attempts" in out
+    counts = [(293, 91), (261, 99), (261, 83), (261, 64), (261, 102), (261, 165),
+              (174, 135), (38, 39)]
+    for i, (submitted, launched) in enumerate(counts):
+        label = f"resume{i}" if i else "initial"
+        assert f"{label}: {submitted} submitted, {launched} launches logged" in out
+    assert "778 distinct launched job IDs" in out
+    assert "778 in launch messages, 747 with timed receipts, 39 in final fleet" in out
     assert "2026-11-21T00:37:50Z" in out and "2026-11-21T16:02:07Z" in out
-    assert "55457 s" in out and "34 receipt records no completion" in out
+    assert "55457 s" in out and "no completion timestamp for 34 receipt-backed jobs" in out
+    assert "38 of 39 final-fleet entries carry `client_submitted_at`" in out
     assert "launch-to-completion" in out
     loc = PSAT._remote_md(remote)
     assert "39 fleet shards in this report's final round (round-local)" in loc

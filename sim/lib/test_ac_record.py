@@ -107,16 +107,16 @@ def test_a_matrix_stability_report_grades_each_cell(tmp_path):
     assert "`hbt_bcs` / 125 C / 0.88 V" in md
 
 
-def test_a_matrix_report_lists_not_simulated_cells(tmp_path):
+def test_a_matrix_report_lists_cells_with_grades_withheld(tmp_path):
     corners = _corners(tmp_path, [("hbt_typ", 27.0, 0.8, 0.5, 0.3)])
     corners.append({"corner_id": "hbt_wcs/0.720V/125C", "process": "hbt_wcs",
                     "temperature_c": 125.0, "status": "error",
                     "supply_v": {"vcc": 0.72}})
     rc, md = _render(tmp_path, "gain", corners)
     assert rc == 0
-    assert "did not simulate" in md
+    assert "Cells with figures withheld" in md
     assert "`hbt_wcs` / 125 C / 0.72 V" in md
-    assert "no figure, not a pass" in md
+    assert "klt status `error`, grade withheld" in md
 
 
 # --- findings point at the design iteration that tracks them (issue #194) ----
@@ -129,10 +129,10 @@ def test_a_matrix_gain_report_links_each_finding_to_its_tracker(tmp_path):
     rc, md = _render(tmp_path, "gain", _corners(tmp_path, cells))
     assert rc == 0
     sec = md.split("## Findings and their trackers", 1)[1]
-    assert ("Input match (S11): 1 cell below the Fallback rung (1 `missed`) "
+    assert ("Input match (S11): 1 cell below the Fallback rung (`missed`) "
             "-- design iteration #172." in sec)
     gain_line = [ln for ln in sec.splitlines() if ln.startswith("- Power gain:")][0]
-    assert "1 cell below the Fallback rung (1 `missed`)" in gain_line
+    assert "1 cell below the Fallback rung (`missed`)" in gain_line
     assert "#1" not in gain_line          # a row with no tracker is linked to nothing
 
 
@@ -143,21 +143,36 @@ def test_a_matrix_stability_report_links_mu_to_its_tracker(tmp_path):
     rc, md = _render(tmp_path, "stability", _corners(tmp_path, cells))
     assert rc == 0
     sec = md.split("## Findings and their trackers", 1)[1]
-    assert ("Stability (mu > 1): 2 cells below the rung (2 `missed`) "
+    assert ("Stability (mu > 1): 2 cells below the rung (`missed`) "
             "-- design iteration #172." in sec)
 
 
-def test_a_matrix_report_links_not_simulated_cells_to_their_tracker(tmp_path):
-    corners = _corners(tmp_path, [("hbt_typ", 27.0, 0.8, 0.5, 0.3),
-                                  ("hbt_bcs", -40.0, 0.72, 6.32, 0.0032)])
-    corners.append({"corner_id": "hbt_wcs/0.720V/125C", "process": "hbt_wcs",
-                    "temperature_c": 125.0, "status": "error",
-                    "supply_v": {"vcc": 0.72}})
+def test_a_matrix_report_links_only_the_ac_error_tracked_by_188(tmp_path):
+    # Both flagged cells have vectors from a completed analysis. Only the AC
+    # singular-matrix case investigated in #188 should acquire its tracker.
+    cells = [("hbt_typ", 27.0, 0.8, 6.32, 0.0032),
+             ("hbt_wcs", 125.0, 0.72, 0.5, 0.7),
+             ("hbt_bcs", 125.0, 0.80, 0.5, 0.7)]
+    corners = _corners(tmp_path, cells)
+    corners[1].update(status="error", diagnostics=[{"code": "singular_matrix"}])
+    corners[2].update(status="error", diagnostics=[{"code": "vector_error"}])
     rc, md = _render(tmp_path, "gain", corners)
     assert rc == 0
+    assert "3 cells" in md and "grades 1 of 27" in md
+    assert "did not simulate" not in md
     sec = md.split("## Findings and their trackers", 1)[1]
-    assert ("1 cell did not simulate (status `error`) "
-            "-- design iteration #188." in sec)
+    assert "1 cell with grade withheld (klt status `error`) -- design iteration #188." in sec
+    assert "1 cell with grade withheld (klt status `error`) -- no design-iteration tracker." in sec
+
+
+def test_fallback_only_is_counted_at_the_fallback_rung(tmp_path):
+    cells = [("hbt_typ", 27.0, 0.8, 4.0, 0.35), ("hbt_wcs", -40.0, 0.72, 4.0, 0.35)]
+    rc, md = _render(tmp_path, "gain", _corners(tmp_path, cells))
+    assert rc == 0
+    sec = md.split("## Findings and their trackers", 1)[1]
+    assert "Power gain: 2 cells at the Fallback rung (`fallback`)" in sec
+    assert "Input match (S11): 2 cells at the Fallback rung (`fallback`)" in sec
+    assert "below the Fallback rung" not in sec and "`missed`" not in sec
 
 
 def test_an_all_met_matrix_report_links_nothing(tmp_path):

@@ -19,13 +19,19 @@ stale number is caught here in review, not by a network call at render time.
 # ac-gain bench, large-signal in the psat sweep) below their rungs: #172.
 STABILITY_AND_MATCH = 172
 
-# PVT cells that do not simulate at all (klt corner status != pass, e.g. the
-# 125 C singular-matrix cells): #188.
-DID_NOT_SIMULATE = 188
-
 # The large-signal power rows -- output P1dB, Psat, peak PAE -- below their
 # rungs: #192.
 POWER_ROWS = 192
+
+
+def ac_error_tracker(corner):
+    """#188 tracks singular-matrix errors for three AC cells at 125 C."""
+    process_vcc = (corner.get("process"), (corner.get("supply_v") or {}).get("vcc"))
+    if (corner.get("status") == "error" and corner.get("temperature_c") == 125
+            and process_vcc in {("hbt_bcs", 0.80), ("hbt_wcs", 0.72), ("hbt_wcs", 0.88)}
+            and any(d.get("code") == "singular_matrix" for d in corner.get("diagnostics") or [])):
+        return 188
+    return None
 
 
 def plural(n, word):
@@ -46,12 +52,13 @@ def line_md(name, rungs, tracker, noun="cell", rung="the Fallback rung"):
     fallback = sum(1 for r in rungs if r == "fallback")
     if not missed and not fallback:
         return None
-    parts = [f"{missed} `missed`"]
+    parts = []
+    if missed:
+        parts.append(f"{plural(missed, noun)} below {rung} (`missed`)")
     if fallback:
-        parts.append(f"{fallback} `fallback`")
+        parts.append(f"{plural(fallback, noun)} at the Fallback rung (`fallback`)")
     link = f"design iteration #{tracker}" if tracker else "no design-iteration tracker"
-    return (f"- {name}: {plural(missed + fallback, noun)} below {rung} "
-            f"({', '.join(parts)}) -- {link}.")
+    return f"- {name}: {', '.join(parts)} -- {link}."
 
 
 def units_md(n, noun, detail, tracker):
