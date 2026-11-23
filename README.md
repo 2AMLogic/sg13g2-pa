@@ -9,6 +9,12 @@ open-source xschem + ngspice flow.
 **The core spec is ratified. The first topology has provisional results across a
 27-cell process, voltage and temperature (PVT) matrix.**
 
+**No bench row below is a pass claim against the ratified spec.** Every
+matched-Psat cell is flagged `BREAKDOWN VIOLATION; OUTSIDE MODEL WINDOW`
+(peak `V_CE` 3.781–5.375 V against the ~1.4 V minimum BVCEO documented
+below), so those figures are outside the VBIC model card's validity window and
+are not quoted as passes.
+
 - **Spec.** The core rows of [`spec/target-spec.md`](spec/target-spec.md) are
   ratified by
   [decision record 0001](spec/decision-records/0001-ratify-target-spec.md),
@@ -26,8 +32,8 @@ open-source xschem + ngspice flow.
   ([`layout/README.md`](layout/README.md)). DRC is clean on that stream;
   **LVS has not been run.**
 - **Simulation.** The AC gain and stability benches each produced results for
-  24 of 27 cells. The same three cells failed to converge at 125 °C. The
-  matched Psat bench simulated all 27 cells and extracted figures for 25.
+  24 of 27 cells; the same three 125 °C cells returned no figures
+  (`status: error`; diagnosis open in #188). The matched Psat bench simulated all 27 cells and extracted figures for 25.
   At two cold cells the drive steps were too coarse to extract the figures.
   All three benches use ideal passives, and the Supply row is still DRAFT.
   The matched bench uses an ideal, lossless off-chip L-section at the spec's
@@ -154,8 +160,9 @@ through `klt sim` (the Spot batch fleet on dispatch workers via
 The environment, smoke, known-answer, device load-line, layout-smoke, tier
 verdict and unit-test rows are toolchain, characterization or hygiene checks,
 not PA design results. The five rows for the DUT benches, the layout generator
-and the PA DRC report cover the proposed PA. Each simulation record states
-its corner, testbench and findings. The DRC report covers the placement-only
+and the PA DRC report cover the proposed PA, under a PROPOSED topology and
+through ideal passives, so none of them is a pass claim against the ratified
+spec. Each simulation record states its corner, testbench and findings. The DRC report covers the placement-only
 layout. The three bench scripts and `layout/pa/generate.sh --check` need the
 PDK (`scripts/setup-env.sh` first); `klt drc --check`, the tier verdict and the
 unit tests do not.
