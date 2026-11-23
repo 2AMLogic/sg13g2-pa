@@ -10,7 +10,6 @@ corner is not `pass`. Stdlib only; run with -I.
 """
 import json
 import os
-import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -31,6 +30,61 @@ def load(out_dir, name):
         return json.load(open(p))
     except (OSError, ValueError):
         return None
+
+
+def _col(cols, name, path):
+    if name not in cols:
+        raise ValueError("%s: column %s missing from the captured sweep" % (path, name))
+    return cols[name]
+
+
+def _at(axis, target, path, what):
+    """Index of the sweep point equal to ``target``; fail loudly if it is not on the grid."""
+    for k, x in enumerate(axis):
+        if abs(x - target) <= 1e-9 * max(1.0, abs(target)):
+            return k
+    raise ValueError("%s: %s not on the captured grid" % (path, what))
+
+
+def read_dc(corner):
+    """{(nx, vbe, vce): Ic} from the dc sweep waveform: Ic = +i(Vs_*) (current into the + terminal)."""
+    path = corner["artifacts"]["waveform"]
+    doc = json.load(open(path))
+    names = [v["name"] for v in doc["variables"]]
+    pts = doc["points"]
+    cols = {n: [row[k] for row in pts] for k, n in enumerate(names)}
+    axis = cols[names[0]]
+    out = {}
+    for nx in gb.NX:
+        for vbe in gb.VBE:
+            y = _col(cols, "i(vs_%s)" % gb.tag(nx, vbe), path)
+            for vce in gb.VCE:
+                out[(nx, vbe, vce)] = y[_at(axis, vce, path, "Vce=%g" % vce)]
+    return out
+
+
+def read_ft(corner):
+    """{(nx, vbe): [(Ic_ac, Ib_ac) per FT_FREQS]} magnitudes from the complex ac sidecar."""
+    path = corner["artifacts"]["complex_vectors"]
+    side = json.load(open(path))
+    freq = side["frequency_hz"]
+    data = side["data"]
+    out = {}
+    for nx in gb.NX:
+        for vbe in gb.VBE:
+            tg = gb.tag(nx, vbe)
+            res = []
+            for f in gb.FT_FREQS:
+                k = _at(freq, float(f), path, "f=%s Hz" % f)
+                mag = []
+                for q in ("vs", "vb"):
+                    name = "i(%s_%s)" % (q, tg)
+                    if name not in data:
+                        raise ValueError("%s: column %s missing from the captured sweep" % (path, name))
+                    mag.append(abs(complex(data[name]["real"][k], data[name]["imag"][k])))
+                res.append(tuple(mag))
+            out[(nx, vbe)] = res
+    return out
 
 
 def main(argv):
@@ -79,13 +133,16 @@ def main(argv):
         for c in reports["dc_family"]["corners"]:
             if c["status"] != "pass":
                 ok = False
-            for m in c["measurements"]:
-                g = re.fullmatch(r"ic_n(\d+)_v(\d+)_vce(\d+)", m["name"])
-                if g and m["value"] is not None:
-                    nx, vbe, vce = int(g[1]), int(g[2]) / 100.0, int(g[3]) / 100.0
-                    ic[(c["process"], c["temperature_c"], nx, vbe, vce)] = m["value"]
-                    dc_cells.append({"process": c["process"], "temperature_c": c["temperature_c"],
-                                     "nx": nx, "vbe": vbe, "vce": vce, "ic_a": m["value"]})
+            try:
+                cells = read_dc(c)
+            except (OSError, ValueError, KeyError) as e:
+                print("summarize.py: %s: %s" % (c.get("corner_id"), e), file=sys.stderr)
+                ok = False
+                continue
+            for (nx, vbe, vce), v in cells.items():
+                ic[(c["process"], c["temperature_c"], nx, vbe, vce)] = v
+                dc_cells.append({"process": c["process"], "temperature_c": c["temperature_c"],
+                                 "nx": nx, "vbe": vbe, "vce": vce, "ic_a": v})
     with open(dc_out, "w") as fh:
         json.dump({"record": rid, "note": "simulated Ic (A) from sim/device-npn13g2/dc_family",
                    "cells": dc_cells}, fh)
@@ -115,7 +172,7 @@ def main(argv):
 
     L += ["## fT vs Ic at Vce = %.1f V (simulated)" % gb.FT_VCE, "",
           "Bench `ft.spice`: small-signal h21 = |Ic_ac / Ib_ac| from a 1 V ac base drive with the "
-          "collector ac-shorted; `.ac dec` 10-100 GHz, h21 read at 20 and 50 GHz; "
+          "collector ac-shorted; `.ac lin 3` 20-50 GHz, h21 read at the 20 and 50 GHz grid points; "
           "fT = |h21| * f0 (single-pole extrapolation, valid while |h21| >> 1 and the -20 dB/dec "
           "slope holds, so the two f0 should agree; where |h21| is near or below 1 the "
           "two estimates disagree and fT is **not** established). Ic is the dc family value at the same Vbe, "
@@ -127,15 +184,17 @@ def main(argv):
         for c in reports["ft"]["corners"]:
             if c["status"] != "pass":
                 ok = False
-            m = {x["name"]: x["value"] for x in c["measurements"]}
-            for nx in gb.NX:
-                for vbe in gb.VBE:
-                    tg = gb.tag(nx, vbe)
-                    h = []
-                    for f in gb.FT_FREQS:
-                        a, b = m.get(f"icac_{tg}_f{f}"), m.get(f"ibac_{tg}_f{f}")
-                        h.append((a / b, a / b * float(f) / 1e9) if a and b else None)
-                    ft[(c["process"], c["temperature_c"], nx, vbe)] = h
+            try:
+                cur = read_ft(c)
+            except (OSError, ValueError, KeyError) as e:
+                print("summarize.py: %s: %s" % (c.get("corner_id"), e), file=sys.stderr)
+                ok = False
+                continue
+            for (nx, vbe), pairs in cur.items():
+                h = []
+                for f, (a, b) in zip(gb.FT_FREQS, pairs):
+                    h.append((a / b, a / b * float(f) / 1e9) if a and b else None)
+                ft[(c["process"], c["temperature_c"], nx, vbe)] = h
     for proc in gb.PROCESS:
         for t in gb.TEMPS:
             L += [f"**{proc}, {t:+d} C** (simulated)", "",
@@ -164,10 +223,9 @@ def main(argv):
     L += sorted(set(diags)) or ["- none"]
     L += ["", "A `singular_matrix` warning here was recovered by ngspice's dynamic gmin stepping (the "
           "corner still reports `pass`); the tables for those corners are monotone in Vbe and Vce.", ""]
-    L += ["## Tool friction", "",
-          "- `klt sim` captures swept curves only as one `.meas` per point; the `par()` 99-call cap and an "
-          "out-of-interval `AT=` both surface as `produced no value`. Worked around with CCVS current probes "
-          "and a `dec` AC sweep. Filed generically as 2AMLogic/klayout-tools#4084.", ""]
+    L += ["## Capture method", "",
+          "- Currents are read from the captured sweep (`options.waveforms`, `capture_only`): Ic = +i(Vs_*) "
+          "from the dc waveform, Ic_ac and Ib_ac from the complex ac sidecar; no probe elements or `.meas` cards.", ""]
     print("\n".join(L))
     return 0 if ok else 1
 
