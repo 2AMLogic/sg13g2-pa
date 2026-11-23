@@ -85,6 +85,9 @@ pinned `klayout-tools` wheel](https://github.com/2AMLogic/klayout-tools/blob/v0.
 
 Signoff, layout and schematic netlisting use `klayout-tools==0.9.1`.
 Simulation uses 0.9.0 to match the batch fleet (`sim/toolchain.json`).
+0.9.1 is the floor for signoff and layout: `--attest` first ships in 0.8.0,
+`--attest 2` (layout stream) and the sg13g2 HBT flavor of `klt gen bjt_array`
+first ship in 0.9.1.
 
 Item 1 (needs xschem and the PDK; `source sim/env.sh` first):
 
