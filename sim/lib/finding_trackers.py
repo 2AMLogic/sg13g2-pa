@@ -19,21 +19,6 @@ stale number is caught here in review, not by a network call at render time.
 # ac-gain bench, large-signal in the psat sweep) below their rungs: #172.
 STABILITY_AND_MATCH = 172
 
-# The large-signal power rows -- output P1dB, Psat, peak PAE -- below their
-# rungs: #192.
-POWER_ROWS = 192
-
-
-def ac_error_tracker(corner):
-    """#188 tracks singular-matrix errors for three AC cells at 125 C."""
-    process_vcc = (corner.get("process"), (corner.get("supply_v") or {}).get("vcc"))
-    if (corner.get("status") == "error" and corner.get("temperature_c") == 125
-            and process_vcc in {("hbt_bcs", 0.80), ("hbt_wcs", 0.72), ("hbt_wcs", 0.88)}
-            and any(d.get("code") == "singular_matrix" for d in corner.get("diagnostics") or [])):
-        return 188
-    return None
-
-
 def plural(n, word):
     """"1 cell" / "2 cells" -- the record's findings lines read as prose."""
     return f"{n} {word}" if n == 1 else f"{n} {word}s"

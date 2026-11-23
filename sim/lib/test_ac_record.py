@@ -155,9 +155,9 @@ def test_a_matrix_stability_report_links_mu_to_its_tracker(tmp_path):
             "-- design iteration #172." in sec)
 
 
-def test_a_matrix_report_links_only_the_ac_error_tracked_by_188(tmp_path):
-    # Both flagged cells have vectors from a completed analysis. Only the AC
-    # singular-matrix case investigated in #188 should acquire its tracker.
+def test_a_matrix_report_links_no_tracker_for_errored_cells(tmp_path):
+    # Both flagged cells have vectors from a completed analysis; no issue tracks
+    # an error class now (#188 closed), so both render UNLINKED.
     cells = [("hbt_typ", 27.0, 0.8, 6.32, 0.0032),
              ("hbt_wcs", 125.0, 0.72, 0.5, 0.7),
              ("hbt_bcs", 125.0, 0.80, 0.5, 0.7)]
@@ -169,8 +169,8 @@ def test_a_matrix_report_links_only_the_ac_error_tracked_by_188(tmp_path):
     assert "3 cells" in md and "grades 1 of 27" in md
     assert "did not simulate" not in md
     sec = md.split("## Findings and their trackers", 1)[1]
-    assert "1 cell with grade withheld (klt status `error`) -- design iteration #188." in sec
-    assert "1 cell with grade withheld (klt status `error`) -- no design-iteration tracker." in sec
+    assert "2 cells with grade withheld (klt status `error`) -- no design-iteration tracker." in sec
+    assert "#188" not in sec
 
 
 def test_fallback_only_is_counted_at_the_fallback_rung(tmp_path):

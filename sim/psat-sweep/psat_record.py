@@ -39,7 +39,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import gen_dut_benches as gdb  # noqa: E402
 import rf_extract as rx  # noqa: E402
 import spec_rows as sr  # noqa: E402
-from finding_trackers import POWER_ROWS, STABILITY_AND_MATCH, line_md, plural, units_md  # noqa: E402
+from finding_trackers import STABILITY_AND_MATCH, line_md, plural, units_md  # noqa: E402
 from provenance import commit_line  # noqa: E402
 # The (P) breakdown minima and the (M) model window live once, in sim/lib/device_limits.py
 # (provenance marked there); the bench facts live once in gen_dut_benches.py, which
@@ -331,9 +331,9 @@ def _findings_md(cells):
     rows = (
         ("Input match (large-signal S11, worst drive)",
          [_rung_s11(c["s11_large_worst_db"]) for c in cells], STABILITY_AND_MATCH),
-        ("Psat", [_rung_psat(c["reduction"]) for c in cells], POWER_ROWS),
-        ("Output P1dB", [_rung_p1db(c["reduction"]) for c in cells], POWER_ROWS),
-        ("Peak PAE", [_rung_pae(c["reduction"]) for c in cells], POWER_ROWS),
+        ("Psat", [_rung_psat(c["reduction"]) for c in cells], None),
+        ("Output P1dB", [_rung_p1db(c["reduction"]) for c in cells], None),
+        ("Peak PAE", [_rung_pae(c["reduction"]) for c in cells], None),
     )
     for name, rungs, tracker in rows:
         ln = line_md(name, rungs, tracker)

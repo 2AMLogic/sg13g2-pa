@@ -78,7 +78,7 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
     for c in rep["corners"]:
         cell = _cell_of(c)
         if c.get("status") != "pass":
-            failures.append((cell, c.get("corner_id", "?"), c.get("status"), ft.ac_error_tracker(c)))
+            failures.append((cell, c.get("corner_id", "?"), c.get("status"), None))
             continue
         freq, d = _load_complex_vectors(c["artifacts"]["complex_vectors"])
         s = sp.s_from_nodes(d)
