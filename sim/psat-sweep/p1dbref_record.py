@@ -44,7 +44,6 @@ pass claim for any row; the Supply row is DRAFT, so every figure is provisional.
 """
 import hashlib
 import json
-import math
 import os
 import sys
 from pathlib import Path
@@ -56,7 +55,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import gen_dut_benches as gdb  # noqa: E402
 import rf_extract as rx  # noqa: E402
 from provenance import commit_line  # noqa: E402
-from psat_record import F0, RS, _cell_md, _remote_md, label, stress, verified_dut  # noqa: E402
+from psat_record import _cell_md, _remote_md, extract_corners, label, verified_dut  # noqa: E402
 
 # `reduce_sweep`'s default reference width: the median gain of this many lowest-drive
 # points. The renderer reads the reference actually used from the matrix record's own
@@ -136,32 +135,7 @@ def fmt(v, spec):
 
 def render(rid, git_sha, dirty, klt_v, ng_v, rep, matrix, out_json, dut):
     bench = gdb.psat_bench("match")
-    points, failures = [], []
-    for c in rep.get("corners", []):
-        cid = c.get("corner_id", "?")
-        if c.get("status") != "pass":
-            failures.append({"corner_id": cid, "code": f"KLT_STATUS_{c.get('status')}"})
-            continue
-        amp = c["supply_v"]["vamp"]
-        pav = amp * amp / (8 * RS)
-        cell = {"process": c.get("process", "?"),
-                "temperature_c": float(c.get("temperature_c", 27)),
-                "vcc": float(c["supply_v"].get("vcc", gdb.VCC_NOM_V))}
-        try:
-            t, s = rx.load_klt_waveform(c["artifacts"]["waveform"])
-            ex = rx.extract(t, F0, s[bench["p_out_v"]], s[bench["p_out_i"]],
-                            supplies=[(s["v(vcc)"], -s["i(vcc)"])],
-                            v_in=s["v(in)"], i_in=-s["i(bs)"])
-            ex = {k: (float(v) if isinstance(v, (np.floating,)) else v) for k, v in ex.items()}
-            ex["p_avail_dbm"] = rx.dbm(pav)
-            ex["s11_large_db"] = 10 * math.log10(max(1 - ex["p_in_w"] / pav, 1e-12))
-            ex["stress"] = stress(t, s, ex, c.get("temperature_c", 27), bench["ic_sense_i"])
-            ex["corner_id"] = cid
-            ex["cell"] = cell
-            points.append(ex)
-        except rx.ExtractError as e:
-            failures.append({"corner_id": cid, "p_avail_dbm": rx.dbm(pav),
-                             "code": e.code, "message": str(e), "cell": cell})
+    points, failures = extract_corners(rep, bench)
 
     by_cell = {}
     order = []

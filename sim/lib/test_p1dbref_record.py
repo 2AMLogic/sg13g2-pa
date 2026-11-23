@@ -11,31 +11,23 @@ import contextlib
 import importlib.util
 import io
 import json
-import math
 import os
 import sys
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 import gen_dut_benches as gdb  # noqa: E402
-from provenance import sha  # noqa: E402
-
-MATCH_DECK_HASH = "sha256:" + sha(Path(REPO) / "sim/psat-sweep/psat_sweep_match.spice")
+from test_psat_record import MATCH_DECK_HASH, _sweep_waveform  # noqa: E402
 
 spec = importlib.util.spec_from_file_location(
     "_p1dbref_record", os.path.join(REPO, "sim", "psat-sweep", "p1dbref_record.py"))
 PR = importlib.util.module_from_spec(spec)
 sys.modules["_p1dbref_record"] = PR
 spec.loader.exec_module(PR)
-
-F0 = gdb.F0_HZ
-N_PER = 120
-PER_STEP = 400
 
 # A synthetic second-order compressor: g(P_in) = G0 - C * P_in. The probe points
 # sit on this curve; the matrix record's reference sits 0.6 dB below G0.
@@ -47,33 +39,7 @@ PROBE_PIN_W = [5.0e-11, 3.16e-10, 2.0e-9, 1.26e-8, 7.9e-8, 5.0e-7]  # ~4 dB apar
 
 def _probe_waveform(path, p_in_w, gain_db):
     """A settled trace whose extracted P_in/P_out hit exact targets."""
-    n = N_PER * PER_STEP + 1
-    t = np.arange(n) / (F0 * PER_STEP)
-    s = np.sin(2 * math.pi * F0 * t)
-    p_out_w = p_in_w * 10 ** (gain_db / 10.0)
-    a_in = 2.0 * p_in_w / 1.0e-3          # i(bs) amplitude fixed at 1 mA
-    c_out = 2.0 * p_out_w / 0.03          # i(vlsense) amplitude fixed at 30 mA
-    traces = {
-        "v(out)": 1.0 * s,
-        "v(outl)": c_out * s,
-        "v(in)": a_in * s,
-        "v(vcc)": np.full(n, gdb.VCC_NOM_V),
-        "v(amp)": np.full(n, 1.0),
-        "i(vbsense)": 0.08 * s,
-        "i(vlsense)": 0.03 * s,
-        "i(vcc)": np.full(n, -0.210),
-        "i(bs)": -1.0e-3 * s,
-        "i(l.xdut.lchoke)": np.full(n, 0.200),
-        "v(xdut.coll)": gdb.VCC_NOM_V + 0.5 * s,
-        "v(xdut.vb)": np.full(n, 0.85),
-        "v(xdut.xq1.t)": np.full(n, 0.6),
-    }
-    names = ["time"] + list(traces)
-    cols = [t] + list(traces.values())
-    doc = {"variables": [{"name": nm} for nm in names],
-           "points": np.column_stack(cols).tolist()}
-    with open(path, "w") as fh:
-        json.dump(doc, fh)
+    _sweep_waveform(path, p_in_w, p_in_w * 10 ** (gain_db / 10.0))
 
 
 def _probe_report(tmp_path):
@@ -173,6 +139,17 @@ def test_epsilon_slope_and_bias_come_out_of_the_record(tmp_path):
     # the committed reference sits 11.4 dB below the stored compression drive
     assert a["reference_below_compression_db"] == pytest.approx(11.4, abs=1e-6)
     assert "0.600" in md and "0.500" in md
+
+
+def test_a_non_pass_probe_corner_carries_its_cell_on_the_failure():
+    """`run_p1dbref_probe.sh` allows errored corners; their cell must not be dropped."""
+    rep = {"corners": [{"corner_id": "c0", "status": "error", "process": "hbt_wcs",
+                        "temperature_c": 125, "supply_v": {"vamp": 0.01, "vcc": 0.72}}]}
+    points, failures = PR.extract_corners(rep, gdb.psat_bench("match"))
+    assert points == []
+    assert failures == [{"corner_id": "c0", "code": "KLT_STATUS_error",
+                         "cell": {"process": "hbt_wcs", "temperature_c": 125.0,
+                                  "vcc": 0.72}}]
 
 
 def test_a_refused_matrix_cell_still_reports_probe_numbers(tmp_path):

@@ -654,31 +654,31 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
     return 0 if any(c["points"] for c in cells) else 1
 
 
-def main(argv):
-    variant, rid, git_sha, dirty, klt_v, ng_v, report_path, out_json = argv[1:9]
-    bench = gdb.psat_bench(variant)       # raises ValueError on an unknown variant
-    net = bench["network"]
-    rep = json.load(open(report_path))
-    run_dir = os.path.dirname(os.path.abspath(report_path))
+def _cell_of(c):
+    """The PVT cell a report corner names (process, temperature, VCC)."""
+    return {"process": c.get("process", "?"),
+            "temperature_c": float(c.get("temperature_c", 27)),
+            "vcc": float((c.get("supply_v") or {}).get("vcc", gdb.VCC_NOM_V))}
+
+
+def extract_corners(rep, bench):
+    """Per-corner extraction shared by the Psat matrix and P1dB-probe reducers.
+
+    Returns (points, failures). The cell is carried on every failure (the report
+    names process/temperature/supply even for an errored corner), so a cell none of
+    whose units produced figures still appears -- as a finding, never as a silent
+    absence.
+    """
     points, failures = [], []
-    for c in rep["corners"]:
+    for c in rep.get("corners", []):
         cid = c.get("corner_id", "?")
+        cell = _cell_of(c)
         if c.get("status") != "pass":
-            # The cell is carried on the failure (the report names process/
-            # temperature/supply even for an errored corner), so a cell none of
-            # whose units produced figures still appears below -- as a finding, never
-            # as a silent absence.
             failures.append({"corner_id": cid, "code": f"KLT_STATUS_{c.get('status')}",
-                             "cell": {"process": c.get("process", "?"),
-                                      "temperature_c": float(c.get("temperature_c", 27)),
-                                      "vcc": float((c.get("supply_v") or {}).get(
-                                          "vcc", gdb.VCC_NOM_V))}})
+                             "cell": cell})
             continue
         amp = c["supply_v"]["vamp"]
         pav = amp * amp / (8 * RS)
-        cell = {"process": c.get("process", "?"),
-                "temperature_c": float(c.get("temperature_c", 27)),
-                "vcc": float(c["supply_v"].get("vcc", gdb.VCC_NOM_V))}
         try:
             t, s = rx.load_klt_waveform(c["artifacts"]["waveform"])
             # P_out and the harmonics from the LOAD's own V and I (spec: "DFT of the
@@ -696,6 +696,16 @@ def main(argv):
         except rx.ExtractError as e:
             failures.append({"corner_id": cid, "p_avail_dbm": rx.dbm(pav),
                              "code": e.code, "message": str(e), "cell": cell})
+    return points, failures
+
+
+def main(argv):
+    variant, rid, git_sha, dirty, klt_v, ng_v, report_path, out_json = argv[1:9]
+    bench = gdb.psat_bench(variant)       # raises ValueError on an unknown variant
+    net = bench["network"]
+    rep = json.load(open(report_path))
+    run_dir = os.path.dirname(os.path.abspath(report_path))
+    points, failures = extract_corners(rep, bench)
     # Group by PVT cell. One cell -> the nominal-cell record this bench has
     # always written; several -> the matrix record (issue #173): one reduction
     # per cell, never one reduction over the whole report (points from
