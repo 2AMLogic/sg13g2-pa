@@ -3,28 +3,28 @@
   "kind": "generic",
   "status": "pass",
   "t1_item": 9,
-  "summary": "T1 item 9 (Testbenches shipped): 21/21 attestation checks passed (klt signoff --attest)",
+  "summary": "T1 item 9 (Testbenches shipped): 25/25 attestation checks passed (klt signoff --attest)",
   "source": "attest/item9.json",
   "attestation": {
     "producer": "klt signoff --attest",
     "inventory_schema_version": 1,
     "hash_algorithm": "sha256-raw-bytes",
-    "check_count": 21,
-    "passed_count": 21,
+    "check_count": 25,
+    "passed_count": 25,
     "checks": [
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/ac-gain/ac_gain.request.json",
         "passed": true,
-        "content_hash": "sha256:898aa6241172770bd280b4effb94e12d5a632ca5d30f0927dbfb95c18dfe3402"
+        "content_hash": "sha256:b1afad28ce6daba67ee0edc712675c6c090e5daa89ca1c2be9d4c7df5b6b612f"
       },
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/ac-stability/ac_stability.request.json",
         "passed": true,
-        "content_hash": "sha256:5c123945d5d65754fb41bc98c125685cddec9cbfefbdcd63d18118afcdaa3640"
+        "content_hash": "sha256:750c5b20266312161e46e0b3e3e2e1935064d00f62129a59c6a284a784a420a5"
       },
       {
         "check": "present",
@@ -43,37 +43,58 @@
       {
         "check": "present",
         "role": "testbench",
+        "path": "sim/known-answer-thermal/thermal.request.json",
+        "passed": true,
+        "content_hash": "sha256:d99940640d4feae683d9cb8b789585d2579c9f4c71b777b67b9faae028486c60"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/known-answer-thermal/thermal_neg.request.json",
+        "passed": true,
+        "content_hash": "sha256:eacf45f41dd611aea8894e41d3a384a56dd0900a72e17b6f6797e6655cd5e4d4"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
         "path": "sim/known-answer/dc_load.request.json",
         "passed": true,
-        "content_hash": "sha256:75bdaa8f6d1d39050e3e5b75738c18f82a7759c408d96b1879e79c8ad615b481"
+        "content_hash": "sha256:105753e6b1c8603295be36e3cc67ed340169b7b2ceef520ce206d7a4e4215f05"
       },
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/known-answer/sine_50.request.json",
         "passed": true,
-        "content_hash": "sha256:e26daa2ffcf0b892f002a1813ea9630871354ea6f862accf9c648f176209af45"
+        "content_hash": "sha256:789739cdc75bd8b032a9808ffeeb93d19b9717149e7d28debd2446a71d415fb9"
       },
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/known-answer/sine_75.request.json",
         "passed": true,
-        "content_hash": "sha256:15d9cc4b7315e15001d173fb40b560971bbb1a6b46e18aa673a1c6f0bf4fc42d"
+        "content_hash": "sha256:33caa3ef4643cc94e0ee6441958b2f3344cc61a9a8039b34f547360140519554"
       },
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/known-answer/sine_h3.request.json",
         "passed": true,
-        "content_hash": "sha256:a781f137b52f8b52f36dd02151b7ab306efaa3507d9975f8d6a47c9c5a7e3c86"
+        "content_hash": "sha256:6cfcf9a73f52cba68e7102f24ac06dedbb18340cded57715ea55c18cfd1b8ca8"
       },
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/psat-sweep/psat_sweep.request.json",
         "passed": true,
-        "content_hash": "sha256:3b7c1ee4c3caaa2d8b721621c98da3c9067787b2e01b2a0931b5338b0f173aea"
+        "content_hash": "sha256:3492a77a189f9fc09df723d371f85865acab09f647cc11584bdba1dc3f3074d3"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/psat-sweep/psat_sweep_match.request.json",
+        "passed": true,
+        "content_hash": "sha256:91f4c1ad5f21651aaedde06ba6d516f5da5f04a79137afe1658ceb3507be8c88"
       },
       {
         "check": "present",
@@ -147,6 +168,18 @@
       {
         "check": "command",
         "role": "cold_start",
+        "testbench": "sim/known-answer-thermal/thermal.request.json",
+        "argv": [
+          "sim/known-answer-thermal/run.sh"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
         "testbench": "sim/known-answer/sine_50.request.json",
         "argv": [
           "sim/known-answer/run.sh"
@@ -211,7 +244,7 @@
         "path": "attest/item9.json",
         "scope": "repo"
       },
-      "content_hash": "sha256:003433da69bae501430ca58910ca785aeb7820078605035a0b3d738eb1a6b77f"
+      "content_hash": "sha256:c5ee0ffb9a575add61f4b0ca92ffb574b01ae2e485395944c488cef253bff920"
     }
   }
 }

@@ -52,27 +52,57 @@ compiles the PDK's own sources with a checksum-pinned OpenVAF-Reloaded
 committed). `npn13G2` is a native VBIC card and needs none.
 
 **ngspice floor.** OpenVAF-Reloaded emits OSDI 0.4; ngspice-43 and earlier
-accept only 0.3. A MOS deck therefore needs ngspice >= 44 (the fleet workers
-run 46). A host with an older ngspice (the dispatch workers have 42) can fetch
+accept only 0.3. A MOS deck therefore needs ngspice >= 44 (enforced as
+`NGSPICE_OSDI_MIN_MAJOR=44` in `sim/tools/build-osdi.sh`). Every host on this
+fleet clears that floor today (batch and dispatch workers both run ngspice-47,
+verified 2026-11-15 from the `sim/*/records/` worker banners and this dispatch
+worker's `ngspice --version`); the floor is a requirement on the host, not a
+version this repo pins. A host below it can still fetch
 the PDK, build the objects and run the HBT, but cannot load the MOS devices
 locally: `setup-env.sh` then exits `NGSPICE_TOO_OLD_FOR_OSDI`, downgraded to a
 warning only when `KLT_SIM_BACKEND=batch`, because `klt sim` runs the MOS decks
-on the fleet.
+on the fleet. No current fleet host takes that path; the sentence describes
+what such a host would hit, not the hosts that exist today.
 
 ## DUT benches (one per ratified electrical row)
 
 Run against `design/netlist/sg13g2-pa.spice` (topology DR 0003, **PROPOSED**; **ideal
 passives** in the output network, so no output-power or PAE figure is an on-chip result).
-Nominal cell only (`hbt_typ`, 27 C, Vcc 0.8 V): each bench takes the cell as request
-parameters so item 5 can run the matrix later, and each run here proves the bench works
-cold. Cold start, after `scripts/setup-env.sh` and with `python3` + `numpy` available:
+The three characterization benches (`psat --match`, `ac-gain`, `ac-stability`) cover the
+full PVT corner box (issue #173): 3 `cornerHBT.lib` sections (`hbt_typ`, `hbt_bcs`,
+`hbt_wcs`) x -40/27/125 C x supply 0.72/0.8/0.88 V (nominal +/-10 %), declared once in
+`sim/pvt-matrix.json` (the psat drive-crossed variant in
+`sim/psat-sweep/psat_sweep_match.pvt-matrix.json`) and checked against every request and
+report with `klt corner-matrix` before any submit. The bare psat variant stays
+nominal-only: its 50 ohm harmonic terminations differ from the matched bench the ratified
+rows are judged on, so its figures are not comparable across the matrix. Every verdict
+from the matrix benches is **provisional** (Supply row DRAFT, DR 0003 PROPOSED). Cold
+start, after `scripts/setup-env.sh` and with `python3` + `numpy` available:
 
 | Spec rows | Bench | Cold-start command | Where it runs |
 |---|---|---|---|
-| Psat, P1dB, peak PAE, large-signal S11, device stress (peak `V_CE`/`V_CB`/`V_BE`/`I_C`/T_j per device, window labelling), harmonics and back-off PAE reported | `psat-sweep/` | `sim/psat-sweep/run_psat_sweep.sh` | one `klt sim` request, 72 drive points: the batch fleet; a submit refused for capacity is waited out by `klt` (`batch.capacity_wait_s` 600 in the request), never run locally |
-| The same rows, **through an ideal off-chip output match** (study variant, see "The off-chip output match" below) | `psat-sweep/` (`--match`) | `sim/psat-sweep/run_psat_sweep.sh --match` | one `klt sim` request, 106 drive points, `remote.hosts` 10: the batch fleet, same capacity wait |
-| Power gain, small-signal S11 (S22, S12) over the band | `ac-gain/` | `sim/ac-gain/run_ac_gain.sh` | single unit, `--backend local` |
-| Small-signal stability: mu, mu', k, abs(delta), negative-resistance check, 10 MHz-30 GHz at 50 pts/decade | `ac-stability/` | `sim/ac-stability/run_ac_stability.sh` | single unit, `--backend local` |
+| Psat, P1dB, peak PAE, large-signal S11, device stress (peak `V_CE`/`V_CB`/`V_BE`/`I_C`/T_j per device, window labelling), harmonics and back-off PAE reported | `psat-sweep/` | `sim/psat-sweep/run_psat_sweep.sh` | one `klt sim` request, nominal cell only, 72 drive points: the batch fleet; a submit refused for capacity is waited out by `klt` (`batch.capacity_wait_s` 600 in the request), never run locally |
+| The same rows, **through an ideal off-chip output match** (study variant, see "The off-chip output match" below), over the full 27-cell PVT matrix (106 drive points per cell, 2862 units) | `psat-sweep/` (`--match`) | `sim/psat-sweep/run_psat_sweep.sh --match` | one `klt sim` request, `remote.hosts` 261: the batch fleet, same capacity wait; an interrupted run resumes with `--resume` into the same outdir |
+| Power gain, small-signal S11 (S22, S12) over the band, over the full 27-cell PVT matrix | `ac-gain/` | `sim/ac-gain/run_ac_gain.sh` | one `klt sim` request, `remote.hosts` 3: the batch fleet |
+| Small-signal stability: mu, mu', k, abs(delta), negative-resistance check, 10 MHz-30 GHz at 50 pts/decade, over the full 27-cell PVT matrix | `ac-stability/` | `sim/ac-stability/run_ac_stability.sh` | one `klt sim` request, `remote.hosts` 3: the batch fleet |
+
+The provisional matrix's findings, and the design iterations that track them (the
+committed records are the authority -- `psat-sweep/records/20261121-003533-b2746d0-match.md`,
+`ac-gain/records/20261121-010216-b2746d0.md`, `ac-stability/records/20261121-011402-b2746d0.md`;
+`sim/lib/finding_trackers.py` is the one place the map lives, and every record the
+renderers write from here on states the same links in its own findings section):
+
+- Input match (S11, small-signal and large-signal) and small-signal stability below
+  their rungs: #172.
+- In three 125 °C cells on both AC benches, ngspice completed the sweeps and
+  produced finite vectors. The records withhold grades because klt reported
+  `error` with a `singular_matrix` diagnostic. [#188](https://github.com/2AMLogic/sg13g2-pa/issues/188)
+  tracks the validity of the recovered operating points.
+- The large-signal power rows -- output P1dB, Psat, peak PAE -- below their rungs:
+  #192.
+- Reduction refusals (e.g. `SWEEP_STEP_TOO_COARSE`) and units that cannot be
+  extracted (e.g. `UNSETTLED`) are findings no issue tracks yet; the records say so
+  rather than linking to the nearest-sounding issue.
 
 Device stress is extracted from the `psat-sweep/` transients (spec: "all large-signal
 benches"), not a separate bench. The decks are generated by `lib/gen_dut_benches.py`, which
@@ -151,7 +181,7 @@ are kept as the evidence for them:
 
 | Run | What it settled |
 |---|---|
-| `records/20261114-032358-651c0cf-match.*` | **The bottom must not move.** That grid was the bare grid translated up by the ~14.2 dB of gain the load drop costs, so it started at -22.0 dBm -- where this deck already compresses. `reduce_sweep` takes its reference gain from the three lowest-drive points; they disagreed by 0.391 dB against a 0.1 dB limit and the whole reduction was refused `LINEAR_REGION_NOT_FOUND`. The same run also bounded the **top**: above roughly +17 dBm available the deck stops solving (12 points aborted with ngspice's `timestep_too_small`, flagged on the bias-reference device `XQref`; two more came back `UNSETTLED`), and those levels sit at collector peaks near 6 V against a BVCEO(min) of 1.4 V. |
+| `records/20261114-032358-651c0cf-match.*` | **The bottom must not move.** That grid was the bare grid translated up by the ~14.2 dB the load-drop estimate had predicted, the estimate the first grid was built on, so it started at -22.0 dBm -- where this deck already compresses. `reduce_sweep` takes its reference gain from the three lowest-drive points; they disagreed by 0.391 dB against a 0.1 dB limit and the whole reduction was refused `LINEAR_REGION_NOT_FOUND`. The same run also bounded the **top**: above roughly +17 dBm available the deck stops solving (12 points aborted with ngspice's `timestep_too_small`, flagged on the bias-reference device `XQref`; two more came back `UNSETTLED`), and those levels sit at collector peaks near 6 V against a BVCEO(min) of 1.4 V. |
 | `records/20261114-033006-28e69b9-match.*` | **The coarse tail must stop early.** With the bare grid's 0.8 dB/0.4 dB boundary (-16.8 dBm) the 1 dB compression point landed inside the coarse region: 0.912 dB of measured P_in across the bracket against a 0.5 dB limit, refused `SWEEP_STEP_TOO_COARSE`. The matched load compresses 1 dB at about -25 dBm available, 10 dB earlier than the bare deck does. |
 
 So the grid is 0.8 dB only up to -28.0 dBm -- the linear reference tail -- and 0.4 dB the
@@ -159,6 +189,46 @@ whole way from there to +10.0 dBm, which puts the entire compressing and saturat
 on the fine step with the bracket ~3 dB inside it. Neither bound is fitted to a result:
 `reduce_sweep` still judges every run, and a record that reaches its own sweep end, or
 brackets P1dB too coarsely, is rerun rather than quoted.
+
+### The P1dB linear-reference probe (`run_p1dbref_probe.sh`, issue #192)
+
+The spec's Output P1dB row requires the reference gain to come from "drive >= 20 dB below
+the compressing level". The committed matched grid **cannot** reach that region: klt
+names a unit by a corner id whose supply-axis values are formatted to three decimals
+(`vamp=0.010`), so below ~10 mV of source amplitude -- about -35.7 dBm available into
+50 ohm -- no <= 1 dB spaced drive grid keeps one bucket per point (the
+klayout-tools#5870 collision class; `assert_pvt_corner_ids_distinct` refuses it at
+generation time), and `reduce_sweep` forbids steps above 1 dB before Psat. The grid
+bottom of -36.0 dBm is therefore an **encoding floor**, and the matrix record's
+reference points sit only ~8-16 dB below each cell's compression. The encoding gap is
+filed with klayout-tools (friction protocol): klayout-tools#7132.
+
+Until it closes, `run_p1dbref_probe.sh` measures what the grid cannot: the SAME
+committed matched deck (byte-identical, no bench fact changes) under a sparse low-drive
+axis -- `P1DBREF_PROBE_GRID_DBM`, -56..-36 dBm available at 4 dB steps, the finest tested
+spacing whose corner ids stay distinct down to the encoding's floor -- over every
+declared cell (one fleet submit, 162 units; request committed as
+`psat_sweep_match_p1dbref.request.json`). Its append-only record
+(`records/<id>-p1dbref.{md,json}`) compares each cell against the committed matrix
+record: the extrapolated zero-drive gain `g0` (fit `g(P_in) = g0 - c*P_in`, the
+second-order compressor's law) against the matrix record's own reference gain; the
+error that reference compression propagates into `P1dB_out` through the crossing
+bracket's slope (`epsilon*(1/s - 1)`); the bracket's measured step against the row's
+0.5 dB limit; and the quiescent operating point (P_DC, total supply current). The probe
+is not a drive sweep -- 4 dB steps bracket no compression, `reduce_sweep` never runs on
+it, no Psat/PAE figure appears -- and like the matched deck it is a study bench outside
+the item-9 inventory. Like every grid it is never hand-launched: one `klt sim` request,
+batch fleet, the request's own capacity wait.
+
+The probe selects the newest matched matrix with the same DUT netlist SHA-256.
+An explicit matrix path passes the same check. The reducer verifies the probe
+deck against klt's input hash before comparing the cells. For a matrix that
+predates DUT metadata, a sibling `<record-id>.dut.json` pins the original record
+bytes and the DUT identity verified from its run.
+
+For candidate measurements, `run_psat_sweep.sh --candidate "description"` runs
+the matched matrix and identifies the candidate in both record formats. Matched
+runs save the generated deck and DUT netlist under `corners/<record-id>/inputs/`.
 
 ## Running grids
 
@@ -254,12 +324,11 @@ terminations (the default is an ideal 50 ohm at 2 f0 and 3 f0, labelled as
 such), window length and whether the passives are ideal in its own record;
 power or PAE under different terminations are not compared.
 
-A waveform-only request declares no measurements, so `klt sim` grades the run
-`not_checked` and exits 4 even with every corner `pass`. Such a bench runs
-through `sim_run_one ... --allow-not-checked` (`env.sh`), which accepts exit 4
-as a successful run; the flag is opt-in, so a bench whose request does declare
-measurements still fails on 4. Either way, gate on the report's corner status,
-as the record scripts and `known-answer/run.sh` do.
+A waveform-only request sets `options.capture_only: true`, so `klt sim` grades
+a run whose corners all passed `pass` and exits 0 (it refuses the option on a
+request that declares measurements); `sim_run_one` treats every non-zero exit
+as a failure. Gate on the report's corner status as well, as the record
+scripts and `known-answer/run.sh` do.
 
 ### Known-answer check (`known-answer/`)
 
@@ -313,11 +382,18 @@ or a thermal time constant (an `op` solve cannot time-resolve them).
   the whole shared body of the two AC runners, which differ only in the bench
   name.
 - `tools/` - `build-osdi.sh`, `pdk_identity.py`.
-- `lib/` - `rf_extract.py`, `device_limits.py` (the npn13G2 breakdown minima, model
-  window and Rth model, defined once for every bench that grades against them),
-  `bench_gen.py` (the pinned PDK name and corner-library path, the capacity wait,
-  the `klt sim` request skeleton and the strict write/`--check` driver both bench
-  generators use -- so a PDK release that moves the corner library is one edit)
+- `lib/` - `units.py` (`dbm`, the one watts-to-dBm conversion every record and
+  the sweep reducer share, defined here once -- `rf_extract` re-exports it as
+  `rx.dbm`, so both names are the same function; `db10` is defined here once
+  too and re-exported the same way, public as `rf_extract.db10`),
+  `rf_extract.py` (extraction from transient waveforms and the Psat/P1dB
+  sweep reducer), `device_limits.py` (the npn13G2 breakdown
+  minima, model window and Rth model, defined once for every bench that grades
+  against them), `bench_gen.py` (the pinned PDK name and corner-library path, the
+  capacity wait, the `klt sim` request skeleton and the strict write/`--check`
+  driver both bench generators use -- so a PDK release that moves the corner
+  library is one edit), `provenance.py` (the `- Commit:` bullet and the
+  artifact-digest helper every record renderer states its provenance through)
   and their tests.
 - `known-answer/` - ideal decks, `run.sh`, `check_known_answer.py`,
   `records/<id>.md`, `corners/<id>/` (klt reports, plus the deck and ngspice log
@@ -332,7 +408,10 @@ or a thermal time constant (an `op` solve cannot time-resolve them).
 - `psat-sweep/`, `ac-gain/`, `ac-stability/` - the DUT benches above (decks and requests
   generated by `lib/gen_dut_benches.py`, `run_*.sh`, `records/`, `corners/<id>/`).
   `psat-sweep/` carries two generated decks: `psat_sweep` (bare 50 ohm, the default) and
-  `psat_sweep_match` (through the ideal off-chip match, `--match`).
+  `psat_sweep_match` (through the ideal off-chip match, `--match`), plus the P1dB
+  linear-reference probe (`run_p1dbref_probe.sh`, `p1dbref_record.py`, the committed
+  `psat_sweep_match_p1dbref.request.json` -- the matched deck under a sparse low-drive
+  axis; see "The P1dB linear-reference probe" above).
   `run_ac_gain.sh` and `run_ac_stability.sh` are wrappers over `env.sh`'s
   `sim_run_ac_bench`, so a gate change reaches both at once; `run_psat_sweep.sh`
   keeps its own body (batch backend, `psat_record.py`, waveform cleanup).

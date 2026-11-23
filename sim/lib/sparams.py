@@ -1,7 +1,6 @@
-"""Two-port S-parameters and stability metrics from the ac benches' ngspice raw files.
+"""Two-port S-parameters and stability metrics from the ac benches' complex node voltages.
 
-Pure layer (numpy only): ``read_ascii_raw`` parses ngspice's ASCII complex raw
-file; ``s_from_nodes`` turns the two-DUT-copy node voltages of
+Pure layer (numpy only): ``s_from_nodes`` turns the two-DUT-copy node voltages of
 ``sim/lib/gen_dut_benches.py`` into S11/S21/S12/S22, valid only when the source
 and load resistances are equal (``gen_dut_benches._ac_deck`` refuses to build a
 deck otherwise);
@@ -9,49 +8,6 @@ deck otherwise);
 negative-resistance check (max |S11|, max |S22|).
 """
 import numpy as np
-
-
-def read_ascii_raw(path):
-    """-> (freq_hz ndarray, {name: complex ndarray}) for an AC-analysis ASCII raw file."""
-    names = []
-    rows = []
-    with open(path) as fh:
-        lines = fh.read().splitlines()
-    nvar = None
-    i = 0
-    while i < len(lines):
-        ln = lines[i]
-        if ln.startswith("No. Variables:"):
-            nvar = int(ln.split(":")[1])
-        elif ln.startswith("Variables:"):
-            for k in range(nvar):
-                names.append(lines[i + 1 + k].split("\t")[2])
-            i += nvar
-        elif ln.startswith("Values:"):
-            i += 1
-            break
-        i += 1
-    cur = []
-    for ln in lines[i:]:
-        if not ln.strip():
-            continue
-        tok = ln.split("\t")
-        val = tok[-1].strip()
-        if tok[0].strip().isdigit():   # " 0\t<first value>"
-            if cur:
-                rows.append(cur)
-            cur = []
-            val = tok[1].strip()
-        re, im = val.split(",")
-        cur.append(complex(float(re), float(im)))
-    if cur:
-        rows.append(cur)
-    arr = np.array(rows)
-    if arr.shape[1] != len(names):
-        raise ValueError(f"raw file shape {arr.shape} does not match {len(names)} variables")
-    data = {n: arr[:, k] for k, n in enumerate(names)}
-    freq = data.pop(names[0]).real
-    return freq, data
 
 
 def s_from_nodes(d):

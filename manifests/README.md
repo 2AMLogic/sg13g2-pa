@@ -1,8 +1,9 @@
 # Block manifest and tier-verdict record
 
 This directory holds this block's `klt signoff` input and its committed
-output, the machine-readable form of the T1 checklist in
-[`design-evidence-tiers.md`](design-evidence-tiers.md).
+output, the machine-readable form of [the T1 checklist shipped with the
+pinned `klayout-tools` wheel](https://github.com/2AMLogic/klayout-tools/blob/v0.9.1/docs/design-evidence-tiers.md)
+(the checklist is not vendored in this repo; see the file list below).
 
 ## Files
 
@@ -14,7 +15,17 @@ output, the machine-readable form of the T1 checklist in
   `evidence/item2.json`), 3 (DRC clean, from
   `../layout/reports/drc-klt-0.9.1.json`), 9 (testbenches shipped, from
   `evidence/item9.json`) and 10 (repo hygiene, from `evidence/item10.json`)
-  are cited today.
+  are cited today. **Item 5 (corner verification) is deliberately not
+  cited**: the provisional PVT matrix (#173) put per-cell records on all
+  three DUT benches, and `klt signoff --manifest` grades item 5 on every
+  ratified row meeting its cell in every corner -- the matrix honestly
+  records Stability and Input match missed in every simulated cell (#172),
+  P1dB missed in every reduced cell with Psat and peak PAE under their
+  Fallback rungs in the worst cells (#192), and three 125 C cells that did
+  not simulate on the two AC benches (#188), so the item stays
+  `unmet, no_evidence`-class until the design iterations (#172, #188, #192)
+  close and the benches re-run. Citing it now would grade `unmet` with
+  the matrix as evidence; the citation is added when it can grade `met`.
 - **`../layout/reports/drc-klt-0.9.1.json`**: the item-3 citation. Unlike
   items 1, 2, 9 and 10 there is no `evidence/item3.json` wrapper and no
   `--attest` step: `klt drc` already emits a first-class envelope, so the
@@ -34,24 +45,39 @@ output, the machine-readable form of the T1 checklist in
   produced from `layout/pa/sg13g2_pa.gds`. Generated, never hand-edited. The
   manifest's `content_hash` for item 2 is `sha256sum layout/pa/sg13g2_pa.gds`.
 - **`../attest/item9.json`**: the item-9 attestation inventory: every committed
-  bench (`sim/smoke`, `sim/known-answer`, `sim/device-npn13g2`, `sim/psat-sweep`,
-  `sim/ac-gain`, `sim/ac-stability`), each primary bench with its cold-start argv
-  (`local_only`: they need the pinned PDK, ngspice, numpy and, for the grid benches,
-  the batch fleet), plus the PDK and tool pins.
+  bench (`sim/smoke`, `sim/known-answer`, `sim/known-answer-thermal`,
+  `sim/device-npn13g2`, `sim/psat-sweep`, `sim/ac-gain`, `sim/ac-stability`),
+  each primary bench with its cold-start argv (`local_only`: they need the
+  pinned PDK, ngspice, numpy and, for the grid benches, the batch fleet), plus
+  the PDK and tool pins. The tool pins are a **minimum-version floor**, not an
+  exact record of the host that produced the evidence: a pin is satisfied by
+  any later version of the same tool, so a worker-image bump does not falsify
+  it — `pins.tools.ngspice: "46"` is satisfied by the ngspice-47 the committed
+  evidence actually ran on (verified 2026-11-15; see the envelope bullet
+  below). The floor is a documented claim, not an enforced one: `klt` does not
+  compare `pins.tools` against the host — its pin check records the declared
+  value only (upstream gap:
+  [`2AMLogic/klayout-tools#5563`](https://github.com/2AMLogic/klayout-tools/issues/5563)).
+  The semantics live here rather than in the inventory because editing that
+  file at all changes its sha256 and forces a full re-attest (item 9's
+  manifest hash is the inventory hash).
 - **`../evidence/item9.json`**: the envelope `klt signoff --attest 9` produced from
   it. Generated, never hand-edited. The manifest's `content_hash` for item 9 is
-  `sha256sum attest/item9.json`.
+  `sha256sum attest/item9.json`. The committed evidence was produced on
+  **ngspice-47** (verified 2026-11-15); the simulator that actually ran each
+  bench is stated per bench in the append-only `sim/*/records/` — e.g. the
+  captured batch-worker banner in
+  `sim/psat-sweep/records/20261115-051641-e0a560f.md` — which is the provenance
+  of record, not this envelope's pins.
 - **`../attest/item10.json`**: the item-10 attestation inventory (hygiene
   files plus the PDK-free checks run on a stock CI runner).
 - **`../evidence/item10.json`**: the envelope `klt signoff --attest 10`
   produced from it. Generated, never hand-edited.
-- **`design-evidence-tiers.md`**: the T1-T4 checklist the grader parses.
-  Vendored **byte-identical** from
-  [`2AMLogic/klayout-tools@44cc42323184`](https://github.com/2AMLogic/klayout-tools/blob/44cc42323184/docs/design-evidence-tiers.md)
-  `docs/design-evidence-tiers.md` (git blob `2f7f69825f8c`). Upstream is
-  MIT-licensed; this repo's Apache-2.0 `LICENSE` does not relicense the
-  vendored copy. When upstream moves, re-vendor the file, update the commit
-  above, and regenerate the record in the same PR.
+- **The T1-T4 checklist** (not a file here): the grader parses the copy
+  bundled with the pinned `klayout-tools` wheel, so the pin fixes its bytes;
+  read it at [the v0.9.1 release tag](https://github.com/2AMLogic/klayout-tools/blob/v0.9.1/docs/design-evidence-tiers.md).
+  The record's `source_doc_content_hash` identifies the exact checklist bytes
+  that were parsed.
 - **`sg13g2-pa.signoff.json`**: **the verdict of record**, the committed
   output of the command below. Never hand-edit it.
 
@@ -164,16 +190,15 @@ If `attest/item10.json` changed, update its `content_hash` in
 ```console
 uvx --from "klayout-tools==0.9.1" klt signoff \
     --manifest manifests/sg13g2-pa.json \
-    --tiers-doc manifests/design-evidence-tiers.md \
     --format json > manifests/sg13g2-pa.signoff.json
 ```
 
 `klt signoff --manifest` exits `3` when at least one item is `unmet` (a valid
 run: `unmet` with a per-item `reason` is the honest statement of the gap) and
 `0` when every T1 item is `met`; the redirect still writes the record on `3`.
-Any change that affects the verdict (new evidence, a manifest edit, a
-vendored-doc bump, a `klt` pin bump) regenerates and commits the record in the
-same PR. **Any later edit to `README.md`, `LICENSE` or the workflow drifts
+Any change that affects the verdict (new evidence, a manifest edit, a `klt`
+pin bump — which also changes the bundled checklist) regenerates and commits
+the record in the same PR. **Any later edit to `README.md`, `LICENSE` or the workflow drifts
 the envelope and fails CI**; re-run the attest command above and regenerate
 the record in the same PR. Check locally with
 `./scripts/check-ci.sh` (below), or on its own with

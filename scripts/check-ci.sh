@@ -25,8 +25,11 @@
 #   4. signoff-record re-render the tier verdict from the committed block
 #                     manifest and byte-compare it against the committed
 #                     verdict of record (manifests/sg13g2-pa.signoff.json).
-#                     A manifest, vendored-checklist or klt-pin change
-#                     without a regenerated record fails here.
+#                     A manifest or klt-pin change without a regenerated
+#                     record fails here. The T1 checklist is not vendored in
+#                     this repo: the grader parses the copy bundled with the
+#                     pinned klt wheel, and the record's
+#                     source_doc_content_hash pins those exact bytes.
 #
 # Items 2, 3 and 9 are deliberately not re-attested: item 2 needs the GDS
 # generator, item 3 the DRC deck, item 9 runs the benches. See
@@ -135,14 +138,14 @@ fresh="${TMPDIR_GATE}/fresh-signoff.json"
 
 rc=0
 "${KLT_CMD[@]}" signoff --manifest manifests/sg13g2-pa.json \
-    --tiers-doc manifests/design-evidence-tiers.md \
     --format json > "${fresh}" || rc=$?
 # 0 = every T1 item met; 3 = the grader ran clean and at least one item is
 # unmet. Both are valid runs and both write the record. Anything else means
-# the manifest, the vendored tier doc or a cited evidence file is broken.
+# the manifest, the checklist bundled with the pinned klt wheel, or a cited
+# evidence file is broken.
 if [[ "${rc}" -ne 0 && "${rc}" -ne 3 ]]; then
   fail signoff-record "klt signoff exited ${rc} (expected 0 or 3): the manifest,
-the vendored tier doc, or cited evidence is broken."
+the checklist bundled with the pinned klt wheel, or cited evidence is broken."
 elif ! cmp -s "${fresh}" manifests/sg13g2-pa.signoff.json; then
   fail signoff-record "the committed verdict is stale -- a fresh klt signoff
 differs from manifests/sg13g2-pa.signoff.json. Regenerate and commit the

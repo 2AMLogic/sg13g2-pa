@@ -3,8 +3,74 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-21
+
+- **Issue #187** (closed): Remove hand-copied Cblock and Lchoke values from matched Psat bench commentary
+- **PR #189**: fix: stop hand-copying Cblock and Lchoke values in the matched Psat bench
+- **Issue #176** (closed): Remove the unusable manual recovery recipe for missing dpkg-deb
+- **PR #183**: fix: replace unusable missing-dpkg-deb recovery recipe with install-and-rerun
+- **Issue #177** (closed): Consolidate PDK model suffix checks so a missing .mod include fails preflight
+- **PR #181**: fix: fail preflight on a missing .mod model include
+- **Issue #179** (closed): Move known-answer-thermal gen_bench.py onto sim/lib/bench_gen.py (lax --check overwrites evidence)
+
+### 2026-11-19
+
+- **PR #170**: chore: grade the signoff record against the klt wheel's bundled checklist
+- **Issue #77** (closed): Remove vendored manifests/design-evidence-tiers.md: stale against the checklist the pinned klt wheel ships
+
+### 2026-11-18
+
+- **PR #166**: sim: use klt capture_only and complex_vectors instead of the exit-4 waiver and rawfile parser
+- **Issue #100** (closed): Use klt's capture_only and complex_vectors request options: drop the --allow-not-checked exit-4 waiver and the hand-written ASCII rawfile parser
+- **PR #164**: ci: add merge_group trigger to the signoff workflow
+- **Issue #163** (closed): Merge queue: add the merge_group trigger to the required-check workflow(s)
+
+### 2026-11-17
+
+- **PR #159**: chore(loom): resync installed Loom to v0.19.1306
+
+### 2026-11-16
+
+- **PR #156**: chore(loom): resync installed Loom to v0.19.1305
+- **PR #154**: chore(loom): resync installed Loom to v0.19.1302
+
+### 2026-11-15
+
+- **PR #152**: docs: document attest tool pins as floors, correct stale ngspice prose
+- **Issue #139** (closed): attest: item 9 pins ngspice 46 but its evidence was produced on ngspice-47
+- **PR #149**: test: follow spec_from_file_location sibling hops through bare and aliased imports
+- **Issue #148** (closed): Inventory closure walk fails open on a bare-name spec_from_file_location call
+- **PR #147**: test: guard that every record inventory pins its full sim/lib closure
+- **Issue #144** (closed): Guard test: every record renderer's digest inventory pins every sim/lib module in its graded path
+- **PR #145**: test: complete the provenance renderer roster and make it self-policing
+- **Issue #133** (closed): sim/lib/test_record_provenance.py's RENDERERS list misses the sixth record renderer (thermal_record.py)
+- **Issue #143** (closed): Thermal known-answer gen_bench re-implements bench_gen request/process_block
+- **PR #114**: docs: roadmap as of 2026-11-13
+- **PR #137**: refactor: single-source the watts-to-dBm conversion in sim/lib/units.py
+- **Issue #125** (closed): Three more copies of the watts-to-dBm conversion remain outside sim/lib/rf_extract.py
+- **PR #141**: docs: reword README verification sentence to route PVT coverage to item 5
+- **Issue #128** (closed): README: the 'Built agent-native' paragraph still claims every claim traces to a PVT-corner result
+- **PR #140**: refactor: route the thermal known-answer generator through bench_gen
+- **Issue #138** (closed): Route the thermal known-answer generator through sim/lib/bench_gen.py: a third copy of the request skeleton, with a --check driver that writes on unknown arguments
+- **PR #136**: attest: inventory the three unlisted benches in T1 item 9 and re-attest
+- **Issue #131** (closed): attest: add sim/known-answer-thermal/ to the T1 item-9 testbench inventory
+- **PR #129**: sim(psat-sweep): relabel gain_drop_db as the load-ratio estimate it is
+- **Issue #121** (closed): sim: `gain_drop_db` is labelled as the gain the load drop costs, and the matched run measures ~3 dB, not 14.2 dB
+- **PR #127**: fix: collapse generate.sh onto one temp dir and one EXIT trap
+- **Issue #123** (closed): Collapse layout/pa/generate.sh onto one temp dir and one EXIT trap: the second trap replaces the first, so --check leaks its tree
+- **PR #126**: refactor(sim): take the record provenance bullet and watts-to-dBm from sim/lib
+- **Issue #119** (closed): Single-source the sim record provenance bullet and the watts-to-dBm conversion: ac_record.py and psat_record.py bypass sim/lib helpers that already exist
+
 ### 2026-11-14
 
+- **PR #130**: sim(known-answer-thermal): known-answer-check the npn13G2 VBIC thermal node
+- **Issue #115** (closed): sim: thermal-node known-answer check for npn13G2 self-heating (DR 0001 Q4)
+- **PR #124**: docs(readme): state the design's actual state and add the PA reproduce rows
+- **Issue #117** (closed): README: status lines are stale against the signoff record; refresh and re-attest item 10
+- **PR #120**: sim(psat-sweep): bench the PA through an ideal off-chip output match at the stated chip boundary
+- **Issue #116** (closed): sim(psat-sweep): bench-side ideal off-chip output match, with the chip boundary stated
+- **PR #118**: refactor(sim): share one klt sim request skeleton and strict --check driver
+- **Issue #111** (closed): Single-source the klt sim request skeleton: gen_bench.py and gen_dut_benches.py duplicate the PDK constants and the --check driver
 - **PR #103**: fix(sim): derive the smoke record's model-input lines from each bench's report
 - **Issue #96** (closed): Derive the smoke record's OSDI provenance from the run: summarize.py hard-codes a 'too old' claim and lists client OSDI hashes the fleet did not load
 - **PR #109**: refactor(sim): route known-answer through sim_run_one and gate its ngspice logs

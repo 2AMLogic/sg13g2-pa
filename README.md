@@ -47,8 +47,9 @@ checked in CI.
 line of documentation here is produced by AI agents working from a ratified
 spec and an append-only evidence trail — not human-authored work that agents
 merely assisted with. Verification is the product: every claim traces to a
-recorded result under PVT corners. Where the agents hit friction with the
-open-source tooling — most often
+recorded result that states its corner and testbench, and PVT-matrix coverage
+is graded by the signoff record (item 5), not asserted here. Where the agents
+hit friction with the open-source tooling — most often
 [klayout-tools](https://github.com/2AMLogic/klayout-tools) — that friction is
 filed as a public issue against the tool itself, so the fix benefits everyone
 using SG13G2, not just this repo.

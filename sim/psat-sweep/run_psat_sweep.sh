@@ -5,6 +5,9 @@
 #   scripts/setup-env.sh && sim/psat-sweep/run_psat_sweep.sh
 #   scripts/setup-env.sh && sim/psat-sweep/run_psat_sweep.sh --match
 #
+# Use --candidate "description of the design change" for a matched candidate run.
+# Its description and exact inputs travel with the record.
+#
 # --match runs the `match` bench variant instead of the default `bare` one: the same
 # sweep, but through an IDEAL, LOSSLESS off-chip output match between RFOUT (the stated
 # chip boundary) and the 50 ohm load, so the collector sees the load-line resistance the
@@ -37,8 +40,13 @@ VARIANT=bare
 SUFFIX=""
 case "${1:-}" in
   "") ;;
-  --match) VARIANT=match; SUFFIX="-match" ;;
-  *) echo "run_psat_sweep.sh: unknown argument '$1' (want --match or nothing)" >&2; exit 2 ;;
+  --match)
+    [[ $# == 1 ]] || { echo "--match takes no additional arguments" >&2; exit 2; }
+    VARIANT=match; SUFFIX="-match" ;;
+  --candidate)
+    [[ $# == 2 && -n "${2:-}" ]] || { echo "--candidate requires a description" >&2; exit 2; }
+    VARIANT=match; SUFFIX="-match" ;;
+  *) echo "run_psat_sweep.sh: unknown argument '$1' (want --match, --candidate DESCRIPTION or nothing)" >&2; exit 2 ;;
 esac
 BENCH="psat_sweep"
 [[ "${VARIANT}" == bare ]] || BENCH="psat_sweep_match"
@@ -54,13 +62,42 @@ python3 -I "${SCRIPT_DIR}/../lib/gen_dut_benches.py" --check
 
 sim_begin_record --suffix "${SUFFIX}" --pathspec sim --pathspec design --pathspec ':!sim/psat-sweep/records' --pathspec ':!sim/psat-sweep/corners'
 failed=0
-# --allow-not-checked: a waveform-only request declares no measurements, so klt
-# exits 4 (not_checked) with every corner `pass`; the corner statuses gate
-# (psat_record.py, sim_gate_logs). sim_run_one submits once -- the capacity wait
-# is the request's batch.capacity_wait_s -- never reruns locally, and sets
-# failed=1 rather than exiting, so the gate below is what stops the record.
-sim_run_one "${BENCH}" --allow-not-checked
-sim_gate_logs
+# The matched variant is the PVT-matrix bench (issue #173): screen the per-unit
+# corner ids (klt collapses close supply values, klayout-tools#5870) and check
+# the request against the declared drive-crossed matrix BEFORE the submit, and
+# the finished report against it after. The bare variant stays nominal-only
+# (no declared matrix; its cold start is the item-9 run).
+if [[ "${VARIANT}" == match ]]; then
+  mkdir "${OUT}/inputs"
+  cp "${SCRIPT_DIR}/${BENCH}.spice" "${REPO_ROOT}/design/netlist/sg13g2-pa.spice" "${OUT}/inputs/"
+  if [[ "$1" == --candidate ]]; then
+    printf '%s\n' "$2" > "${OUT}/inputs/candidate.txt"
+  fi
+  sim_dry_run_corner_ids "${BENCH}" || failed=1
+  sim_corner_matrix_check "${SCRIPT_DIR}/psat_sweep_match.pvt-matrix.json" request \
+      "${SCRIPT_DIR}/${BENCH}.request.json" "${BENCH}" || failed=1
+fi
+# The corner statuses gate (psat_record.py, sim_gate_logs). sim_run_one submits
+# once -- the capacity wait is the request's batch.capacity_wait_s -- never
+# reruns locally, and sets failed=1 rather than exiting, so the gate below is
+# what stops the record. (--capacity-retries is a --batch-set-only flag at the
+# pinned klt 0.9.0; the single-request wait above is the mechanism this repo
+# pins, see sim/README.md "Running grids".) The matched variant is the PVT
+# characterization bench (issue #173): corners that errored are RECORDED as
+# cells that did not simulate (a finding, not a reason to narrow the box), so
+# its klt exit 4 is waived and exactly the report's errored-corner logs skip
+# the log gate; the bare variant stays strict.
+if [[ "${VARIANT}" == match ]]; then
+  sim_run_one "${BENCH}" --allow-errored-corners
+  sim_gate_logs --skip-errored-from "${OUT}/${BENCH}.report.json"
+else
+  sim_run_one "${BENCH}"
+  sim_gate_logs
+fi
+if [[ "${VARIANT}" == match ]]; then
+  sim_corner_matrix_check "${SCRIPT_DIR}/psat_sweep_match.pvt-matrix.json" report \
+      "${OUT}/${BENCH}.report.json" "${BENCH}" || failed=1
+fi
 (( failed == 0 )) || exit 1
 
 REC="${RECORDS_DIR}/${RECORD_ID}.md"

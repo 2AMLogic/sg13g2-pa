@@ -7,7 +7,9 @@ DFT with P_k = 1/2 Re(V_k I_k*), PAE, and the Psat / P1dB sweep reducer.
 Two layers, so the unit tests need no simulator:
 
 * pure functions (arrays in, numbers out): ``resample_uniform``,
-  ``period_means``, ``check_settled``, ``extract``, ``reduce_sweep``;
+  ``period_means``, ``check_settled``, ``extract``, ``reduce_sweep``, and the
+  watts-to-dBm conversion ``dbm`` the record renderers share with the reducer
+  (defined once in ``units`` and re-exported here);
 * a thin reader, ``load_klt_waveform``, for the ``waveform.raw.json`` that
   ``klt sim`` writes when the request sets ``options.waveforms``.
 
@@ -25,6 +27,8 @@ import json
 import math
 
 import numpy as np
+
+from units import db10, dbm
 
 # Spec tolerances (ratified): settling and the known-answer check.
 SETTLE_POWER_DB = 0.01      # cycle-to-cycle change of P_out, dB
@@ -54,14 +58,6 @@ class ExtractError(ValueError):
 
 
 _trapz = getattr(np, "trapezoid", None) or np.trapz  # numpy 1.x / 2.x
-
-
-def _db10(x):
-    return 10.0 * math.log10(x)
-
-
-def _dbm(w):
-    return _db10(w / 1e-3)
 
 
 def load_klt_waveform(path):
@@ -132,7 +128,7 @@ def _power_change_ok(a, b):
         return True
     if a <= ZERO_FLOOR or b <= ZERO_FLOOR:
         return False  # one side zero/negative: not a small dB change
-    return abs(_db10(b / a)) <= SETTLE_POWER_DB
+    return abs(db10(b / a)) <= SETTLE_POWER_DB
 
 
 def check_settled(p_out_means, supply_current_means, n_window=DEFAULT_WINDOW):
@@ -229,7 +225,7 @@ def extract(t, f0, v_load, i_load, supplies, v_in=None, i_in=None,
     h = {}
     for k in (2, 3):
         pk = _harmonic_power(vl, il, k, n_periods, per_period)
-        h[k] = _db10(pk / p_out) if p_out > ZERO_FLOOR and pk > ZERO_FLOOR else None
+        h[k] = db10(pk / p_out) if p_out > ZERO_FLOOR and pk > ZERO_FLOOR else None
     return {
         "f0_hz": f0,
         "periods_simulated": total,
@@ -272,8 +268,8 @@ def reduce_sweep(points, linear_points=3, linear_spread_db=0.1):
     pts = sorted(points, key=lambda p: p["p_in_w"])
     if len(pts) < linear_points + 1:
         raise ExtractError("SWEEP_TOO_SHORT", f"need at least {linear_points + 1} drive points")
-    pin = np.array([_dbm(p["p_in_w"]) for p in pts])
-    pout = np.array([_dbm(p["p_out_w"]) for p in pts])
+    pin = np.array([dbm(p["p_in_w"]) for p in pts])
+    pout = np.array([dbm(p["p_out_w"]) for p in pts])
     gain = pout - pin
     lin = gain[:linear_points]
     if lin.max() - lin.min() > linear_spread_db:

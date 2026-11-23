@@ -25,6 +25,10 @@ from provenance import commit_line, sha  # noqa: E402
 
 F0 = 1e9
 # Analytic values (spec: known-answer check).
+# P_SINE_DBM stays inlined on purpose: it is the analytic reference the check
+# grades the *measured* figure against. Routing it through units.dbm (the code
+# under test, via rf_extract) would cancel a fault in that helper in the delta
+# and the check would stop being able to detect it.
 P_SINE_DBM = 10 * math.log10(0.5 * (1.0 / 2) ** 2 / 50 / 1e-3)  # +3.9794 dBm
 V_DC, R_DC = 3.3, 100.0
 P_DC_W = V_DC ** 2 / R_DC
@@ -67,10 +71,6 @@ def run_case(out_dir, name):
     return rep, res
 
 
-def dbm(w):
-    return 10 * math.log10(w / 1e-3)
-
-
 def main(argv):
     rid, git_sha, dirty, klt_ver, out_dir, mode = argv[1:7]
     cases = ["sine_75"] if mode == "wrong-load" else ["sine_50", "dc_load", "sine_h3"]
@@ -93,7 +93,7 @@ def main(argv):
 
     for name in ("sine_50", "sine_75"):
         if name in extracted:
-            got = dbm(extracted[name]["p_out_w"])
+            got = rx.dbm(extracted[name]["p_out_w"])
             d = got - P_SINE_DBM
             row(name, "P_out (fundamental), dBm", f"{P_SINE_DBM:+.4f}", f"{got:+.4f}",
                 f"{d:+.4f} dB", f"abs {TOL_DB} dB", abs(d) <= TOL_DB)
@@ -174,6 +174,11 @@ def main(argv):
         if fn.endswith((".spice", ".request.json")) and fn.rsplit(".", 2)[0].split(".")[0] in cases:
             out.append(f"- `sim/known-answer/{fn}` `{sha(os.path.join(HERE, fn))}`")
     out.append(f"- `sim/lib/rf_extract.py` `{sha(os.path.join(HERE, '..', 'lib', 'rf_extract.py'))}`")
+    # units.py is in the graded path too: the measured P_out row renders through
+    # rx.dbm -> units.dbm, so its digest belongs in the inventory beside rf_extract's.
+    out.append(f"- `sim/lib/units.py` `{sha(os.path.join(HERE, '..', 'lib', 'units.py'))}`")
+    # provenance.py renders the Commit bullet above, so its digest belongs here too.
+    out.append(f"- `sim/lib/provenance.py` `{sha(os.path.join(HERE, '..', 'lib', 'provenance.py'))}`")
     print("\n".join(out))
     return 0 if ok else 1
 

@@ -257,6 +257,10 @@ def main(argv):
         if os.path.isfile(os.path.join(HERE, fn)):
             L.append(f"- `sim/known-answer-thermal/{fn}` `{sha(os.path.join(HERE, fn))}`")
     L.append(f"- `sim/lib/device_limits.py` `{sha(os.path.join(HERE, '..', 'lib', 'device_limits.py'))}`")
+    # provenance.py renders the Commit bullet above; bench_gen.py holds the request
+    # skeleton and strict write/--check driver the exec'd gen_bench.py runs with.
+    L.append(f"- `sim/lib/provenance.py` `{sha(os.path.join(HERE, '..', 'lib', 'provenance.py'))}`")
+    L.append(f"- `sim/lib/bench_gen.py` `{sha(os.path.join(HERE, '..', 'lib', 'bench_gen.py'))}`")
     print("\n".join(L))
     return 0 if ok else 1
 

@@ -1,0 +1,6 @@
+{
+  "record_sha256": "38d5f70c07ebc8b32918bd83322518bbebcddebef8d9d3ea127201302d1f9d13",
+  "netlist_sha256": "b10bc89410f84bd0051a7009fd1648c1d12a46bda2ffebfc54bd0e6e33f056c6",
+  "deck_content_hash": "sha256:a460b6580ecf354e3ed46cef12ec061bf2920746f80e176eca1f471ec65366c0",
+  "source_commit": "b2746d0543c0b03aef701c0bfb72fafd948efb5e"
+}

@@ -31,14 +31,3 @@ def test_unstable_has_mu_below_one():
     s = {k: np.array([v], complex) for k, v in
          dict(s11=1.2, s12=0.1, s21=3.0, s22=0.4).items()}
     assert sp.stability(s)["mu"][0] < 1
-
-
-def test_read_ascii_raw(tmp_path):
-    p = tmp_path / "x.raw"
-    p.write_text(
-        "Title: t\nPlotname: AC Analysis\nFlags: complex\nNo. Variables: 2\nNo. Points: 2\n"
-        "Variables:\n\t0\tfrequency\tfrequency\n\t1\tv(a)\tvoltage\nValues:\n"
-        " 0\t1.0e+09,0.0e+00\n\t1.0e+00,2.0e+00\n\n"
-        " 1\t2.0e+09,0.0e+00\n\t3.0e+00,-4.0e+00\n\n")
-    f, d = sp.read_ascii_raw(str(p))
-    assert list(f) == [1e9, 2e9] and d["v(a)"][1] == 3 - 4j

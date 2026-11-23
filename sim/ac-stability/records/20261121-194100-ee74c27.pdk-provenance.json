@@ -1,0 +1,29 @@
+{
+  "schema": "sg13g2-pa/pdk-provenance/1",
+  "pin_file": "sim/pdk.json",
+  "pinned_release_tag": "v0.3.0",
+  "pinned_variant": "ihp-sg13g2",
+  "verified": true,
+  "identity_route": "tarball-marker",
+  "installed_release_raw": "0.3.0",
+  "pdk_dir": "/home/ubuntu/share/pdk/ihp-sg13g2",
+  "model_input_boundary": "textual .lib/.include closure from cornerHBT.lib plus the listed extra files; not a proof of completeness",
+  "model_inputs": [
+    {
+      "path": "/home/ubuntu/share/pdk/ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib",
+      "sha256": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462"
+    },
+    {
+      "path": "/home/ubuntu/share/pdk/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_hbt_mod.lib",
+      "sha256": "ae9288f885dd30fab24b07ed1e7e02e69eac9154022a0a6da576985183b0bd79"
+    },
+    {
+      "path": "/home/ubuntu/share/pdk/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_hbt_mod_mismatch.lib",
+      "sha256": "1e493f25150b25b64985acd3f1e7ed2eb2e6ca4b712adf45b2de2ce2ba1a0eb2"
+    },
+    {
+      "path": "/home/ubuntu/share/pdk/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_hbt_stat.lib",
+      "sha256": "80d1893eb06a3417d05400335d8e58c8309b9c80061ca96ceff8f8fd68c9a7db"
+    }
+  ]
+}

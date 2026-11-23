@@ -104,6 +104,10 @@ def main(argv):
     for fn in sorted(os.listdir(smoke_dir)):
         if fn.endswith((".spice", ".request.json")):
             lines.append(f"- `sim/smoke/{fn}` `{sha(os.path.join(smoke_dir, fn))}`")
+    # The model-window constants the Statement is formatted from, and the
+    # provenance helper rendering the Commit bullet, live in sim/lib.
+    lines.append(f"- `sim/lib/device_limits.py` `{sha(os.path.join(smoke_dir, '..', 'lib', 'device_limits.py'))}`")
+    lines.append(f"- `sim/lib/provenance.py` `{sha(os.path.join(smoke_dir, '..', 'lib', 'provenance.py'))}`")
     lines += ["", "## Results", ""]
     for name in names:
         rp = os.path.join(out_dir, f"{name}.report.json")

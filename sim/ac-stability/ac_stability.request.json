@@ -13,11 +13,38 @@
             "section": "hbt_typ"
           }
         ]
+      },
+      {
+        "name": "hbt_bcs",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_bcs"
+          }
+        ]
+      },
+      {
+        "name": "hbt_wcs",
+        "sections": [
+          {
+            "lib": "libs.tech/ngspice/models/cornerHBT.lib",
+            "section": "hbt_wcs"
+          }
+        ]
       }
     ],
     "temperature_c": [
-      27
-    ]
+      -40.0,
+      27.0,
+      125.0
+    ],
+    "supply_v": {
+      "vcc": [
+        0.72,
+        0.8,
+        0.88
+      ]
+    }
   },
   "analysis": {
     "kind": "ac",
@@ -27,6 +54,28 @@
     "timeout_s": 300,
     "keep_artifacts": true,
     "waveforms": true,
-    "save_mode": "netlist"
+    "capture_only": true,
+    "complex_vectors": [
+      "v(s1)",
+      "v(in1)",
+      "v(out1)",
+      "v(in2)",
+      "v(out2)",
+      "v(s2)"
+    ],
+    "save_vectors": [
+      "v(s1)",
+      "v(in1)",
+      "v(out1)",
+      "v(in2)",
+      "v(out2)",
+      "v(s2)"
+    ]
+  },
+  "batch": {
+    "capacity_wait_s": 600
+  },
+  "remote": {
+    "hosts": 3
   }
 }
