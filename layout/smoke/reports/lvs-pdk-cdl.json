@@ -1,8 +1,14 @@
 {
-  "schema_version": 1,
+  "schema_version": 3,
   "engine": "klayout",
-  "layout": "sg13g2_inv_1.gds",
-  "reference": "sg13g2_inv_1.cdl",
+  "layout": {
+    "path": "layout/smoke/sg13g2_inv_1.gds",
+    "scope": "repo"
+  },
+  "reference": {
+    "path": "layout/smoke/sg13g2_inv_1.cdl",
+    "scope": "repo"
+  },
   "top": "sg13g2_inv_1",
   "reference_top": "SG13G2_INV_1",
   "parameter_tolerance": null,
@@ -17,6 +23,8 @@
     "compare_parameters": null,
     "power_connectivity": null,
     "anchor_top_level_pins": null,
+    "strict_top_level_pin_count": false,
+    "compare_mos_flavour": false,
     "supply_nets": [
       "GND",
       "VCC",
@@ -24,9 +32,11 @@
       "VGND",
       "VPWR",
       "VSS"
-    ]
+    ],
+    "finfet_bulk": null
   },
   "hints_applied": null,
+  "constant_nets_applied": null,
   "status": "mismatch",
   "power_connectivity": {
     "status": "unchecked",
@@ -36,6 +46,7 @@
     "instance_count": 0,
     "expected_nets": null,
     "unchecked_expected_pins": [],
+    "excluded_pins": [],
     "findings": [],
     "finding_count": 0
   },
@@ -90,26 +101,28 @@
   ],
   "environment": {
     "engine": "klayout",
-    "engine_version": "0.30.12",
+    "engine_version": "0.30.14",
     "netgen_binary": null,
     "layout_sha256": "02c9a6c1e57a6fafee8179a1d8e2fb4d5713b7179fdc6688d4de8ff6b8fbf2d8",
     "reference_sha256": "25e3fee469f713b2f02f82f0babf4c213c599b4e37431fe5a64768a93b4de6fb",
     "extracted_netlist": null
   },
   "provenance": {
-    "klt_version": "0.7.0",
-    "klayout_version": "0.30.12",
+    "klt_version": "0.9.1",
+    "klt_git_commit": "4d0d29be4fd991f499d59e783a908082d5e24c56",
+    "klt_reinstall_spec": "klayout-tools==0.9.1",
+    "klayout_version": "0.30.14",
     "pdk": null,
     "deck": {
       "name": "sg13g2",
-      "content_hash": "sha256:bf483105cb17948270f0cad45d9418787654bfc0a5ffd04a2e2413d8c7d3b6e7",
+      "content_hash": "sha256:1c95db40596afc5412e216009bcf0b775d1d74895b32738447eccbc76336dd15",
       "released": true
     },
     "input": {
       "content_hash": "sha256:02c9a6c1e57a6fafee8179a1d8e2fb4d5713b7179fdc6688d4de8ff6b8fbf2d8",
       "role": "layout"
     },
-    "klayout_version_mismatch": false
+    "klayout_version_mismatch": true
   },
   "mismatches": [
     {
@@ -311,10 +324,14 @@
     {
       "category": "topology",
       "severity": "error",
-      "description": "device class could not be mapped to a counterpart",
+      "description": "device class could not be mapped to a counterpart: 'nfet'",
       "side": "layout",
       "net": null,
-      "device": null,
+      "device": {
+        "layout": null,
+        "reference": null,
+        "class": "nfet"
+      },
       "property": null,
       "details": null,
       "circuit": null,
@@ -324,10 +341,14 @@
     {
       "category": "topology",
       "severity": "error",
-      "description": "device class could not be mapped to a counterpart",
+      "description": "device class could not be mapped to a counterpart: 'pfet'",
       "side": "layout",
       "net": null,
-      "device": null,
+      "device": {
+        "layout": null,
+        "reference": null,
+        "class": "pfet"
+      },
       "property": null,
       "details": null,
       "circuit": null,
@@ -337,10 +358,14 @@
     {
       "category": "topology",
       "severity": "error",
-      "description": "device class could not be mapped to a counterpart",
+      "description": "device class could not be mapped to a counterpart: 'SG13_LV_NMOS'",
       "side": "reference",
       "net": null,
-      "device": null,
+      "device": {
+        "layout": null,
+        "reference": null,
+        "class": "SG13_LV_NMOS"
+      },
       "property": null,
       "details": null,
       "circuit": null,
@@ -350,10 +375,14 @@
     {
       "category": "topology",
       "severity": "error",
-      "description": "device class could not be mapped to a counterpart",
+      "description": "device class could not be mapped to a counterpart: 'SG13_LV_PMOS'",
       "side": "reference",
       "net": null,
-      "device": null,
+      "device": {
+        "layout": null,
+        "reference": null,
+        "class": "SG13_LV_PMOS"
+      },
       "property": null,
       "details": null,
       "circuit": null,
