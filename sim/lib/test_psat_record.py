@@ -417,7 +417,7 @@ def test_the_matrix_record_links_each_finding_to_its_tracker(tmp_path):
             "rung (`missed`) -- design iteration #172." in sec)
     for row in ("Psat", "Output P1dB", "Peak PAE"):
         assert (f"{row}: 1 cell below the Fallback rung (`missed`) "
-                "-- design iteration #192." in sec)
+                "-- no design-iteration tracker." in sec)
     assert ("2 sweep units excluded by klt status (`KLT_STATUS_error`) "
             "-- no design-iteration tracker." in sec)
     assert "#188" not in sec
@@ -578,9 +578,9 @@ def test_the_committed_matched_run_separates_fallback_from_missed():
     sidecar = Path(REPO, "sim/psat-sweep/records", f"{record}.json")
     findings = PSAT._findings_md(json.loads(sidecar.read_text())["cells"])
     assert ("- Psat: 4 cells below the Fallback rung (`missed`), "
-            "15 cells at the Fallback rung (`fallback`) -- design iteration #192." in findings)
+            "15 cells at the Fallback rung (`fallback`) -- no design-iteration tracker." in findings)
     assert ("- Peak PAE: 1 cell below the Fallback rung (`missed`), "
-            "13 cells at the Fallback rung (`fallback`) -- design iteration #192." in findings)
+            "13 cells at the Fallback rung (`fallback`) -- no design-iteration tracker." in findings)
 
 
 def test_the_committed_matched_run_provenance_matches_its_artifacts():
