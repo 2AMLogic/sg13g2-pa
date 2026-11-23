@@ -23,24 +23,49 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 ENV_SH = REPO / "sim" / "env.sh"
 
+
+def _run_env(body, env=None):
+    """Run a bash <body> with sim/env.sh sourced, the way every harness does:
+    `set -uo pipefail`, the source tolerated (a PDK-less host must not abort
+    the test before the functions under test are defined), SIM_SCRIPT_NAME set.
+    """
+    script = (
+        "set -uo pipefail\n"
+        'source "' + str(ENV_SH) + '" >/dev/null 2>&1 || true\n'
+        "SIM_SCRIPT_NAME=test_env_sh\n"
+        + body
+    )
+    return subprocess.run(["bash", "-c", script], capture_output=True,
+                          text=True, env=env, timeout=120)
+
+
+def _parse_failed(proc, allow_exit=False):
+    """Read a harness run's `RESULT failed=<n>` verdict; return (failed, stderr).
+
+    A stdout without the marker means the harness died before its own verdict:
+    with allow_exit the process's own exit code is returned instead (the gates
+    report usage errors that way); without it the run is a test failure.
+    """
+    if "RESULT failed=" not in proc.stdout:
+        if allow_exit:
+            return proc.returncode, proc.stderr
+        raise AssertionError(
+            f"harness died before its verdict: {proc.stdout}{proc.stderr}")
+    return int(proc.stdout.rsplit("RESULT failed=", 1)[1].strip()), proc.stderr
+
+
+def _write_stub(path, text):
+    """Write an executable stub script (each harness's fake `klt`)."""
+    path.write_text(text)
+    path.chmod(0o755)
+
+
 STUB = """#!/usr/bin/env bash
 # Stands in for `klt`: records its argv, emits the chosen stderr, exits STUB_RC.
 printf '%s\\n' "$@" >> "${ARGV_LOG}"
 printf '%s' "${STUB_STDERR:-}" >&2
 printf '{"status": "stub"}\\n'
 exit "${STUB_RC:-0}"
-"""
-
-HARNESS = """
-set -uo pipefail
-source "__ENV_SH__" >/dev/null 2>&1 || true
-SCRIPT_DIR="__TMP__/bench"
-OUT="__TMP__/out"
-SIM_SCRIPT_NAME=test_env_sh
-KLT_CMD=("__TMP__/klt-stub")
-failed=0
-sim_run_one __ARGS__
-echo "RESULT failed=${failed}"
 """
 
 
@@ -52,20 +77,23 @@ def run_one(args, rc=0, stderr_text=""):
         (tmp / "out").mkdir()
         argv_log = tmp / "argv.log"
         argv_log.touch()
-        stub = tmp / "klt-stub"
-        stub.write_text(STUB)
-        stub.chmod(0o755)
-        script = (
-            HARNESS.replace("__ENV_SH__", str(ENV_SH))
+        _write_stub(tmp / "klt-stub", STUB)
+        body = (
+            """
+SCRIPT_DIR="__TMP__/bench"
+OUT="__TMP__/out"
+KLT_CMD=("__TMP__/klt-stub")
+failed=0
+sim_run_one __ARGS__
+echo "RESULT failed=${failed}"
+"""
             .replace("__TMP__", str(tmp))
             .replace("__ARGS__", args)
         )
         env = dict(os.environ, STUB_RC=str(rc), STUB_STDERR=stderr_text,
                    ARGV_LOG=str(argv_log))
-        proc = subprocess.run(["bash", "-c", script], capture_output=True,
-                              text=True, env=env, timeout=120)
-        assert "RESULT failed=" in proc.stdout, (proc.stdout, proc.stderr)
-        failed = int(proc.stdout.rsplit("RESULT failed=", 1)[1].strip())
+        proc = _run_env(body, env)
+        failed, _ = _parse_failed(proc)
         return failed, proc.stdout, argv_log.read_text().splitlines()
 
 
@@ -130,16 +158,6 @@ def test_a_failure_is_submitted_once_whatever_its_cause():
 # matrix is tolerated only when the bench asks for it, and nothing else about
 # a log (exit codes, completion markers) is consulted.
 
-GATE_HARNESS = """
-set -uo pipefail
-source "__ENV_SH__" >/dev/null 2>&1 || true
-OUT="__TMP__/out"
-SIM_SCRIPT_NAME=test_env_sh
-failed=0
-sim_gate_logs __ARGS__
-echo "RESULT failed=${failed}"
-"""
-
 CLEAN_LOG = """Circuit: ** sg13g2 pa bench
 Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
 No. of Data Rows : 101
@@ -151,25 +169,42 @@ Dynamic gmin stepping completed
 """
 
 
-def gate(logs, args=""):
-    """Run `sim_gate_logs <args>` over {point: text}; return (failed, stderr)."""
+def gate(logs, args="", corners=None):
+    """Run `sim_gate_logs <args>` over {point: text}; return (failed, stderr).
+
+    corners, when given, is the report's corner list: (corner_id, status,
+    point) with the point naming the same directory the log was written to, so
+    the fixture report references the very logs the test wrote -- one tree,
+    like a real collect. Passing it writes report.json and appends
+    `--skip-errored-from <report>` to the invocation.
+    """
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         for point, text in logs.items():
             log = tmp / "out" / point / "ngspice.log"
             log.parent.mkdir(parents=True)
             log.write_text(text)
-        script = (
-            GATE_HARNESS.replace("__ENV_SH__", str(ENV_SH))
+        if corners is not None:
+            report = tmp / "report.json"
+            report.write_text(json.dumps({
+                "corners": [
+                    {"corner_id": cid, "status": st,
+                     "artifacts": {"log": str(tmp / "out" / point / "ngspice.log")}}
+                    for cid, st, point in corners
+                ],
+            }))
+            args = f"{args} --skip-errored-from {report}".strip()
+        body = (
+            """
+OUT="__TMP__/out"
+failed=0
+sim_gate_logs __ARGS__
+echo "RESULT failed=${failed}"
+"""
             .replace("__TMP__", str(tmp))
             .replace("__ARGS__", args)
         )
-        proc = subprocess.run(["bash", "-c", script], capture_output=True,
-                              text=True, timeout=120)
-        if "RESULT failed=" not in proc.stdout:
-            return proc.returncode, proc.stderr
-        failed = int(proc.stdout.rsplit("RESULT failed=", 1)[1].strip())
-        return failed, proc.stderr
+        return _parse_failed(_run_env(body), allow_exit=True)
 
 
 def test_a_clean_log_passes_the_gate():
@@ -269,49 +304,14 @@ def test_a_gate_over_no_logs_is_not_a_failure():
 # never from re-parsing the log text, and nothing else is waived.
 
 
-def gate_with_report(logs, corners, args=""):
-    """Run `sim_gate_logs <args> --skip-errored-from <report>` over {point: text}.
-
-    corners is the report's corner list: (corner_id, status, point) with the
-    point naming the same directory the log was written to, so the fixture
-    report references the very logs the test wrote -- one tree, like a real
-    collect.
-    """
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp = Path(tmp)
-        for point, text in logs.items():
-            log = tmp / "out" / point / "ngspice.log"
-            log.parent.mkdir(parents=True)
-            log.write_text(text)
-        report = tmp / "report.json"
-        report.write_text(json.dumps({
-            "corners": [
-                {"corner_id": cid, "status": st,
-                 "artifacts": {"log": str(tmp / "out" / point / "ngspice.log")}}
-                for cid, st, point in corners
-            ],
-        }))
-        script = (
-            GATE_HARNESS.replace("__ENV_SH__", str(ENV_SH))
-            .replace("__TMP__", str(tmp))
-            .replace("__ARGS__", f"{args} --skip-errored-from {report}".strip())
-        )
-        proc = subprocess.run(["bash", "-c", script], capture_output=True,
-                              text=True, timeout=120)
-        if "RESULT failed=" not in proc.stdout:
-            return proc.returncode, proc.stderr
-        failed = int(proc.stdout.rsplit("RESULT failed=", 1)[1].strip())
-        return failed, proc.stderr
-
-
 BAD_LOG = CLEAN_LOG + "Warning: singular matrix:  check nodes net3 and net3\n"
 
 
 def test_skip_errored_from_skips_exactly_the_errored_corners_log():
-    failed, err = gate_with_report(
+    failed, err = gate(
         {"hot/125c": BAD_LOG, "tt/27c": CLEAN_LOG},
-        [("hbt_wcs/0.800V/125C", "error", "hot/125c"),
-         ("hbt_typ/0.800V/27C", "pass", "tt/27c")])
+        corners=[("hbt_wcs/0.800V/125C", "error", "hot/125c"),
+                 ("hbt_typ/0.800V/27C", "pass", "tt/27c")])
     assert failed == 0, err
     assert "errored corner" in err and "hot/125c" in err
 
@@ -319,10 +319,10 @@ def test_skip_errored_from_skips_exactly_the_errored_corners_log():
 def test_skip_errored_from_waives_nothing_else():
     # A pass-status corner's bad log still fails the gate, and the errored
     # corner's log is not skipped when the report grades it pass.
-    failed, err = gate_with_report(
+    failed, err = gate(
         {"hot/125c": BAD_LOG, "tt/27c": BAD_LOG},
-        [("hbt_wcs/0.800V/125C", "pass", "hot/125c"),
-         ("hbt_typ/0.800V/27C", "pass", "tt/27c")])
+        corners=[("hbt_wcs/0.800V/125C", "pass", "hot/125c"),
+                 ("hbt_typ/0.800V/27C", "pass", "tt/27c")])
     assert failed == 1, err
     assert "FAILED hot/125c" in err and "FAILED tt/27c" in err
 
@@ -330,11 +330,7 @@ def test_skip_errored_from_waives_nothing_else():
 def test_skip_errored_from_with_an_unreadable_report_waives_nothing():
     # A report that cannot be read gates everything: the strict default.
     with tempfile.TemporaryDirectory() as tmp:
-        tmp = Path(tmp)
-        log = tmp / "out" / "hot" / "ngspice.log"
-        log.parent.mkdir(parents=True)
-        log.write_text(BAD_LOG)
-        broken = tmp / "report.json"
+        broken = Path(tmp) / "report.json"
         broken.write_text("{not json")
         failed, err = gate({"hot": BAD_LOG},
                            f"--skip-errored-from {broken}")
@@ -349,25 +345,12 @@ def test_skip_errored_from_needs_a_value():
 
 # --- sim_corner_matrix_check -----------------------------------------------
 #
-# The `klt corner-matrix` gate: the stub IS klt (its argv is recorded, its
-# stdout is the verdict the test chooses), so what is under test is the gate's
-# own reading of the verdict -- and, for the errored-cells case, its
-# cross-check of the verdict against the report klt graded (issue #173,
-# 2AMLogic/klayout-tools#7008).
-
-CM_HARNESS = """
-set -uo pipefail
-source "__ENV_SH__" >/dev/null 2>&1 || true
-OUT="__TMP__/out"
-SIM_SCRIPT_NAME=test_env_sh
-KLT_CMD=("__TMP__/klt-stub")
-failed=0
-sim_corner_matrix_check __TMP__/matrix.json __MODE__ __SRC__ bench || failed=1
-echo "RESULT failed=${failed}"
-"""
+# The `klt corner-matrix` gate: the stub IS klt (its stdout is the verdict the
+# test chooses), so what is under test is the gate's own reading of the
+# verdict -- and, for the errored-cells case, its cross-check of the verdict
+# against the report klt graded (issue #173, 2AMLogic/klayout-tools#7008).
 
 CM_KLT_STUB = """#!/usr/bin/env bash
-printf '%s\\n' "$@" >> "${ARGV_LOG}"
 cat "${VERDICT_JSON}"
 exit "${VERDICT_RC:-0}"
 """
@@ -386,23 +369,24 @@ def cm_check(mode, verdict, report=None, verdict_rc=0):
             src.write_text(json.dumps(report))
         else:
             src.write_text("{}\n")
-        stub = tmp / "klt-stub"
-        stub.write_text(CM_KLT_STUB)
-        stub.chmod(0o755)
-        argv_log = tmp / "argv.log"
-        argv_log.touch()
-        script = (
-            CM_HARNESS.replace("__ENV_SH__", str(ENV_SH))
+        _write_stub(tmp / "klt-stub", CM_KLT_STUB)
+        body = (
+            """
+OUT="__TMP__/out"
+KLT_CMD=("__TMP__/klt-stub")
+failed=0
+sim_corner_matrix_check __TMP__/matrix.json __MODE__ __SRC__ bench || failed=1
+echo "RESULT failed=${failed}"
+"""
             .replace("__TMP__", str(tmp))
             .replace("__MODE__", mode)
             .replace("__SRC__", str(src))
         )
-        env = dict(os.environ, ARGV_LOG=str(argv_log),
-                   VERDICT_JSON=str(verdict_json), VERDICT_RC=str(verdict_rc))
-        proc = subprocess.run(["bash", "-c", script], capture_output=True,
-                              text=True, env=env, timeout=120)
-        assert "RESULT failed=" in proc.stdout, (proc.stdout, proc.stderr)
-        return int(proc.stdout.rsplit("RESULT failed=", 1)[1].strip()), proc.stdout
+        env = dict(os.environ, VERDICT_JSON=str(verdict_json),
+                   VERDICT_RC=str(verdict_rc))
+        proc = _run_env(body, env)
+        failed, _ = _parse_failed(proc)
+        return failed, proc.stdout
 
 
 def _report(corners):
@@ -508,17 +492,17 @@ for a in "$@"; do
   [[ "${a}" == "--dry-run" ]] && dry=1
   prev="${a}"
 done
-printf '%s\n' "$@" >> "${ARGV_LOG}"
+printf '%s\\n' "$@" >> "${ARGV_LOG}"
 if [[ -n "${out}" && -n "${STUB_LOG:-}" ]]; then
   mkdir -p "${out}/tt"
   printf '%s' "${STUB_LOG}" > "${out}/tt/ngspice.log"
 fi
 if [[ "${1:-}" == "corner-matrix" ]]; then
-  printf '{"mode": "stub", "matrix_size": 2, "observed_count": 2, "coverage_complete": true, "complete": true, "missing": [], "extra": [], "duplicate": []}\n'
+  printf '{"mode": "stub", "matrix_size": 2, "observed_count": 2, "coverage_complete": true, "complete": true, "missing": [], "extra": [], "duplicate": []}\\n'
 elif (( dry )); then
-  printf '{"status": "valid", "units": [{"corner_id": "stub/0.800V/27C"}, {"corner_id": "stub/0.720V/-40C"}]}\n'
+  printf '{"status": "valid", "units": [{"corner_id": "stub/0.800V/27C"}, {"corner_id": "stub/0.720V/-40C"}]}\\n'
 else
-  printf '{"status": "stub"}\n'
+  printf '{"status": "stub"}\\n'
 fi
 exit "${STUB_RC:-0}"
 """
@@ -539,22 +523,6 @@ with open(os.environ["RECORD_ARGV_LOG"], "w") as fh:
     fh.write("\\n".join(sys.argv[1:]))
 print("# stub record")
 sys.exit(int(os.environ.get("STUB_RECORD_RC", "0")))
-"""
-
-# `set -e` is enabled only after sourcing, so a PDK-less host cannot abort the
-# source before the functions under test are defined -- the runners themselves
-# run the driver under `set -euo pipefail`.
-AC_HARNESS = """
-set -uo pipefail
-source "__ENV_SH__" >/dev/null 2>&1 || true
-SIM_DIR="__TMP__/sim"
-REPO_ROOT="__TMP__"
-SCRIPT_DIR="__TMP__/sim/ac-__DIR__"
-SIM_SCRIPT_NAME=test_env_sh
-NGSPICE_VERSION="ngspice-stub"
-sim_resolve_klt() { KLT_CMD=("__TMP__/klt-stub"); KLT_VERSION="klt-stub"; }
-set -e
-sim_run_ac_bench __ARGS__
 """
 
 
@@ -600,14 +568,23 @@ def run_ac(args, dir_kind="gain", rc=0, log=None, stale=False, record_rc=0):
             d = tmp / "sim" / f"ac-{kind}"
             d.mkdir()
             bench_dirs[kind] = d
-        stub = tmp / "klt-stub"
-        stub.write_text(AC_KLT_STUB)
-        stub.chmod(0o755)
+        _write_stub(tmp / "klt-stub", AC_KLT_STUB)
         argv_log = tmp / "argv.log"
         argv_log.touch()
         record_argv_log = tmp / "record-argv.log"
-        script = (
-            AC_HARNESS.replace("__ENV_SH__", str(ENV_SH))
+        # `set -e` is enabled only after sourcing, so a PDK-less host cannot
+        # abort the source before the functions under test are defined -- the
+        # runners themselves run the driver under `set -euo pipefail`.
+        body = (
+            """
+SIM_DIR="__TMP__/sim"
+REPO_ROOT="__TMP__"
+SCRIPT_DIR="__TMP__/sim/ac-__DIR__"
+NGSPICE_VERSION="ngspice-stub"
+sim_resolve_klt() { KLT_CMD=("__TMP__/klt-stub"); KLT_VERSION="klt-stub"; }
+set -e
+sim_run_ac_bench __ARGS__
+"""
             .replace("__TMP__", str(tmp))
             .replace("__DIR__", dir_kind)
             .replace("__ARGS__", args)
@@ -618,8 +595,7 @@ def run_ac(args, dir_kind="gain", rc=0, log=None, stale=False, record_rc=0):
         env.pop("STUB_DECK_STALE", None)
         if stale:
             env["STUB_DECK_STALE"] = "1"
-        proc = subprocess.run(["bash", "-c", script], capture_output=True,
-                              text=True, env=env, timeout=120)
+        proc = _run_env(body, env)
         record_argv = (record_argv_log.read_text().splitlines()
                        if record_argv_log.exists() else [])
         # Read the sandbox out before the TemporaryDirectory is removed.

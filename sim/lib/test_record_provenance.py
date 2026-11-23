@@ -41,6 +41,7 @@ BULLET_LITERALS = ("- Commit:", "- Repo `")
 RENDERERS = (
     "sim/lib/ac_record.py",
     "sim/psat-sweep/psat_record.py",
+    "sim/psat-sweep/p1dbref_record.py",
     "sim/known-answer/check_known_answer.py",
     "sim/known-answer-thermal/thermal_record.py",
     "sim/smoke/summarize.py",
@@ -139,6 +140,9 @@ NO_INVENTORY_BY_DECISION = (
     ("sim/psat-sweep/psat_record.py",
      "renders no sha256 inventory section; recording the decision, not an "
      "accidental exemption (issue #144)"),
+    ("sim/psat-sweep/p1dbref_record.py",
+     "renders no sha256 inventory section; a verification probe of the committed "
+     "matrix record, not a bench inventory (issue #192)"),
 )
 
 # The pin bullet's rendered shape: ``- `sim/lib/<name>.py` `<sha>` ``. The
@@ -439,63 +443,72 @@ def test_an_import_cycle_terminates_the_walk():
     assert {"zz_cycle_a", "zz_cycle_b"} <= closure
 
 
-_DYNAMIC_LOAD_FIXTURE = '''\
+# One source template for every sibling-hop fixture: the import shape the
+# loader call is written through and the path expression are the only things
+# that vary between the cases.
+_DYNAMIC_LOAD_TEMPLATE = '''\
 import os
-import importlib.util
+{imports}
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-_spec = importlib.util.spec_from_file_location("gen_bench", os.path.join(HERE, "gen_bench.py"))
-gb = importlib.util.module_from_spec(_spec)
+_spec = {loader}("gen_bench", {path})
+gb = {module_factory}(_spec)
 _spec.loader.exec_module(gb)
 '''
 
-# Issue #148: the same dynamic load written through a bare imported name and
-# through an aliased import -- both silently skipped by the attribute-only
-# predicate the fixture above predates.
-_DYNAMIC_LOAD_BARE_NAME_FIXTURE = '''\
-import os
-import importlib.util
-from importlib.util import spec_from_file_location
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-_spec = spec_from_file_location("gen_bench", os.path.join(HERE, "gen_bench.py"))
-gb = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(gb)
-'''
-
-_DYNAMIC_LOAD_ALIASED_FIXTURE = '''\
-import os
-import importlib.util
-from importlib.util import spec_from_file_location as sffl
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-_spec = sffl("gen_bench", os.path.join(HERE, "gen_bench.py"))
-gb = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(gb)
-'''
+_DEFAULT_SIBLING_PATH = 'os.path.join(HERE, "gen_bench.py")'
 
 
-def test_the_spec_from_file_location_sibling_hop_is_followed():
-    """The exec'd sibling's own sim/lib closure belongs to the renderer's."""
-    sources = {
-        "/fixtures/dir/renderer.py": _DYNAMIC_LOAD_FIXTURE,
-        "/fixtures/dir/gen_bench.py": "from zz_fix_helper import X\n",
-        "/fixtures/lib/zz_fix_helper.py": "",
-    }
+def _dynamic_load_source(imports="import importlib.util",
+                         loader="importlib.util.spec_from_file_location",
+                         module_factory="importlib.util.module_from_spec",
+                         path=_DEFAULT_SIBLING_PATH):
+    """A renderer fixture that dynamic-loads `gen_bench.py` from its own
+    directory, written through the given import shape."""
+    return _DYNAMIC_LOAD_TEMPLATE.format(imports=imports, loader=loader,
+                                         module_factory=module_factory, path=path)
 
-    def module_path(name):
-        return ("/fixtures/lib/zz_fix_helper.py" if name == "zz_fix_helper"
-                else _sim_lib_module_path(name))
 
-    closure = _sim_lib_closure("/fixtures/dir/renderer.py",
-                               read=_fixture_read(sources), module_path=module_path)
-    assert "zz_fix_helper" in closure
+# The four import shapes the loader call must be recognized through: the
+# qualified attribute call, a bare imported name, an aliased function and an
+# aliased module (issue #148).
+_SIBLING_IMPORT_SHAPES = [
+    pytest.param("import importlib.util",
+                 "importlib.util.spec_from_file_location",
+                 "importlib.util.module_from_spec",
+                 id="qualified_call"),
+    pytest.param("import importlib.util\n"
+                 "from importlib.util import spec_from_file_location",
+                 "spec_from_file_location",
+                 "importlib.util.module_from_spec",
+                 id="bare_import"),
+    pytest.param("import importlib.util\n"
+                 "from importlib.util import spec_from_file_location as sffl",
+                 "sffl",
+                 "importlib.util.module_from_spec",
+                 id="aliased_function"),
+    pytest.param("import importlib.util as iu",
+                 "iu.spec_from_file_location",
+                 "iu.module_from_spec",
+                 id="aliased_module"),
+]
+
+
+@pytest.mark.parametrize("imports,loader,module_factory",
+                         _SIBLING_IMPORT_SHAPES)
+def test_every_import_shape_of_the_sibling_hop_is_followed(imports, loader,
+                                                           module_factory):
+    """The exec'd sibling's own sim/lib closure belongs to the renderer's,
+    whichever of the four import shapes the loader call was written through
+    (#148)."""
+    assert "zz_fix_helper" in _dynamic_load_closure(
+        _dynamic_load_source(imports, loader, module_factory))
 
 
 def _dynamic_load_closure(fixture):
     """Closure of a renderer fixture that dynamic-loads `gen_bench.py`, whose
-    own sim/lib import (`zz_fix_helper`) is injected -- the same wiring the
-    sibling-hop test above spells out inline."""
+    own sim/lib import (`zz_fix_helper`) is injected -- the one fixture file
+    map every sibling-hop case above runs against."""
     sources = {
         "/fixtures/dir/renderer.py": fixture,
         "/fixtures/dir/gen_bench.py": "from zz_fix_helper import X\n",
@@ -510,36 +523,10 @@ def _dynamic_load_closure(fixture):
                             read=_fixture_read(sources), module_path=module_path)
 
 
-def test_the_bare_name_import_shape_of_the_sibling_hop_is_followed():
-    """`from importlib.util import spec_from_file_location` then a bare call:
-    the hop must not depend on which import style the author chose (#148)."""
-    assert "zz_fix_helper" in _dynamic_load_closure(_DYNAMIC_LOAD_BARE_NAME_FIXTURE)
-
-
-def test_the_aliased_import_shape_of_the_sibling_hop_is_followed():
-    """`from importlib.util import spec_from_file_location as sffl` then
-    `sffl(...)`: renaming the symbol must not hide the hop either (#148)."""
-    assert "zz_fix_helper" in _dynamic_load_closure(_DYNAMIC_LOAD_ALIASED_FIXTURE)
-
-
-def test_a_module_alias_of_the_attribute_call_is_still_followed():
-    """`import importlib.util as iu` then `iu.spec_from_file_location(...)` is
-    still the attribute form; aliasing the module must not hide it either."""
-    fixture = (_DYNAMIC_LOAD_FIXTURE
-               .replace("import importlib.util\n",
-                        "import importlib.util as iu\n")
-               .replace("importlib.util.spec_from_file_location",
-                        "iu.spec_from_file_location")
-               .replace("importlib.util.module_from_spec",
-                        "iu.module_from_spec"))
-    assert "zz_fix_helper" in _dynamic_load_closure(fixture)
-
-
 def test_a_dynamic_load_that_cannot_be_resolved_fails_rather_than_being_skipped():
     """A non-literal spec_from_file_location path must fail the guard, not
     quietly contribute nothing."""
-    src = _DYNAMIC_LOAD_FIXTURE.replace(
-        'os.path.join(HERE, "gen_bench.py")', 'os.environ["BENCH_PATH"]')
+    src = _dynamic_load_source(path='os.environ["BENCH_PATH"]')
     with pytest.raises(ValueError, match="unresolvable dynamic-load path"):
         _sim_lib_closure("/fixtures/dir/renderer.py", read=lambda p: src)
 

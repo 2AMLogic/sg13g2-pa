@@ -1,0 +1,506 @@
+{
+  "dry_run": true,
+  "status": "valid",
+  "engine": "ngspice",
+  "backend": "batch",
+  "hosts": 15,
+  "netlist": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-192/sim/psat-sweep/psat_sweep_match.spice",
+  "models_lib": null,
+  "unit_count": 162,
+  "units": [
+    {
+      "corner_id": "hbt_typ/vamp=0.001_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.001_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.001_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.002_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.002_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.002_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.003_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.003_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.003_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.004_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.004_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.004_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.006_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.006_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.006_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.010_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.010_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.010_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.001_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.001_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.001_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.002_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.002_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.002_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.003_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.003_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.003_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.004_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.004_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.004_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.006_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.006_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.006_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.010_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.010_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.010_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.001_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.001_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.001_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.002_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.002_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.002_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.003_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.003_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.003_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.004_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.004_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.004_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.006_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.006_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.006_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.010_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.010_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_typ/vamp=0.010_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.001_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.001_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.001_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.002_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.002_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.002_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.003_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.003_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.003_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.004_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.004_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.004_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.006_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.006_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.006_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.010_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.010_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.010_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.001_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.001_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.001_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.002_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.002_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.002_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.003_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.003_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.003_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.004_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.004_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.004_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.006_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.006_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.006_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.010_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.010_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.010_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.001_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.001_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.001_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.002_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.002_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.002_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.003_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.003_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.003_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.004_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.004_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.004_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.006_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.006_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.006_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.010_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.010_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_bcs/vamp=0.010_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.001_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.001_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.001_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.002_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.002_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.002_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.003_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.003_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.003_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.004_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.004_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.004_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.006_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.006_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.006_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.010_vcc=0.720V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.010_vcc=0.720V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.010_vcc=0.720V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.001_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.001_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.001_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.002_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.002_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.002_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.003_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.003_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.003_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.004_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.004_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.004_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.006_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.006_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.006_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.010_vcc=0.800V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.010_vcc=0.800V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.010_vcc=0.800V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.001_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.001_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.001_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.002_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.002_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.002_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.003_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.003_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.003_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.004_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.004_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.004_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.006_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.006_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.006_vcc=0.880V/125C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.010_vcc=0.880V/-40C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.010_vcc=0.880V/27C"
+    },
+    {
+      "corner_id": "hbt_wcs/vamp=0.010_vcc=0.880V/125C"
+    }
+  ],
+  "monte_carlo": null,
+  "staged_files": [],
+  "warnings": [],
+  "published_runner": {
+    "status": "unknown",
+    "client_klt_version": "0.9.0",
+    "images": []
+  }
+}
