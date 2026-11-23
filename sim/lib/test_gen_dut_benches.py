@@ -31,10 +31,16 @@ def test_ac_decks_carry_the_gmin_convergence_aid(build):
     cells' operating-point stepping free of the singular-matrix warning klt
     grades `error` on, so the deck line and the constant must not diverge --
     and neither may drift back to the default, which re-breaks the three cells.
+    Nor may it rise past 1e-10: that is the smallest decade clearing all three
+    125 C cells (`gen_dut_benches.py`, issue #188) and the only value whose
+    numerical inertness was measured (S-parameters within 5e-4 dB,
+    operating-point currents within 6e-5 relative), so anything higher needs
+    new equivalence evidence, not a silent edit (issue #205).
     """
     deck = build()
     assert f".options gmin={gdb.AC_GMIN:g}\n" in deck
     assert gdb.AC_GMIN > 1e-12
+    assert gdb.AC_GMIN <= 1e-10
 
 
 @pytest.mark.parametrize("build", AC_BUILDERS, ids=AC_BUILDER_IDS)
