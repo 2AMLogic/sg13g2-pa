@@ -41,20 +41,26 @@ def test_dc_missing_point_fails(tmp_path):
 
 
 def _ft(tmp_path, freqs=(20e9, 35e9, 50e9), drop=None):
-    data = {}
+    names = ["frequency"]
+    points = [[freq] for freq in freqs]
     for nx in gb.NX:
         for v in gb.VBE:
-            for q, mag in (("vs", 3.0), ("vb", 1.0)):
-                data["i(%s_%s)" % (q, gb.tag(nx, v))] = {"real": [mag] * len(freqs), "imag": [4.0 * mag / 3] * len(freqs)}
-    data.pop(drop, None)
-    p = tmp_path / "complex_vectors.json"
-    p.write_text(json.dumps({"frequency_hz": list(freqs), "data": data}))
-    return {"artifacts": {"complex_vectors": str(p)}}
+            for q, scale in (("vs", 3.0), ("vb", 1.0)):
+                name = "i(%s_%s)" % (q, gb.tag(nx, v))
+                if name != drop:
+                    names.append(name)
+                    for row in points:
+                        row.append(scale * nx * v * row[0] / 1e9)
+    p = tmp_path / "waveform.raw.json"
+    p.write_text(json.dumps({"variables": [{"name": n} for n in names], "points": points}))
+    return {"artifacts": {"waveform": str(p)}}
 
 
 def test_ft_magnitudes(tmp_path):
     ft = S.read_ft(_ft(tmp_path))
-    assert ft[(1, 0.7)][0] == (pytest.approx(5.0), pytest.approx(5.0 / 3))
+    first, last = ft[(4, 0.82)]
+    assert first == pytest.approx((196.8, 65.6))
+    assert last == pytest.approx((492.0, 164.0))
 
 
 def test_ft_missing_frequency_fails(tmp_path):

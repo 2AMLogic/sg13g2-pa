@@ -46,14 +46,19 @@ def _at(axis, target, path, what):
     raise ValueError("%s: %s not on the captured grid" % (path, what))
 
 
-def read_dc(corner):
-    """{(nx, vbe, vce): Ic} from the dc sweep waveform: Ic = +i(Vs_*) (current into the + terminal)."""
+def _sweep(corner):
     path = corner["artifacts"]["waveform"]
-    doc = json.load(open(path))
+    with open(path) as waveform:
+        doc = json.load(waveform)
     names = [v["name"] for v in doc["variables"]]
     pts = doc["points"]
     cols = {n: [row[k] for row in pts] for k, n in enumerate(names)}
-    axis = cols[names[0]]
+    return path, cols[names[0]], cols
+
+
+def read_dc(corner):
+    """{(nx, vbe, vce): Ic} from the dc sweep waveform: Ic = +i(Vs_*) (current into the + terminal)."""
+    path, axis, cols = _sweep(corner)
     out = {}
     for nx in gb.NX:
         for vbe in gb.VBE:
@@ -64,26 +69,16 @@ def read_dc(corner):
 
 
 def read_ft(corner):
-    """{(nx, vbe): [(Ic_ac, Ib_ac) per FT_FREQS]} magnitudes from the complex ac sidecar."""
-    path = corner["artifacts"]["complex_vectors"]
-    side = json.load(open(path))
-    freq = side["frequency_hz"]
-    data = side["data"]
+    """klt's AC waveform stores magnitudes, so h21 needs only the two branch-current columns."""
+    path, freq, cols = _sweep(corner)
+    indices = [_at(freq, float(f), path, "f=%s Hz" % f) for f in gb.FT_FREQS]
     out = {}
     for nx in gb.NX:
         for vbe in gb.VBE:
             tg = gb.tag(nx, vbe)
-            res = []
-            for f in gb.FT_FREQS:
-                k = _at(freq, float(f), path, "f=%s Hz" % f)
-                mag = []
-                for q in ("vs", "vb"):
-                    name = "i(%s_%s)" % (q, tg)
-                    if name not in data:
-                        raise ValueError("%s: column %s missing from the captured sweep" % (path, name))
-                    mag.append(abs(complex(data[name]["real"][k], data[name]["imag"][k])))
-                res.append(tuple(mag))
-            out[(nx, vbe)] = res
+            ic = _col(cols, "i(vs_%s)" % tg, path)
+            ib = _col(cols, "i(vb_%s)" % tg, path)
+            out[(nx, vbe)] = [(ic[k], ib[k]) for k in indices]
     return out
 
 
@@ -225,7 +220,7 @@ def main(argv):
           "corner still reports `pass`); the tables for those corners are monotone in Vbe and Vce.", ""]
     L += ["## Capture method", "",
           "- Currents are read from the captured sweep (`options.waveforms`, `capture_only`): Ic = +i(Vs_*) "
-          "from the dc waveform, Ic_ac and Ib_ac from the complex ac sidecar; no probe elements or `.meas` cards.", ""]
+          "from the dc waveform, and the magnitudes of Ic_ac and Ib_ac from the ac waveform.", ""]
     print("\n".join(L))
     return 0 if ok else 1
 

@@ -78,19 +78,12 @@ def ft_deck():
     return "\n".join(out) + "\n"
 
 
-def ft_vectors():
-    """The branch currents h21 is formed from; AC data is complex, so klt writes them to the
-    complex_vectors.json sidecar."""
-    return ["i(%s_%s)" % (p, tag(nx, vbe)) for nx in NX for vbe in VBE for p in ("vs", "vb")]
-
-
 def ft_request():
     return bench_gen.request(
         "ft.spice",
         {"kind": "ac", "args": "lin 3 20e9 50e9"},  # both FT_FREQS on the grid (lin 2 returned one row on ngspice 42)
         {"timeout_s": 300, "keep_artifacts": True, "waveforms": True, "capture_only": True,
-         "complex_vectors": ft_vectors(), "save_vectors": ft_vectors(),
-         "ngspice_init": ["set numdgt=8"]},
+         "save_mode": "netlist", "ngspice_init": ["set numdgt=8"]},
         process=PROCESS, temperature_c=TEMPS, batch=True)
 
 
