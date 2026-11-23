@@ -107,6 +107,14 @@ def test_a_matrix_stability_report_grades_each_cell(tmp_path):
     assert "`hbt_bcs` / 125 C / 0.88 V" in md
 
 
+def test_a_matrix_report_states_the_dc_solve_option(tmp_path):
+    """The gmin convergence aid is a bench condition, restated from the
+    generator's constant so the record cannot fall behind the deck (issue #188)."""
+    rc, md = _render(tmp_path, "gain", _corners(tmp_path, [("hbt_typ", 27.0, 0.8, 0.5, 0.3)]))
+    assert rc == 0
+    assert f"`.options gmin={gdb.AC_GMIN:g}`" in md
+
+
 def test_a_matrix_report_lists_cells_with_grades_withheld(tmp_path):
     corners = _corners(tmp_path, [("hbt_typ", 27.0, 0.8, 0.5, 0.3)])
     corners.append({"corner_id": "hbt_wcs/0.720V/125C", "process": "hbt_wcs",

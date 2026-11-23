@@ -1,0 +1,14 @@
+{
+  "matrix": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-188/sim/pvt-matrix.json",
+  "mode": "report",
+  "source": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-188/sim/ac-stability/corners/20261122-005323-a2f3ee27/ac_stability.report.json",
+  "complete": true,
+  "matrix_size": 27,
+  "observed_count": 27,
+  "missing": [],
+  "extra": [],
+  "duplicate": [],
+  "not_simulated": [],
+  "non_finite": [],
+  "out_of_bounds": []
+}

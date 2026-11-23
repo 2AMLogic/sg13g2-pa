@@ -119,6 +119,8 @@ def _render_matrix(kind, rid, git_sha, dirty, klt_v, ng_v, rep):
     w("- **R/C process sections**: the spec pairs `res_*`/`cap_*` with the HBT corner of "
       "the same name, but the DUT's passives are ideal ngspice elements, so no R/C "
       "corner applies to them; only the HBT section moves.")
+    w(f"- DC solve: `.options gmin={gdb.AC_GMIN:g}` -- convergence aid (issue #188); "
+      "keeps the 125 C cells' stepping clean without moving the OP or the sweep.")
     w(f"- Source and load: {_port_z()}, S-parameter reference {gdb.RS_OHM:g} ohm; "
       "two independent DUT copies (forward and reverse excitation) per cell.")
     w(commit_line(git_sha, dirty))
@@ -239,6 +241,8 @@ def main(argv):
       f"corner id `{corner.get('corner_id', '?')}`. Not a PVT matrix (item 5).")
     w("- Quiescent point: DC operating point of the DUT's own mirror bias "
       f"(`Iref`/`Rb` of `{NETLIST_REL}`).")
+    w(f"- DC solve: `.options gmin={gdb.AC_GMIN:g}` -- convergence aid (issue #188); "
+      "keeps the 125 C cells' stepping clean without moving the OP or the sweep.")
     w(f"- Source and load: {_port_z()}, S-parameter reference {gdb.RS_OHM:g} ohm; "
       "two independent DUT copies (forward and reverse excitation) in one analysis.")
     w(commit_line(git_sha, dirty))

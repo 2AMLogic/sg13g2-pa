@@ -857,6 +857,29 @@ Rl outl 0 {RL_OHM:g}
     return h + _dut_block() + body
 
 
+# --- The AC decks' DC-solve convergence aid (issue #188) -------------------
+#
+# ngspice's default minimum junction conductance (gmin 1e-12) lets the DC
+# operating-point solve of the two AC decks hit a singular matrix inside the
+# VBIC card's internal nodes at 125 C ambient on three PVT cells (hbt_bcs /
+# 0.80 V and hbt_wcs / 0.72 V and 0.88 V). ngspice's own stepping recovered
+# every time -- the completed sweeps' vectors matched a clean solve to
+# < 5e-4 dB on every S-parameter -- but klt 0.9.0 cannot recognize that
+# recovery for a capture-only AC request: its only independent completion
+# signal for a corner without measurements is tran-specific
+# (`_waveform_reached_tran_window`), so each corner graded `error` and the
+# records withheld the three cells' figures as "did not simulate"
+# (2AMLogic/klayout-tools#7120; the diagnosis and the OP/S-parameter
+# equivalence evidence are issue #188's). Raising gmin two decades keeps the
+# Jacobian regular through the stepping, so the same solve converges with no
+# singular-matrix warning and the corner grades `pass` with no diagnostics,
+# at a bias and S-parameter response indistinguishable from the default
+# (operating-point currents within 6e-5 relative, S-parameters within
+# 5e-4 dB). 1e-11 leaves the worst cell (hbt_wcs / 0.72 V / 125 C) singular,
+# so 1e-10 is the smallest decade that clears all three.
+AC_GMIN = 1e-10
+
+
 def _ac_deck(title, extra_header):
     # The AC decks are only readable as S-parameters through
     # `sim/lib/sparams.py` `s_from_nodes`, whose 2 v(out)/vs forms are S21/S12
@@ -883,6 +906,8 @@ def _ac_deck(title, extra_header):
         f"{len(PVT_VCC_V)} supplies = {pvt_cell_count()} cells, klt `alter vcc=`; the deck's",
         f"  own Vcc line is the {VCC_NOM_V:g} V nominal). The bias is the DUT's own mirror.",
         "Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT).",
+        f"DC solve: `.options gmin={AC_GMIN:g}` -- convergence aid (issue #188): keeps the 125 C",
+        "  stepping singular matrix away without moving the OP or the sweep.",
     ])
     body = f"""Vcc vcc 0 dc {VCC_NOM_V}
 Vs1 s1 0 dc 0 ac 1
@@ -893,6 +918,7 @@ Vs2 s2 0 dc 0 ac 1
 Rs2 s2 out2 {RL_OHM:g}
 X2 in2 out2 vcc 0 sg13g2-pa
 Rt2 in2 0 {RS_OHM:g}
+.options gmin={AC_GMIN:g}
 .save v(in1) v(out1) v(s1) v(in2) v(out2) v(s2)
 """
     return h + _dut_block() + body
