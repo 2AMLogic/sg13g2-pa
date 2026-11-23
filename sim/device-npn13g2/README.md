@@ -23,8 +23,7 @@ via `KLT_SIM_BACKEND=batch`; a failed submit is reported, never rerun locally),
 and writes, append-only, `records/<timestamp>-<sha>.md` plus `.dc.json`,
 `.loadline.json`, `.pdk-provenance.json` and `corners/<id>/` artifacts. It
 refuses to reuse a record id (exit 4). `loadline.py --out` alone needs no
-simulation (it uses the newest `records/*.dc.json` if present, for the Vbe at the
-quiescent point only).
+simulation and reads no simulated data.
 
 ## Files
 
@@ -48,7 +47,7 @@ terminations are not modelled and efficiency (PAE) is not computed.
 
 - `vce = Vcc + Vswing sin(wt)`; `Vswing = Vcc - Vknee` (`saturated`: tracks the supply at each tolerance cell) or `Vcc_nominal - Vknee` (`fixed-nominal`). `Vknee` = 0.4 V, the window floor.
 - Peak `Vce = Vcc + Vswing`; `Vcb_pk = Vce_pk - Vbe_at_peak` (quasi-static, Vbe at peak assumed 0.65 V, the window floor, which is conservative).
-- Verdict: peak `Vce` > BVCEO(min) 1.4 V or `Vcb` > BVCBO(min) 3.8 V is a **BREAKDOWN VIOLATION**. Window labels (OUTSIDE MODEL WINDOW) carry the quantity, peak and fraction of the cycle outside (analytic, for a sinusoid): `Vce` outside 0.4-2.0 V, Vbe outside 0.65-0.96 V, Tj > 125 C per ambient (the 125 C ambient is outside by construction).
+- Verdict: peak `Vce` > BVCEO(min) 1.4 V or `Vcb` > BVCBO(min) 3.8 V is a **BREAKDOWN VIOLATION**. Window labels (OUTSIDE MODEL WINDOW) carry the quantity, peak and fraction of the cycle outside (analytic, for a sinusoid): `Vce` outside 0.4-2.0 V, Tj > 125 C per ambient (the 125 C ambient is outside by construction).
 - `Iq = 1.5 mA x Nx` so the peak `ic` (2 Iq) equals the window limit 3 mA x Nx. `Pout = 1/2 Vswing Iq` per unit of Nx; the Nx needed for +15 dBm (31.62 mW) is `ceil(31.62 mW / Pout_per_Nx)`; the ideal load is `Vswing / (Iq Nx_total)`.
 - `Tj = Tamb + Rth (Vcc Iq - Pout)`, `Rth = 3.26e3 (4/Nx)^0.9` K/W (card), for an Nx = 10 device.
 - Controls: Vcc 1.4 V saturated must be flagged (negative); Vcc 0.5 V must pass (positive). Both are in the JSON.

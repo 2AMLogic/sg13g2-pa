@@ -43,11 +43,7 @@ python3 -I "${SCRIPT_DIR}/summarize.py" "${RECORD_ID}" "${REPO_GIT_SHA}" "${DIRT
     "${KLT_VERSION}" "${NGSPICE_VERSION}" "${PROV}" "${OUT}" "${DCJSON}" > "${REC}" || failed=1
 
 LLJSON="${RECORDS_DIR}/${RECORD_ID}.loadline.json"
-if [[ -s "${DCJSON}" ]]; then
-  python3 -I "${SCRIPT_DIR}/loadline.py" --dc-json "${DCJSON}" --out "${LLJSON}" || failed=1
-else
-  python3 -I "${SCRIPT_DIR}/loadline.py" --out "${LLJSON}" || failed=1
-fi
+python3 -I "${SCRIPT_DIR}/loadline.py" --out "${LLJSON}" || failed=1
 if [[ -s "${LLJSON}" ]]; then
   python3 -I "${SCRIPT_DIR}/loadline.py" --render "${LLJSON}" >> "${REC}" || failed=1
 fi
