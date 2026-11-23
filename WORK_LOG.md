@@ -3,6 +3,25 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-23
+
+- **PR #208**: refactor(sim): share the drive-axis builder between the matched psat sweep and its reference probe
+- **PR #198**: fix: raise the AC decks' gmin so the three 125 C PVT cells simulate clean
+- **Issue #207** (closed): Share the drive-axis builder between the matched Psat sweep and its reference probe
+- **Issue #204** (closed): sim(known-answer-thermal): the thermal-node check covers Nx ∈ {1,4}; the psat DUT instantiates Nx=10
+- **Issue #188** (closed): Diagnose AC error status after ngspice recovery in three 125 °C PVT cells
+
+### 2026-11-22
+
+- **PR #201**: sim(psat-sweep): verify the P1dB reference and refute the bias-feed candidate (27 cells)
+- **PR #200**: test: consolidate the duplicated bash harnesses in sim/lib/test_env_sh.py
+- **PR #196**: sim: matrix records name their findings' trackers and state whole-run shard provenance
+- **PR #195**: test: parameterize the four sibling-import shapes of the dynamic-load hop
+- **Issue #194** (closed): PVT-matrix records under-describe their own run: no design-iteration issue links, and a resumed sharded run's provenance line reports only the final round
+- **Issue #192** (closed): Design iteration: large-signal power rows in the PVT matrix worst cells (P1dB missed everywhere; Psat < 10 dBm in three 0.72 V cells; peak PAE 14.7 % at hbt_wcs 125 C)
+- **Issue #190** (closed): Consolidate the four sibling-import fixtures in the provenance tests
+- **Issue #199** (closed): Consolidate the duplicated bash harnesses and dead fixture setup in sim/lib/test_env_sh.py
+
 ### 2026-11-21
 
 - **Issue #173** (closed): T1 item 5: provisional PVT corner matrix on the three DUT benches (3 HBT corners x -40/27/125 C x supply +/-10 %)
