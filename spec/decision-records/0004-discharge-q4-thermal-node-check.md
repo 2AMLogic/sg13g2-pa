@@ -1,4 +1,4 @@
-# 0004: DR 0001 Q4 discharged — the thermal-node known-answer check passes (PROPOSED)
+# 0004: DR 0001 Q4 discharged at DC — the thermal-node known-answer check passes (PROPOSED)
 
 - **Status**: **PROPOSED. Not ratified.** No row of
   [`spec/target-spec.md`](../target-spec.md) is edited by this record; every
@@ -8,8 +8,9 @@
 - **Decided by**: builder agent (proposal); the operator ratifies
 - **Issue**: [#132](https://github.com/2AMLogic/sg13g2-pa/issues/132)
 - **Answers**: [0001-ratify-target-spec](0001-ratify-target-spec.md), Q4
-  (self-heating known-answer check) — the Q4 item of DR 0001's D-2 deferral
-  list only, not the other eight items.
+  (self-heating known-answer check), **DC portion only** — the `rth`/power-path
+  part; the `rth·cth` settling part stays open. This is the Q4 item of DR
+  0001's D-2 deferral list only, not the other eight items.
 
 ## The question and its answer
 
@@ -17,7 +18,8 @@ DR 0001 Q4 asked whether ngspice's VBIC implementation solves the PDK card's
 self-heating thermal node as intended, deferred the known-answer check that
 would show it, and ruled: "Until that passes, results with self-heating are
 labelled 'self-heating unverified'". The check now exists and passes, so **Q4
-is discharged**.
+is discharged at DC**; the settling element of Q4's planned check (`rth·cth` ≈
+5 ns), which an `op` analysis cannot show, stays open.
 
 The evidence is
 [`sim/known-answer-thermal/records/20261114-205927-00b692a.md`](../../sim/known-answer-thermal/records/20261114-205927-00b692a.md)
@@ -86,6 +88,13 @@ narrower: the 4-terminal/5-terminal row shows the node the bench reads
 hierarchically is the node the check drove, so the DC `rth` gain from power to
 node is checked on the instance it probes. The peak value and its settling are
 not.
+
+The caveat `sim/psat-sweep/psat_record.py` emits today ("Read the `Tj` column as
+checked within that scope") predates this rule and does not carry the
+"self-heating unverified (transient peak and settling)" label required above;
+aligning the emitter is tracked in
+[#203](https://github.com/2AMLogic/sg13g2-pa/issues/203). Until then, this
+record's rule governs how that column is read.
 
 ## D-2: only its Q4 item is addressed
 
