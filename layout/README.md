@@ -1,9 +1,7 @@
 # layout
 
-`smoke/` holds the DRC/LVS toolchain smoke test on a PDK reference cell (not a
-design result); `toolchain.json` pins `klt` for it (`klt.pin`, 0.7.0) and
-pins the PA DRC separately (`pa_drc.pin`, 0.9.1 -- see below). `pa/` holds the
-PA layout described below. See the repo README for scope.
+`smoke/` runs DRC and LVS on a PDK reference cell. `pa/` holds the PA layout.
+Both use `klayout-tools==0.9.1` as recorded in `toolchain.json`.
 
 ## `pa/`: PA core placement (T1 item 2)
 
@@ -18,12 +16,7 @@ committed layout stale. The two GDS regenerations done while writing this were
 byte-identical. The check needs the PDK, so it is local-only and is not a step
 in the stock-runner `signoff` workflow.
 
-The generator runs `klt gen bjt_array` (rows 2, columns = devices / 2) under
-`uvx --from klayout-tools==0.9.1`. This is the pin the generator needs: the
-sg13g2 HBT flavor of `bjt_array` and `klt signoff --attest 2` are not in 0.7.0
-or 0.8.0. It is also the `signoff` workflow pin and, since the DRC artifact
-below, `toolchain.json`'s `pa_drc.pin`. `toolchain.json`'s `klt.pin` and the
-smoke test stay at 0.7.0 and are a separate concern.
+The generator runs `klt gen bjt_array` with two rows and one column per pair of devices.
 
 ### What this layout is, and is not
 
@@ -47,7 +40,7 @@ smoke test stay at 0.7.0 and are a separate concern.
   established; it is settled by extraction and LVS, not by this item. The
   generator states that LVS recognition of `npn13G2` is not claimed.
 - **DRC is `clean`; no LVS result is claimed** (items 3 and 4). `klt drc` on
-  this stream at `klt` 0.9.1 (`toolchain.json` `pa_drc.pin`) is
+  this stream at `klt` 0.9.1 is
   `reports/drc-klt-0.9.1.json`, `status: clean`, 0 violations. The earlier
   `reports/drc.json` run at `klt` 0.7.0 is `violations` (28, `cont.width.1`)
   and is **superseded**: 0.7.0's deck measured the PDK `npn13G2` cell's
