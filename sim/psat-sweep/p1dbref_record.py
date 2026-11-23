@@ -55,7 +55,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import gen_dut_benches as gdb  # noqa: E402
 import rf_extract as rx  # noqa: E402
 from provenance import commit_line  # noqa: E402
-from psat_record import _cell_md, _remote_md, extract_corners, label, verified_dut  # noqa: E402
+from pvt_cells import cell_md  # noqa: E402
+from psat_record import _remote_md, extract_corners, label, verified_dut  # noqa: E402
 
 # `reduce_sweep`'s default reference width: the median gain of this many lowest-drive
 # points. The renderer reads the reference actually used from the matrix record's own
@@ -250,19 +251,19 @@ def render(rid, git_sha, dirty, klt_v, ng_v, rep, matrix, out_json, dut):
     for r in rows:
         a = r["analysis"]
         if not a.get("matrix_record_has_cell"):
-            w(f"| {_cell_md(r['cell'])} | no matrix cell | | | | | | |")
+            w(f"| {cell_md(r['cell'])} | no matrix cell | | | | | | |")
             continue
         ref, br, fit = a["reference"], a["bracket"], a["fit"]
         eps, bias = a["epsilon_db"], a["p1db_out_bias_db"]
         below = a["reference_below_compression_db"]
-        w(f"| {_cell_md(r['cell'])}"
+        w(f"| {cell_md(r['cell'])}"
           f"| {fit['g0_db']:.3f} | {fmt(ref['g_ref_db'], '{:.3f}')}"
           f"| {fmt(eps, '{:+.3f}')} | {fmt(br and br['slope_db_per_db'], '{:.3f}')}"
           f"| {fmt(bias, '{:+.3f}')} | {fmt(br and br['step_db'], '{:.3f}')}"
           f"| {fmt(below, '{:.1f}')} |")
     w("")
     if bad_brackets:
-        w(f"**Bracket violations**: {', '.join(_cell_md(r['cell']) for r in bad_brackets)} "
+        w(f"**Bracket violations**: {', '.join(cell_md(r['cell']) for r in bad_brackets)} "
           "have a measured crossing step above 0.5 dB.")
     else:
         w(f"**Bracket**: every cell's measured crossing step is within the 0.5 dB "
@@ -281,7 +282,7 @@ def render(rid, git_sha, dirty, klt_v, ng_v, rep, matrix, out_json, dut):
     w("")
     for r in rows:
         a = r["analysis"]
-        w(f"### {_cell_md(r['cell'])}")
+        w(f"### {cell_md(r['cell'])}")
         w("")
         w("| Pavail dBm | P_in dBm | P_out dBm | gain dB | P_DC mW | S11 large dB |")
         w("|---|---|---|---|---|---|")
