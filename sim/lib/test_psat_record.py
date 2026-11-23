@@ -19,7 +19,9 @@ waveform deliberately gives every candidate trace a DIFFERENT amplitude, so a re
 reduced through the wrong node produces a different number rather than the same one.
 No simulator or PDK is needed.
 """
+import contextlib
 import importlib.util
+import io
 import json
 import math
 import os
@@ -62,15 +64,15 @@ VCC = gdb.VCC_NOM_V
 I_VCC = -0.210         # ngspice sign: delivered = -i(vcc)
 
 
-def _waveform(path):
+def _waveform(path, *, v_out=V_OUT_A, v_outl=V_OUTL_A, v_in=0.1):
     """A settled steady-state trace carrying every node both variants may ask for."""
     n = N_PER * PER_STEP + 1
     t = np.arange(n) / (F0 * PER_STEP)
     s = np.sin(2 * math.pi * F0 * t)
     traces = {
-        "v(out)": V_OUT_A * s,
-        "v(outl)": V_OUTL_A * s,
-        "v(in)": 0.1 * s,
+        "v(out)": v_out * s,
+        "v(outl)": v_outl * s,
+        "v(in)": v_in * s,
         "v(vcc)": np.full(n, VCC),
         "v(amp)": np.full(n, 1.0),
         "i(vbsense)": I_BOUND_A * s,
@@ -91,6 +93,17 @@ def _waveform(path):
     return traces
 
 
+def _run_psat(report, rep_path, out_json, variant="match", rid="rid"):
+    """Write ``report`` to ``rep_path`` and run psat_record.main; returns (rc, stdout)."""
+    with open(rep_path, "w") as fh:
+        json.dump(report, fh)
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = PSAT.main(["psat_record.py", variant, rid, "deadbee", "0",
+                        "klt 0.9.1", "ngspice-47", rep_path, out_json])
+    return rc, buf.getvalue()
+
+
 def _render(tmp_path, variant, remote="n/a"):
     """Run psat_record.main for one variant; returns (markdown, json)."""
     wav = os.path.join(tmp_path, "waveform.raw.json")
@@ -105,20 +118,12 @@ def _render(tmp_path, variant, remote="n/a"):
     }
     rep_path = os.path.join(tmp_path, "report.json")
     out_json = os.path.join(tmp_path, f"rec-{variant}.json")
-    with open(rep_path, "w") as fh:
-        json.dump(report, fh)
-
-    import contextlib
-    import io
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        rc = PSAT.main(["psat_record.py", variant, f"id-{variant}", "deadbee", "0",
-                        "klt 0.9.1", "ngspice-47", rep_path, out_json])
+    rc, md = _run_psat(report, rep_path, out_json, variant, f"id-{variant}")
     # One point only, so reduce_sweep cannot find a linear region; the record still
     # renders (with `Reduction refused`) and the per-point and stress tables are what
     # these tests read.
     assert rc == 0
-    return buf.getvalue(), json.load(open(out_json))
+    return md, json.load(open(out_json))
 
 
 # --- the node that carries per-device I_C (AC 10) --------------------------
@@ -312,32 +317,8 @@ def _sweep_waveform(path, pin_w, pout_w):
     Amplitudes come from the powers, so a cell's rungs are set by the spec's
     own arithmetic on numbers the test chooses, not by retyped voltages.
     """
-    n = N_PER * PER_STEP + 1
-    t = np.arange(n) / (F0 * PER_STEP)
-    s = np.sin(2 * math.pi * F0 * t)
-    vin = 2 * pin_w / 0.002          # vin * 0.002 / 2 = pin_w
-    voutl = 2 * pout_w / 0.030       # voutl * 0.030 / 2 = pout_w
-    traces = {
-        "v(out)": 0.5 * s,
-        "v(outl)": voutl * s,
-        "v(in)": vin * s,
-        "v(vcc)": np.full(n, VCC),
-        "v(amp)": np.full(n, 1.0),
-        "i(vbsense)": 0.080 * s,
-        "i(vlsense)": 0.030 * s,
-        "i(vcc)": np.full(n, I_VCC),
-        "i(bs)": -0.002 * s,
-        "i(l.xdut.lchoke)": np.full(n, I_CHOKE),
-        "v(xdut.coll)": VCC + 0.5 * s,
-        "v(xdut.vb)": np.full(n, 0.85),
-        "v(xdut.xq1.t)": np.full(n, 0.6),
-    }
-    names = ["time"] + list(traces)
-    cols = [t] + list(traces.values())
-    doc = {"variables": [{"name": nm} for nm in names],
-           "points": np.column_stack(cols).tolist()}
-    with open(path, "w") as fh:
-        json.dump(doc, fh)
+    _waveform(path, v_out=0.5, v_outl=2 * pout_w / 0.030,   # voutl * 0.030 / 2 = pout_w
+              v_in=2 * pin_w / 0.002)                         # vin * 0.002 / 2 = pin_w
 
 
 def _findings_render(tmp_path, specs, remote="n/a", report_dir=None):
@@ -375,16 +356,9 @@ def _findings_render(tmp_path, specs, remote="n/a", report_dir=None):
     rep_dir = report_dir or str(tmp_path)
     rep_path = os.path.join(rep_dir, "psat_sweep_match.report.json")
     out_json = os.path.join(str(tmp_path), "rec-matrix.json")
-    with open(rep_path, "w") as fh:
-        json.dump(report, fh)
-    import contextlib
-    import io
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        rc = PSAT.main(["psat_record.py", "match", "rid-matrix", "deadbee", "0",
-                        "klt 0.9.1", "ngspice-47", rep_path, out_json])
+    rc, md = _run_psat(report, rep_path, out_json, "match", "rid-matrix")
     assert rc == 0
-    return buf.getvalue(), json.load(open(out_json))
+    return md, json.load(open(out_json))
 
 
 ALL_MET = {"proc": "hbt_typ", "temp": 27.0, "vcc": 0.8,
@@ -666,15 +640,8 @@ def _matrix_render(tmp_path):
               "environment": {"backend": "test", "remote": "n/a"}, "corners": corners}
     rep_path = os.path.join(tmp, "report.json")
     out_json = os.path.join(tmp, "rec.json")
-    with open(rep_path, "w") as fh:
-        json.dump(report, fh)
-    import contextlib
-    import io
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        rc = PSAT.main(["psat_record.py", "match", "rid", "deadbee", "0",
-                        "klt 0.9.1", "ngspice-47", rep_path, out_json])
-    return rc, buf.getvalue(), json.load(open(out_json))
+    rc, md = _run_psat(report, rep_path, out_json)
+    return rc, md, json.load(open(out_json))
 
 
 def test_a_matrix_report_reduces_per_cell_and_labels_it_provisional(tmp_path):
