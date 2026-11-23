@@ -54,7 +54,7 @@ card's `rth` expression (`3.26e3·(4/Nx)^0.9` K/W) carries no process or
 temperature coefficient, so no other corner can change the answer this bench
 grades.
 
-The 4-terminal agreement row is what transfers the verdict to the device
+The 4-terminal agreement row is what transfers the DC-only verdict to the device
 instance `sim/psat-sweep/` actually probes: that bench reads the internal
 thermal node hierarchically (`v(x<inst>.t)`) on the 4-terminal `npn13G2`
 subcircuit, and the row shows that node agrees with the 5-terminal node the
@@ -66,19 +66,26 @@ not reach the psat bench.
 DR 0001's rule — "Until that passes, results with self-heating are labelled
 'self-heating unverified'" — is replaced, within the scope above, by:
 
-> Results that rely on self-heating report their junction-temperature figure
-> as **thermal-node verified (DC)**: the figure rests on a known-answer-checked
-> card `rth` network and device-to-node power path at DC
-> (`sim/known-answer-thermal/`, record `20261114-205927-00b692a`). The verdict
-> does **not** cover `cth` or a thermal time constant; a claim that depends on
-> them (transient thermal behaviour, settling-time choices) must not cite this
-> check and stays labelled as unverified on that point.
+> Results that rely on self-heating label **the card's `rth` network and the
+> device-to-node power path** as **thermal-node verified (DC)**, on
+> ngspice 47, PDK `v0.3.0`, corner `hbt_typ/novdd/27C`
+> (`sim/known-answer-thermal/`, record `20261114-205927-00b692a`). The label
+> attaches to that DC response only. A **junction-temperature figure extracted
+> from a transient waveform** (for example a maximum over RF-cycle samples,
+> as `sim/psat-sweep/` reports) is **not** covered: it depends on `cth` through
+> `cth·dΔT/dt + ΔT/rth = P(t)`, which an `op` analysis sets to zero, so even a
+> wrong `cth` would pass every check in the record. Such a figure stays
+> labelled **self-heating unverified (transient peak and settling)** until a
+> time-domain known-answer check exists. A claim that depends on `cth`, a
+> thermal time constant, ripple or settling-time choices must not cite this
+> check.
 
-This is the same scope the psat bench itself now states:
-`sim/psat-sweep/psat_record.py` reads its `Tj` column as "scoped to the DC
-`rth` network and the device-to-node power path -- **not** `cth` or a thermal
-time constant". Record and bench say the same thing; the two cannot be read
-as disagreeing.
+The `sim/psat-sweep/` `Tj` column is therefore a transient peak that this
+record leaves **unverified**. What the record does transfer to that bench is
+narrower: the 4-terminal/5-terminal row shows the node the bench reads
+hierarchically is the node the check drove, so the DC `rth` gain from power to
+node is checked on the instance it probes. The peak value and its settling are
+not.
 
 ## D-2: only its Q4 item is addressed
 
@@ -118,9 +125,12 @@ recommends; it edits nothing. Ratification still waits on:
 
 ## Consequences
 
-- Results with self-heating are no longer labelled "self-heating
-  unverified"; they carry the scoped successor label above.
-- `sim/psat-sweep/`'s `Tj` column reads as checked within the DC `rth` /
-  power-path scope, as its own caveat already states.
+- The DC `rth` network and power path are labelled "thermal-node verified
+  (DC)" (ngspice 47, PDK `v0.3.0`, `hbt_typ/novdd/27C`). Any
+  transient-extracted junction-temperature figure stays labelled
+  "self-heating unverified (transient peak and settling)".
+- `sim/psat-sweep/`'s `Tj` column is a transient maximum and keeps the
+  unverified label; this record verifies only the DC gain to the node it
+  reads.
 - The Thermal row's ratification is a recommendation the operator can act on,
   with its remaining waits named.
