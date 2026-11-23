@@ -534,7 +534,9 @@ def test_the_matrix_corner_ids_are_distinct_at_three_decimals():
     0.8/0.4 dB, whose worst case (~1 me-ohm... ~0.96 mV at the -36 dBm floor)
     is one bucket wide but never two points deep; this pins that.
     """
-    units = gdb.pvt_psat_units("match")
+    # the units a submit would dispatch, expanded from the emitted request's
+    # own axis -- the same single axis the builder screened and submitted.
+    units = gdb._crossed_units(gdb.psat_request("match")["corners"]["supply_v"])
     assert len(units) == gdb.pvt_cell_count() * len(gdb.drive_grid_match_dbm()) == 2862
     assert gdb.assert_pvt_corner_ids_distinct(units) == 2862
 
@@ -608,7 +610,9 @@ def test_the_reference_probe_amplitudes_stay_one_bucket_apart():
 
 
 def test_the_reference_probe_covers_every_declared_cell_with_distinct_ids():
-    units = gdb.p1dbref_probe_units()
+    # units expanded from the emitted request's own axis -- the same single
+    # axis the builder screened and submitted.
+    units = gdb._crossed_units(gdb.p1dbref_probe_request()["corners"]["supply_v"])
     assert len(units) == gdb.pvt_cell_count() * len(gdb.P1DBREF_PROBE_GRID_DBM)
     assert gdb.assert_pvt_corner_ids_distinct(units) == len(units)
     # every declared cell is probed at every probe drive

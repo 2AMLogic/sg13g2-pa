@@ -297,17 +297,19 @@ def pvt_cell_count():
     return len(PVT_PROCESS_SECTIONS) * len(PVT_TEMP_C) * len(PVT_VCC_V)
 
 
-def pvt_psat_supply_axis(variant="match"):
-    """The matched psat bench's `corners.supply_v`: the drive grid CROSSED with
+def drive_supply_axis(grid):
+    """A drive-sweep bench's `corners.supply_v`: the drive grid CROSSED with
     the supply points, as parallel per-index lists (klt sweeps multiple supply
     keys together by index, never as a cross product of their own).
 
     Supply-major, so the crossed expansion (process x supply x temperature)
     runs each cell's drive sweep as one contiguous run of units; `vcc` repeats
     the supply point across its whole sweep and `vamp` repeats the grid once
-    per supply point.
+    per supply point. The matched psat sweep and the P1dB reference probe
+    share this one crossing -- each passes its own grid, so each keeps its own
+    drive levels, rounding and ordering. The bare psat bench never comes here:
+    it stays nominal-only by design (see `psat_request`).
     """
-    grid = drive_grid_match_dbm() if variant == "match" else drive_grid_dbm()
     vamps, vccs = [], []
     for vcc in PVT_VCC_V:
         for p in grid:
@@ -316,17 +318,12 @@ def pvt_psat_supply_axis(variant="match"):
     return {"vamp": vamps, "vcc": vccs}
 
 
-def pvt_psat_units(variant="match"):
-    """Every (cell, drive) unit of the psat matrix request, as explicit
+def _crossed_units(axis):
+    """Every (cell, drive) unit of a crossed-axis request, as explicit
     `{process, temperature_c, supply_v}` records in klt's own odometer order
     (process, supply, temperature) -- the expansion `klt sim` performs on the
-    crossed axes above, enumerated here so the corner-id screen below sees
-    exactly the units a submit would dispatch."""
-    axis = pvt_psat_supply_axis(variant)
-    return _crossed_units(axis)
-
-
-def _crossed_units(axis):
+    axis, enumerated so the corner-id screen sees exactly the units a submit
+    would dispatch."""
     units = []
     for proc in PVT_PROCESS_SECTIONS:
         for vamp, vcc in zip(axis["vamp"], axis["vcc"]):
@@ -334,25 +331,6 @@ def _crossed_units(axis):
                 units.append({"process": proc, "temperature_c": temp,
                               "supply_v": {"vamp": vamp, "vcc": vcc}})
     return units
-
-
-def p1dbref_probe_axis():
-    """The probe request's `corners.supply_v`: the sparse low-drive grid crossed
-    with the supply points, supply-major exactly like `pvt_psat_supply_axis`
-    (vamp/vcc sweep together by index, one contiguous run of probe points per
-    cell)."""
-    vamps, vccs = [], []
-    for vcc in PVT_VCC_V:
-        for p in P1DBREF_PROBE_GRID_DBM:
-            vamps.append(round(amp_v(p), 9))
-            vccs.append(vcc)
-    return {"vamp": vamps, "vcc": vccs}
-
-
-def p1dbref_probe_units():
-    """Every (cell, probe drive) unit of the reference-probe request, for the
-    same pre-submit corner-id screen the matrix units get."""
-    return _crossed_units(p1dbref_probe_axis())
 
 
 def p1dbref_probe_request():
@@ -363,14 +341,14 @@ def p1dbref_probe_request():
     (it is the same per-unit transient); it is NOT a declared-matrix bench, so
     it gets no `klt corner-matrix` gate -- its coverage is the probe grid, and
     its record states both."""
-    units = p1dbref_probe_units()
-    n_units = assert_pvt_corner_ids_distinct(units)
+    axis = drive_supply_axis(P1DBREF_PROBE_GRID_DBM)
+    n_units = assert_pvt_corner_ids_distinct(_crossed_units(axis))
     req = _matrix_request(
         "psat_sweep_match.spice",
         {"kind": "tran", "args": f"{TRAN_STEP_S * 1e12:.6g}p {TRAN_STOP_S * 1e9:.6g}n"},
         {"timeout_s": PSAT_MATCH_TIMEOUT_S, "keep_artifacts": True, "waveforms": True,
          "capture_only": True, "save_mode": "netlist"},
-        corners_extra={"supply_v": p1dbref_probe_axis()},
+        corners_extra={"supply_v": axis},
     )
     req["remote"] = {"hosts": batch_hosts(n_units, PSAT_MATCH_TIMEOUT_S)}
     return req
@@ -447,7 +425,7 @@ def psat_match_pvt_matrix():
     matched psat request and report against. The cells are exactly
     `pvt_matrix()`'s; only the drive axis is added."""
     m = pvt_matrix()
-    m["supply_v"] = pvt_psat_supply_axis("match")
+    m["supply_v"] = drive_supply_axis(drive_grid_match_dbm())
     m["description"] = (
         "sg13g2-pa PVT corner box drive-crossed for sim/psat-sweep's matched "
         "bench: the 27 cells of sim/pvt-matrix.json x the matched drive grid "
@@ -978,15 +956,16 @@ def psat_request(variant="bare"):
         )
     else:
         # The matched bench carries the whole PVT matrix: the drive axis crossed
-        # with the supply points (pvt_psat_supply_axis), 27 cells x 106 drive
-        # points = 2862 units. Screen the per-unit corner ids BEFORE anything
-        # is built or submitted: klt names a unit by its corner id and rounds
-        # supply values to three decimals, so close values collapse
+        # with the supply points (drive_supply_axis), 27 cells x 106 drive
+        # points = 2862 units. ONE axis feeds both the corner-id screen and
+        # the request, so the units checked are exactly the units submitted.
+        # Screen the per-unit corner ids BEFORE anything is built or
+        # submitted: klt names a unit by its corner id and rounds supply
+        # values to three decimals, so close values collapse
         # (klayout-tools#5870) -- here that would silently merge two (cell,
         # drive) pairs into one unit and one artifact directory.
-        units = pvt_psat_units("match")
-        n_units = assert_pvt_corner_ids_distinct(units)
-        grid = drive_grid_match_dbm()
+        axis = drive_supply_axis(drive_grid_match_dbm())
+        n_units = assert_pvt_corner_ids_distinct(_crossed_units(axis))
         timeout_s = PSAT_MATCH_TIMEOUT_S
         # Every shard stays inside the fleet's whole-job ceiling
         # (units/shard x timeout + overhead <= 3600 s), so the 2862-unit grid
@@ -997,7 +976,7 @@ def psat_request(variant="bare"):
             {"kind": "tran", "args": f"{TRAN_STEP_S * 1e12:.6g}p {TRAN_STOP_S * 1e9:.6g}n"},
             {"timeout_s": timeout_s, "keep_artifacts": True, "waveforms": True,
              "capture_only": True, "save_mode": "netlist"},
-            corners_extra={"supply_v": pvt_psat_supply_axis("match")},
+            corners_extra={"supply_v": axis},
         )
     if hosts is not None:
         req["remote"] = {"hosts": hosts}
