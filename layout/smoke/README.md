@@ -4,6 +4,10 @@
 (`sg13g2_inv_1`). It is not a design result and says nothing about the PA.**
 
 - `klt` **0.9.1** (`layout/toolchain.json`). The reports record KLayout 0.30.14.
+  All three carry `provenance.klayout_version_mismatch: true`: `klt` 0.9.1 was
+  tested against KLayout 0.30.12. `klt` states the verdict is unaffected, but
+  counts such as `rules_skipped` (see "DRC coverage fields") may differ from a
+  0.30.12 run.
 - PDK: IHP-Open-PDK **v0.3.0** (`sim/pdk.json`), fetched by `scripts/setup-env.sh`
   into `~/.cache/sg13g2-pa/pdk-root` by default. The DRC report records
   `provenance.pdk.version` as `fetched:0.3.0`.
@@ -30,7 +34,10 @@ $K lvs --check reports/lvs-simform.json
 
 `--check` verifies the recorded input and deck hashes. All three checks report
 `match`, including the one for the expected CDL mismatch. To reproduce the
-reports, repeat the three generation commands above. The DRC command selects
+reports, repeat the three generation commands above rather than using
+`klt drc --check --rerun`: at 0.9.1 it replays without a top cell on a
+multi-top stream (klayout-tools#7000) and ignores `--pdk-root`, so
+`provenance.pdk` drifts to null (klayout-tools#6986). The DRC command selects
 `sg13g2_inv_1` from the three top cells and records the PDK used.
 
 ## Results (simulated tooling output, curated `klt` engine, not a signoff)
