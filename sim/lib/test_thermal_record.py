@@ -8,7 +8,6 @@ and the negative control's contract: a control that fails is the demonstration,
 a control that passes is broken. The measured values used are the committed
 run's (records/20261114-205927-00b692a.md), so the fixtures are real shapes.
 """
-import importlib.util
 import json
 import os
 import shutil
@@ -19,20 +18,14 @@ import pytest
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 BENCH = os.path.join(REPO, "sim", "known-answer-thermal")
+sys.path.insert(0, HERE)
+from script_loader import load_script  # noqa: E402
+
 RECORD_ID = "20261114-205927-00b692a"
 
 
-def _load(name, path):
-    """Import a bench script by path (they are scripts, not packages)."""
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-RECORDER = _load("_thermal_record", os.path.join(BENCH, "thermal_record.py"))
-GEN = _load("_thermal_gen_bench", os.path.join(BENCH, "gen_bench.py"))
+RECORDER = load_script("_thermal_record", "sim/known-answer-thermal/thermal_record.py")
+GEN = load_script("_thermal_gen_bench", "sim/known-answer-thermal/gen_bench.py")
 
 # The committed run's measured values (positive case), by measurement name.
 MEASURED = {
@@ -213,7 +206,7 @@ def test_check_passes_on_committed_decks_and_catches_drift(tmp_path):
     copy = tmp_path / "copy"
     shutil.copytree(BENCH, copy,
                     ignore=shutil.ignore_patterns("records", "corners", "__pycache__"))
-    stale = _load("_thermal_gen_bench_stale", os.path.join(copy, "gen_bench.py"))
+    stale = load_script("_thermal_gen_bench_stale", os.path.join(copy, "gen_bench.py"))
     deck = copy / "thermal.spice"
     deck.write_text(deck.read_text().replace("Nx=4", "Nx=5", 1))
     assert stale.main(["--check"]) == 1

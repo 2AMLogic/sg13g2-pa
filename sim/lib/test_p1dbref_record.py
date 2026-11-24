@@ -8,7 +8,6 @@ through the bracket arithmetic, not just by its own epsilon. The tests below pin
 that arithmetic on synthetic inputs; no simulator or PDK is needed.
 """
 import contextlib
-import importlib.util
 import io
 import json
 import os
@@ -21,13 +20,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 import gen_dut_benches as gdb  # noqa: E402
+from script_loader import load_script  # noqa: E402
 from test_psat_record import MATCH_DECK_HASH, _sweep_waveform  # noqa: E402
 
-spec = importlib.util.spec_from_file_location(
-    "_p1dbref_record", os.path.join(REPO, "sim", "psat-sweep", "p1dbref_record.py"))
-PR = importlib.util.module_from_spec(spec)
-sys.modules["_p1dbref_record"] = PR
-spec.loader.exec_module(PR)
+PR = load_script("_p1dbref_record", "sim/psat-sweep/p1dbref_record.py")
 
 # A synthetic second-order compressor: g(P_in) = G0 - C * P_in. The probe points
 # sit on this curve; the matrix record's reference sits 0.6 dB below G0.

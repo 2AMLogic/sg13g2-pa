@@ -8,7 +8,6 @@ frequency -- so the per-cell numbers are closed-form and the assertions pin
 the grading, not the numerics of `sparams.py`. No simulator or PDK.
 """
 import contextlib
-import importlib.util
 import io
 import json
 import math
@@ -18,19 +17,10 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
+import ac_record as AC  # noqa: E402
 import gen_dut_benches as gdb  # noqa: E402
 
 
-def _load_ac_record():
-    spec = importlib.util.spec_from_file_location(
-        "_ac_record", os.path.join(HERE, "ac_record.py"))
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-AC = _load_ac_record()
 
 
 def _sidecar(path, s21_lin, s11_lin):
