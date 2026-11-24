@@ -5,8 +5,10 @@ triage role. Newest first.
 
 ### 2026-11-24
 
+- **PR #225**: test: share one script loader across sim/lib tests and drop dead _load_psat_record
 - **PR #222**: refactor(sim): single-source the PVT cell label and verdict rung
 - **PR #220**: docs: record klayout_version_mismatch, 0.9.1 floor rationale and --rerun citations
+- **Issue #223** (closed): Consolidate duplicated script-loader boilerplate across sim/lib tests and drop dead _load_psat_record
 - **Issue #221** (closed): Consolidate duplicated record helpers (_cell_md, _rung, _cell_of) into sim/lib
 - **Issue #215** (closed): layout/smoke/README.md: record the 0.9.1 klayout_version_mismatch alongside the coverage counts, and restore the why-0.9.1 floor rationale
 
