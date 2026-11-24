@@ -1,0 +1,50 @@
+* klt sim -- generated corner deck, do not edit
+.options seed=1841751039
+.param mc_sample_index=87
+.param mc_process_seed=804909989
+.param mc_mismatch_seed=1807648788
+.lib /opt/pdk/ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib hbt_typ_mismatch
+.include /var/tmp/eda-job-klt-sim-e592593cc2be/inputs/netlist.cir
+.temp 27
+.control
+save all
+op 
+let ic1 = @q.x1.xq1.qnpn13g2[ic]
+print ic1
+let ic2 = @q.x1.xq2.qnpn13g2[ic]
+print ic2
+let ic3 = @q.x1.xq3.qnpn13g2[ic]
+print ic3
+let ic4 = @q.x1.xq4.qnpn13g2[ic]
+print ic4
+let ic5 = @q.x1.xq5.qnpn13g2[ic]
+print ic5
+let ic6 = @q.x1.xq6.qnpn13g2[ic]
+print ic6
+let ic7 = @q.x1.xq7.qnpn13g2[ic]
+print ic7
+let ic8 = @q.x1.xq8.qnpn13g2[ic]
+print ic8
+let ic9 = @q.x1.xq9.qnpn13g2[ic]
+print ic9
+let ic10 = @q.x1.xq10.qnpn13g2[ic]
+print ic10
+let ic11 = @q.x1.xq11.qnpn13g2[ic]
+print ic11
+let ic12 = @q.x1.xq12.qnpn13g2[ic]
+print ic12
+let ic13 = @q.x1.xq13.qnpn13g2[ic]
+print ic13
+let ic14 = @q.x1.xq14.qnpn13g2[ic]
+print ic14
+let ic_total = @q.x1.xq1.qnpn13g2[ic] + @q.x1.xq2.qnpn13g2[ic] + @q.x1.xq3.qnpn13g2[ic] + @q.x1.xq4.qnpn13g2[ic] + @q.x1.xq5.qnpn13g2[ic] + @q.x1.xq6.qnpn13g2[ic] + @q.x1.xq7.qnpn13g2[ic] + @q.x1.xq8.qnpn13g2[ic] + @q.x1.xq9.qnpn13g2[ic] + @q.x1.xq10.qnpn13g2[ic] + @q.x1.xq11.qnpn13g2[ic] + @q.x1.xq12.qnpn13g2[ic] + @q.x1.xq13.qnpn13g2[ic] + @q.x1.xq14.qnpn13g2[ic]
+print ic_total
+let ic_diff_12 = ic1 - ic2
+print ic_diff_12
+let ic_ref = @q.x1.xqref.qnpn13g2[ic]
+print ic_ref
+let icc_vcc = i(vcc)
+print icc_vcc
+quit
+.endc
+.end

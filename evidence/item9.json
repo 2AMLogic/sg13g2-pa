@@ -3,14 +3,14 @@
   "kind": "generic",
   "status": "pass",
   "t1_item": 9,
-  "summary": "T1 item 9 (Testbenches shipped): 25/25 attestation checks passed (klt signoff --attest)",
+  "summary": "T1 item 9 (Testbenches shipped): 32/32 attestation checks passed (klt signoff --attest)",
   "source": "attest/item9.json",
   "attestation": {
     "producer": "klt signoff --attest",
     "inventory_schema_version": 1,
     "hash_algorithm": "sha256-raw-bytes",
-    "check_count": 25,
-    "passed_count": 25,
+    "check_count": 32,
+    "passed_count": 32,
     "checks": [
       {
         "check": "present",
@@ -81,6 +81,48 @@
         "path": "sim/known-answer/sine_h3.request.json",
         "passed": true,
         "content_hash": "sha256:6cfcf9a73f52cba68e7102f24ac06dedbb18340cded57715ea55c18cfd1b8ca8"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/mc-pilot/mc_ac_mismatch.request.json",
+        "passed": true,
+        "content_hash": "sha256:bca468fcf24e7cab6711056833f41f273acb62eff2c3a145dfcf915b9cf2ad4e"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/mc-pilot/mc_ac_stat.request.json",
+        "passed": true,
+        "content_hash": "sha256:371004095e2c4c428d15edd12330e425af8abaaaaa4b4d466fc7b8040aa505c9"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/mc-pilot/mc_op_mismatch.request.json",
+        "passed": true,
+        "content_hash": "sha256:5656c06d83e9a04b48abb1d42ea720dc515b7c49eca9b70519978ad790d001e5"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/mc-pilot/mc_op_stat.request.json",
+        "passed": true,
+        "content_hash": "sha256:fbc2f7875b7091308a13a67827e192539da4180e388a4b3465aee2cf410aef0e"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/mc-pilot/probe_instances.request.json",
+        "passed": true,
+        "content_hash": "sha256:d0897c4ad94fabcda839c529a8ab6f95c37eeb76f0f075cf0b23fca94a2b722d"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/mc-pilot/probe_scale.request.json",
+        "passed": true,
+        "content_hash": "sha256:8b6ededd0c55bf92f1fb30a4b3445439a5fdc18f4ad3b402729ca6b2050634e4"
       },
       {
         "check": "present",
@@ -192,6 +234,18 @@
       {
         "check": "command",
         "role": "cold_start",
+        "testbench": "sim/mc-pilot/mc_op_stat.request.json",
+        "argv": [
+          "sim/mc-pilot/run_mc_pilot.sh"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
         "testbench": "sim/psat-sweep/psat_sweep.request.json",
         "argv": [
           "sim/psat-sweep/run_psat_sweep.sh"
@@ -244,7 +298,7 @@
         "path": "attest/item9.json",
         "scope": "repo"
       },
-      "content_hash": "sha256:c5ee0ffb9a575add61f4b0ca92ffb574b01ae2e485395944c488cef253bff920"
+      "content_hash": "sha256:250d0859e7b1cb403cfd362f645f279b8be634df181123564dd32c8e25597813"
     }
   }
 }

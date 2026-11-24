@@ -21,7 +21,7 @@ The first topology, a single-stage array of 14 `npn13G2` (`Nx=10`) at 0.8 V, is
 [DR 0003](spec/decision-records/0003-first-topology-single-npn13g2.md):
 **PROPOSED, not ratified**.
 
-**T1 checklist: 4 of 11 items met, `tier: null`** (tracker: #5, whose table is
+**T1 checklist: 5 of 11 items met, `tier: null`** (tracker: #5, whose table is
 stale; the record is current).
 
 | # | Item | State | Evidence |
@@ -34,7 +34,7 @@ stale; the record is current).
 | 6 | Monte Carlo evidence | unmet, `no_evidence` | pilot + proposed DR 0005 (#174); waits on the operator ratifying statistical rows, then a `klt yield` campaign |
 | 7 | Post-layout verification | unmet, `no_evidence` | no issue; needs a routed layout |
 | 8 | Characterization report | unmet, `no_evidence` | no issue |
-| 9 | Testbenches shipped | unmet, `stale_evidence` | expanded inventory awaits a successful batch-enabled re-attestation (#174) |
+| 9 | Testbenches shipped | met | `evidence/item9.json`, 32/32 cold starts on the expanded inventory incl. the mc-pilot, batch fleet (#174) |
 | 10 | Repo hygiene | met | `evidence/item10.json`, gate `scripts/check-ci.sh` (#41) |
 | 11 | Power delivery | unmet, `no_evidence` | #42, depends on #39 |
 

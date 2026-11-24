@@ -1,0 +1,18 @@
+klt: warning: 2 installs provide PDK variant 'ihp-sg13g2'; read /home/ubuntu/.cache/sg13g2-pa/pdk-root (PDK_ROOT environment variable), skipped /home/ubuntu/share/pdk (search root: ~/share/pdk). Resolution is first-match-wins, so a pinned open_pdks build may not be the one this run read -- pin the root explicitly (--pdk-root, or a request's models.pdk_root) to disable the search and choose deliberately.
+klt: batch job klt-sim-fa60000c1290 submitting to s3://<bucket>/jobs/klt-sim-fa60000c1290
+klt: batch job klt-sim-cf20ebbb0d66 submitting to s3://<bucket>/jobs/klt-sim-cf20ebbb0d66
+klt: batch job klt-sim-f71578ef435a submitting to s3://<bucket>/jobs/klt-sim-f71578ef435a
+klt sim: batch job klt-sim-f71578ef435a: submitted
+klt sim: shards 0/3 launched, 1 launching, 2 pending, 0 collected; launch rate unknown, ETA unknown
+klt sim: batch job klt-sim-fa60000c1290: submitted
+klt sim: batch job klt-sim-cf20ebbb0d66: submitted
+klt sim: batch job klt-sim-fa60000c1290 launched; re-attach with `klt sim <request> --backend batch --attach klt-sim-fa60000c1290`
+klt sim: batch job klt-sim-f71578ef435a launched; re-attach with `klt sim <request> --backend batch --attach klt-sim-f71578ef435a`
+klt sim: shards 3/3 launched, 0 launching, 0 pending, 0 collected; launch rate 132.9/min, ETA 0m
+klt sim: batch job klt-sim-cf20ebbb0d66 launched; re-attach with `klt sim <request> --backend batch --attach klt-sim-cf20ebbb0d66`
+klt sim: batch job klt-sim-f71578ef435a state=no status.json yet elapsed=2s
+klt sim: batch job klt-sim-fa60000c1290 state=no status.json yet elapsed=2s
+klt sim: batch job klt-sim-cf20ebbb0d66 state=no status.json yet elapsed=2s
+klt sim: batch job klt-sim-f71578ef435a: done
+klt sim: batch job klt-sim-fa60000c1290: done
+klt sim: batch job klt-sim-cf20ebbb0d66: done

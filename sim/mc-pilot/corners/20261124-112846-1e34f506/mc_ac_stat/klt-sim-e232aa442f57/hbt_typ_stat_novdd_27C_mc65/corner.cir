@@ -1,0 +1,23 @@
+* klt sim -- generated corner deck, do not edit
+.options seed=1834566038
+.param mc_sample_index=65
+.param mc_process_seed=2001021020
+.param mc_mismatch_seed=695342939
+.lib /opt/pdk/ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib hbt_typ_stat
+.include /var/tmp/eda-job-klt-sim-e232aa442f57/inputs/netlist.cir
+.temp 27
+.control
+save v(s1) v(in1) v(out1) v(in2) v(out2) v(s2)
+set filetype=ascii
+ac lin 11 2.4e+09 2.4835e+09
+write /var/tmp/eda-job-klt-sim-e232aa442f57/outputs/artifacts/hbt_typ_stat_novdd_27C_mc65/waveform.raw
+let __klt_cv_0 = v(s1)
+let __klt_cv_1 = v(in1)
+let __klt_cv_2 = v(out1)
+let __klt_cv_3 = v(in2)
+let __klt_cv_4 = v(out2)
+let __klt_cv_5 = v(s2)
+write /var/tmp/eda-job-klt-sim-e232aa442f57/outputs/artifacts/hbt_typ_stat_novdd_27C_mc65/complex_vectors.raw __klt_cv_0 __klt_cv_1 __klt_cv_2 __klt_cv_3 __klt_cv_4 __klt_cv_5
+quit
+.endc
+.end

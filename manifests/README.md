@@ -237,16 +237,14 @@ item 3 the DRC deck, and item 9 runs the benches.
 
 ## Current verdict
 
-`tier: null`, 4 of 11 T1 items met (design sources, layout stream, DRC and
-repo hygiene). Items 4–8 and 11 have `no_evidence`. Item 9 grades
-`stale_evidence` because its last passing envelope covers the pre-pilot
-inventory. On 2026-11-21 the pinned attester passed 28 of 32 checks on the
-expanded inventory with `KLT_SIM_BACKEND=batch` and
-`KLT_BATCH_PROVISION_SCRIPT` set to the executable fleet provisioner. The
-device, pilot, psat and smoke cold starts all reached the netlist upload.
-The AWS CLI returned `The config profile (batch-runner-submit) could not be found`.
-The four pilot requests completed zero draws. Item 9 needs a new run from a
-submitter with that profile. [Attester output](../sim/mc-pilot/records/20261121-035222-1fd05f2.item9.json) · [Pilot diagnostics](../sim/mc-pilot/records/20261121-035222-1fd05f2.md)
+`tier: null`, 5 of 11 T1 items met (design sources, layout stream, DRC,
+testbenches shipped and repo hygiene). Items 4-8 and 11 have `no_evidence`.
+Item 9 grades `met`: on 2026-11-24 the pinned attester passed 32 of 32 checks
+on the expanded inventory (including the mc-pilot cold start, 4/4 batch
+requests completing all 100 draws) from a submitter with the
+`batch-runner-submit` profile. The earlier 28/32 run (2026-11-21, missing
+profile) stays in `sim/mc-pilot/records/` as append-only history.
+[Attester envelope](../evidence/item9.json) · [Pilot record](../sim/mc-pilot/records/20261124-112846-1e34f506.md)
 
 **Item 6 (Monte Carlo evidence) waits on ratification.** The mc-pilot
 ([`sim/mc-pilot/`](../sim/mc-pilot/), #174) established feasibility and
