@@ -3,7 +3,23 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-24
+
+- **PR #222**: refactor(sim): single-source the PVT cell label and verdict rung
+- **PR #220**: docs: record klayout_version_mismatch, 0.9.1 floor rationale and --rerun citations
+- **Issue #221** (closed): Consolidate duplicated record helpers (_cell_md, _rung, _cell_of) into sim/lib
+- **Issue #215** (closed): layout/smoke/README.md: record the 0.9.1 klayout_version_mismatch alongside the coverage counts, and restore the why-0.9.1 floor rationale
+
 ### 2026-11-23
+
+- **PR #218**: refactor: share corner extraction and waveform fixtures between psat and p1dbref reducers
+- **PR #212**: sim: drop closed-issue tracker entries from finding_trackers
+- **PR #217**: sim: make the npn13g2 load-line study analytic by removing its DC-data input
+- **PR #213**: chore: align layout smoke and netlisting on klayout-tools 0.9.1
+- **Issue #216** (closed): Share corner extraction and synthetic waveform fixtures between psat_record.py and p1dbref_record.py
+- **Issue #210** (closed): Remove closed-issue entries from finding_trackers.py: #188 special case and #192 power-row link point at closed issues
+- **Issue #93** (closed): Make loadline.py purely analytic: its simulated-DC input feeds an unread field and a Vbe check that cannot fire
+- **Issue #85** (closed): Collapse the layout and design klt pins onto 0.9.1: four klt releases are pinned across the repo
 
 - **PR #208**: refactor(sim): share the drive-axis builder between the matched psat sweep and its reference probe
 - **PR #198**: fix: raise the AC decks' gmin so the three 125 C PVT cells simulate clean
