@@ -5,8 +5,12 @@
 * Two independent DUT copies so one analysis gives all four S-parameters (reference 50 ohm):
 *   X1: AC source at port 1 (RFIN), 50 ohm load at RFOUT      -> S11 = 2 v(in1)/vs - 1, S21 = 2 v(out1)/vs
 *   X2: AC source at port 2 (RFOUT), 50 ohm termination at RFIN -> S22 = 2 v(out2)/vs - 1, S12 = 2 v(in2)/vs
-* Quiescent point: DC operating point at Vcc = 0.8 V (the bias is the DUT's own mirror).
+* Quiescent point: DC operating point at the cell's Vcc (the request sweeps the PVT
+*   matrix: 3 HBT sections x 3 temperatures x 3 supplies = 27 cells, klt `alter vcc=`; the deck's
+*   own Vcc line is the 0.8 V nominal). The bias is the DUT's own mirror.
 * Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT).
+* DC solve: `.options gmin=1e-10` -- convergence aid (issue #188): keeps the 125 C
+*   stepping singular matrix away without moving the OP or the sweep.
 
 * ---- DUT (verbatim copy of design/netlist/sg13g2-pa.spice) ----
 ** sch_path: /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-36/design/sg13g2-pa.sch
@@ -47,4 +51,5 @@ Vs2 s2 0 dc 0 ac 1
 Rs2 s2 out2 50
 X2 in2 out2 vcc 0 sg13g2-pa
 Rt2 in2 0 50
+.options gmin=1e-10
 .save v(in1) v(out1) v(s1) v(in2) v(out2) v(s2)

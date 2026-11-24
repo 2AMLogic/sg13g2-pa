@@ -106,10 +106,18 @@ refresh (#117, PR #124) — are merged with their done-criteria met, and #96
   No issue. Unblocked: the off-chip match bench (PR #120) fixes the load the
   device sees.
 - **Provisional PVT matrix on the three DUT benches** (3 HBT corners, -40 /
-  27 / 125 C, supply +/-10 %). Done when each bench has a record covering
-  every cell with window and breakdown labels, marked provisional while the
-  Supply row is DRAFT. No issue. Unblocked: the thermal known-answer check
-  (PR #130) and the off-chip match bench (PR #120) are on main.
+  27 / 125 C, supply +/-10 %). The matrix benches and their provisional
+  records landed with #173 (all three benches, every simulated cell window-
+  and breakdown-labelled, Supply row still DRAFT). What remains is design
+  work the matrix exposed, not bench work: every cell misses Stability and
+  Input match (#172), P1dB is missed in every reduced cell and Psat / peak
+  PAE fall under their Fallback rungs in the worst cells (#192), and three
+  125 C cells do not simulate on the two AC benches (#188; the psat
+  transients simulated all 27 cells, and two cold `hbt_bcs` cells refused
+  their reduction on drive-grid granularity -- recorded as findings, not
+  passes). Done when a re-run of the three benches after #172/#188/#192
+  shows every cell simulated with the ratified rows judged without
+  softening.
 - **Staged LVS run for item 4** (device census plus `klt lvs` recorded as-is
   on the placement GDS). Done when the report is committed and any
   recognition gap is filed upstream. #39. Unblocked by the scope ruling below.

@@ -8,7 +8,6 @@ importing it, which is how `sim/psat-sweep/psat_record.py` came to grade against
 own copy (issue #71).
 """
 import glob
-import importlib.util
 import json
 import os
 import sys
@@ -18,24 +17,16 @@ import pytest
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
+import ac_record as AC  # noqa: E402
 import device_limits as dl  # noqa: E402
 import gen_dut_benches as gdb  # noqa: E402
-
-
-def _load(name, relpath):
-    """Import a summarizer by path (they are scripts, not packages)."""
-    spec = importlib.util.spec_from_file_location(name, os.path.join(REPO, relpath))
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
+from script_loader import load_script as _load  # noqa: E402
 
 
 LOADLINE = _load("_loadline", "sim/device-npn13g2/loadline.py")
 SUMMARIZE = _load("_summarize", "sim/device-npn13g2/summarize.py")
 PSAT = _load("_psat_record", "sim/psat-sweep/psat_record.py")
 SMOKE = _load("_smoke_summarize", "sim/smoke/summarize.py")
-AC = _load("_ac_record", "sim/lib/ac_record.py")
 
 # (module, attribute) pairs that must be the shared object, not a local copy.
 CONSUMERS = [(LOADLINE, n) for n in ("BVCEO_MIN", "BVCBO_MIN", "VCE_WIN", "VBE_WIN",
@@ -164,11 +155,18 @@ def test_ac_record_renders_the_committed_conditions_unchanged(record, tmp_path, 
     """At today's constants the two formerly-retyped lines render byte-identically.
 
     `sim/ac-*/records/` is append-only evidence, so this pins that single-sourcing the
-    facts changed how the record is built and not what it says.
+    facts changed how the record is built and not what it says. PVT-matrix records
+    (issue #173) have no single cell to compare -- their per-cell conditions are the
+    declared matrix, pinned by test_ac_record.py -- so a committed record without a
+    "- Cell:" line must actually be one of those.
     """
+    committed = open(record).read().splitlines()
+    if not any(ln.startswith("- Cell:") for ln in committed):
+        assert any("PVT matrix" in ln for ln in committed[:3]), \
+            f"{record} has no '- Cell:' line and is not a PVT-matrix record"
+        pytest.skip("PVT-matrix record: no single nominal cell to compare")
     kind = "gain" if "/ac-gain/" in record else "stability"
     rendered = _render_ac(kind, tmp_path, capsys).splitlines()
-    committed = open(record).read().splitlines()
     # The corner id is the run's own, so compare the nominal cell up to it.
     assert (_conditions_line(rendered, "- Cell:").split("; corner id")[0]
             == _conditions_line(committed, "- Cell:").split("; corner id")[0])

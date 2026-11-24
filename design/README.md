@@ -52,14 +52,14 @@ run `xschem` directly. It needs xschem and the pinned SG13G2 PDK
 
 ```console
 source sim/env.sh
-uvx --from "klayout-tools==0.8.0" klt netlist design/sg13g2-pa.sch \
+uvx --from "klayout-tools==0.9.1" klt netlist design/sg13g2-pa.sch \
     -o design/netlist/sg13g2-pa.spice --rcfile design/xschemrc --block
 ```
 
 ## Check for drift (non-mutating)
 
 ```console
-uvx --from "klayout-tools==0.8.0" klt netlist design/sg13g2-pa.sch \
+uvx --from "klayout-tools==0.9.1" klt netlist design/sg13g2-pa.sch \
     -o design/netlist/sg13g2-pa.spice --rcfile design/xschemrc --block --check
 ```
 

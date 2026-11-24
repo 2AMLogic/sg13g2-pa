@@ -1,0 +1,13 @@
+* klt sim -- generated corner deck, do not edit
+.lib /home/ubuntu/share/pdk/ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib hbt_typ
+.include /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-192/sim/psat-sweep/psat_sweep_match.spice
+.temp 27.0
+.control
+alter vamp=0.437552325
+alter vcc=0.8
+set filetype=ascii
+tran 2p 204.812n
+write /home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-192/sim/psat-sweep/corners/20261122-020117-8062a122-match/psat_sweep_match/hbt_typ_vamp0p438_vcc0p800V_27C/waveform.raw
+quit
+.endc
+.end

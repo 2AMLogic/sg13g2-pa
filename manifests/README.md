@@ -15,7 +15,17 @@ pinned `klayout-tools` wheel](https://github.com/2AMLogic/klayout-tools/blob/v0.
   `evidence/item2.json`), 3 (DRC clean, from
   `../layout/reports/drc-klt-0.9.1.json`), 9 (testbenches shipped, from
   `evidence/item9.json`) and 10 (repo hygiene, from `evidence/item10.json`)
-  are cited today.
+  are cited today. **Item 5 (corner verification) is deliberately not
+  cited**: the provisional PVT matrix (#173) put per-cell records on all
+  three DUT benches, and `klt signoff --manifest` grades item 5 on every
+  ratified row meeting its cell in every corner -- the matrix honestly
+  records Stability and Input match missed in every simulated cell (#172),
+  P1dB missed in every reduced cell with Psat and peak PAE under their
+  Fallback rungs in the worst cells (#192), and three 125 C cells that did
+  not simulate on the two AC benches (#188), so the item stays
+  `unmet, no_evidence`-class until the design iterations (#172, #188, #192)
+  close and the benches re-run. Citing it now would grade `unmet` with
+  the matrix as evidence; the citation is added when it can grade `met`.
 - **`../layout/reports/drc-klt-0.9.1.json`**: the item-3 citation. Unlike
   items 1, 2, 9 and 10 there is no `evidence/item3.json` wrapper and no
   `--attest` step: `klt drc` already emits a first-class envelope, so the
@@ -74,9 +84,13 @@ pinned `klayout-tools` wheel](https://github.com/2AMLogic/klayout-tools/blob/v0.
 
 ## Regenerate
 
-The signoff pin is `klayout-tools==0.9.1`: `--attest` first ships in 0.8.0 and `--attest 2` (layout stream) in 0.9.1.
-The `sim/` and `layout/` pins (`sim/toolchain.json`, `layout/toolchain.json`)
-stay at 0.7.0 and are a separate concern.
+Signoff, layout and schematic netlisting use `klayout-tools==0.9.1`.
+Simulation uses 0.9.0 to match the batch fleet (`sim/toolchain.json`).
+0.9.1 is pinned by the #85 operator ruling, which collapsed the signoff and
+layout pins onto one version; it is not a capability floor. The capability
+floor for signoff and layout is 0.9.0: `--attest` first ships in 0.8.0, while
+`--attest 2` (layout stream) and the sg13g2 HBT flavor of `klt gen bjt_array`
+first ship in 0.9.0.
 
 Item 1 (needs xschem and the PDK; `source sim/env.sh` first):
 
@@ -350,9 +364,6 @@ cause — see "Residual gap" below for what was filed instead.
 - The superseded 0.7.0 report is kept as append-only evidence at
   [`../layout/reports/drc.json`](../layout/reports/drc.json) (`status:
   violations`, 28). It is the record of the artifact, not a current result.
-  `layout/toolchain.json`'s `klt.pin` stays 0.7.0: it is the
-  `layout/smoke/` pin and those reports were generated with it. The PA DRC
-  pin is recorded separately in that file as `pa_drc.pin`.
 
 ### What the `clean` does and does not cover
 
@@ -420,9 +431,8 @@ itself:
   and the item is `unmet` until the DRC is re-run on the new stream and both
   the report and the record are regenerated in the same PR.
 - The `klt` pin or the deck moves. A different deck content hash is a
-  different measurement; `pa_drc.pin` in
-  [`../layout/toolchain.json`](../layout/toolchain.json) and the pin in this
-  file and in the workflow must stay identical.
+  different measurement. Keep the layout and signoff pins in sync with
+  `klt.pin` in [`../layout/toolchain.json`](../layout/toolchain.json).
 - The re-run is not `clean`. That is reported as not clean and item 3 goes
   back to `unmet` with its `reason`; the deck is not relaxed and no rule is
   waived to recover a `met`.

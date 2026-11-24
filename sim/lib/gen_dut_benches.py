@@ -12,9 +12,13 @@ RFOUT VCC GND`):
 
 * ``sim/psat-sweep/psat_sweep.{spice,request.json}``  transient drive sweep
 * ``sim/psat-sweep/psat_sweep_match.{spice,request.json}`` the same sweep through an
-  ideal off-chip output match (``match`` variant; see ``psat_bench``)
+  ideal off-chip output match (``match`` variant; see ``psat_bench``), drive grid
+  crossed with the declared PVT matrix
 * ``sim/ac-gain/ac_gain.{spice,request.json}``        S-parameters over the band
 * ``sim/ac-stability/ac_stability.{spice,request.json}`` S-parameters 10 MHz-30 GHz
+* ``sim/pvt-matrix.json`` + ``sim/psat-sweep/psat_sweep_match.pvt-matrix.json``
+  the declared PVT matrix (27 cells; the latter crossed with the drive grid)
+  for ``klt corner-matrix check``
 
 The DUT netlist is **inlined verbatim** into each deck (klt sim owns the
 `.control` block, and an `.include` path would be resolved against an unknown
@@ -24,13 +28,23 @@ file, so a netlist change that is not regenerated fails loudly instead of
 silently benching a stale copy.
 
 The bench facts a record must restate -- ``F0_HZ``, ``RS_OHM``, ``RL_OHM``, the
-nominal cell (``PROCESS_NOM``, ``TEMP_NOM_C``, ``VCC_NOM_V``) and the DUT's output
-array via ``output_array()`` -- are declared (or derived from the netlist) here once;
-the reducers import them rather than keeping their own copies. The two psat variants
-differ in more than a filename (load, harmonic terminations, and which nodes carry the
-load power and the chip-boundary current), so every one of those facts is declared in
-``psat_bench(variant)`` and read from there by ``psat_record.py``: a deck whose
-extraction nodes moved cannot leave a record quoting the other variant's labels.
+nominal cell (``PROCESS_NOM``, ``TEMP_NOM_C``, ``VCC_NOM_V``), the declared PVT
+matrix (``PVT_PROCESS_SECTIONS`` x ``PVT_TEMP_C`` x ``PVT_VCC_V``) and the DUT's
+output array via ``output_array()`` -- are declared (or derived from the
+netlist) here once; the reducers import them rather than keeping their own
+copies. The two psat variants differ in more than a filename (load, harmonic
+terminations, and which nodes carry the load power and the chip-boundary
+current), so every one of those facts is declared in ``psat_bench(variant)``
+and read from there by ``psat_record.py``: a deck whose extraction nodes moved
+cannot leave a record quoting the other variant's labels.
+
+The AC requests and the matched psat request declare the full PVT matrix (27
+cells, T1 item 5); the committed ``sim/pvt-matrix.json`` and
+``sim/psat-sweep/psat_sweep_match.pvt-matrix.json`` are the same declaration
+in the two shapes ``klt corner-matrix`` checks requests and reports against.
+The bare psat request stays at the nominal cell -- the ratified large-signal
+rows are judged on the matched bench, whose harmonic terminations make the
+bare deck's P_out/PAE not comparable with it.
 
 The parts that are not specific to this DUT -- the pinned PDK name and corner-library
 path, the host's capacity wait, the request skeleton and the write/``--check`` driver
@@ -67,6 +81,24 @@ RL_OHM = 50.0
 VCC_NOM_V = 0.8             # DR 0003 (PROPOSED) nominal; the Supply row is DRAFT
 PROCESS_NOM = "hbt_typ"
 TEMP_NOM_C = 27
+
+# --- The PVT corner matrix (spec "PVT corner box"; T1 item 5, issue #173) ---
+#
+# The 27 cells the grid benches cover: the three HBT sections of the pinned
+# corner library x the spec's three ambient temperatures x the Supply row's
+# +/-10 %. This triple is THE declaration -- the request axes, the committed
+# matrix files `sim/pvt-matrix.json` and
+# `sim/psat-sweep/psat_sweep_match.pvt-matrix.json`, and every matrix record
+# derive from it, never from a second list. The Supply row is DRAFT (DR 0003
+# PROPOSED), so every result off this matrix is provisional by construction.
+PVT_PROCESS_SECTIONS = ("hbt_typ", "hbt_bcs", "hbt_wcs")
+PVT_TEMP_C = (-40.0, 27.0, 125.0)
+PVT_VCC_V = (round(0.9 * VCC_NOM_V, 3), float(VCC_NOM_V), round(1.1 * VCC_NOM_V, 3))
+# The two committed matrix files: the 27-cell box (the small-signal benches'
+# shape) and its drive-crossed expansion (the matched psat bench's shape --
+# one full drive sweep per cell).
+PVT_MATRIX_REL = "sim/pvt-matrix.json"
+PSAT_MATCH_MATRIX_REL = "sim/psat-sweep/psat_sweep_match.pvt-matrix.json"
 
 # Transient: the base-bias node settles with a time constant of ~70 RF periods
 # (Cin x the mirror's Rb), so 500 periods (>= 100 required) give the spec's settling
@@ -144,6 +176,41 @@ PSAT_MATCH_TOP_DBM = 10.0
 # bracket with ~3 dB to spare below it -- on the fine step.
 PSAT_MATCH_COARSE_TOP_DBM = -28.0
 
+# --- The P1dB linear-reference probe (issue #192) ---------------------------
+#
+# The spec's Output P1dB row takes its reference gain from "the linear region of the
+# same sweep (drive >= 20 dB below the compressing level)". The committed matched grid
+# CANNOT satisfy that sentence, and not by oversight: its bottom (-36.0 dBm available)
+# sits at the floor klt's corner-id encoding allows. klt names each unit by a corner id
+# whose supply-axis values are formatted to three decimals (`vamp=0.010`), and rounds
+# the artifact directory to the same slug, so two drive points whose source amplitudes
+# fall in one millivolt bucket collapse onto one unit (the klayout-tools#5870 class of
+# collision; `assert_pvt_corner_ids_distinct` refuses it at generation time, and the
+# matrix record's committed corner ids show the 3-decimal format live). Below roughly
+# 10 mV of amplitude -- about -35.7 dBm available into 50 ohm -- no <= 1 dB spaced
+# grid stays one bucket per point, and `reduce_sweep` forbids steps above 1 dB before
+# Psat, so the committed bench cannot reach a reference region 20 dB under any cell
+# that compresses above -48 dBm available. Every cell of the matrix record does: the
+# earliest measured 1 dB point is at Pavail -25.6 dBm (nominal cell), which leaves the
+# committed reference points only ~8-16 dB below compression depending on the cell.
+# The encoding gap is klayout-tools#7132 (friction protocol); until it closes,
+# this probe is the bench that measures what the committed grid cannot.
+#
+# It reuses the committed MATCHED deck unchanged (same load, harmonic terminations and
+# extraction nodes -- it changes no bench fact) and swaps only the drive axis for a
+# SPARSE low-drive one: 4 dB spacing, the finest tested that keeps every corner id distinct
+# down to -56 dBm available (2 dB spacing collides below about -44 dBm: consecutive
+# amplitudes share the `vamp=0.003` bucket). -56 dBm is itself 28 dB below the
+# earliest measured compression, so the probe's own lowest points already satisfy the
+# spec sentence the committed grid violates; the top probe point IS the committed
+# grid's bottom, so the two measurements bridge. The probe is NOT a drive sweep: its
+# steps are 4 dB, its points bracket no compression, and `reduce_sweep` is never run
+# on it -- its record extrapolates each cell's gain-vs-drive deficit to zero drive
+# (`p1dbref_record.py`) and reports the error the committed three-lowest-points
+# reference carries.
+P1DBREF_PROBE_GRID_DBM = (-56.0, -52.0, -48.0, -44.0, -40.0, -36.0)
+P1DBREF_PROBE_REQUEST_REL = "sim/psat-sweep/psat_sweep_match_p1dbref.request.json"
+
 
 def drive_grid_dbm():
     """Available drive power, dBm, ascending. The reducer's step limits apply to the
@@ -169,7 +236,11 @@ def drive_grid_match_dbm():
       compressing, so the three lowest-drive points ``reduce_sweep`` takes its
       reference gain from disagree (0.391 dB against a 0.1 dB limit) and the whole
       reduction is refused ``LINEAR_REGION_NOT_FOUND``. First matched run,
-      ``…-651c0cf-match``.
+      ``…-651c0cf-match``. The bottom also cannot move DOWN: klt's corner-id
+      encoding rounds supply-axis values to three decimals, so below ~10 mV of
+      source amplitude no <= 1 dB spaced grid keeps one bucket per point (see
+      ``P1DBREF_PROBE_GRID_DBM`` -- the low-drive probe that measures the
+      reference region this floor keeps the committed grid out of).
     * **The coarse tail must stop early.** With the bare grid's boundary (-16.8 dBm) the
       1 dB compression point lands inside the 0.8 dB region: measured P_in steps 0.912 dB
       across the bracket against a 0.5 dB limit, refused ``SWEEP_STEP_TOO_COARSE``.
@@ -219,6 +290,149 @@ def amp_v(p_avail_dbm):
     """Source EMF amplitude giving the available power into RS (P = A^2/(8 RS))."""
     p_w = 1e-3 * 10 ** (p_avail_dbm / 10.0)
     return math.sqrt(8.0 * RS_OHM * p_w)
+
+
+def pvt_cell_count():
+    """The cell count of the declared PVT matrix (3 sections x 3 temps x 3 supplies)."""
+    return len(PVT_PROCESS_SECTIONS) * len(PVT_TEMP_C) * len(PVT_VCC_V)
+
+
+def drive_supply_axis(grid):
+    """A drive-sweep bench's `corners.supply_v`: the drive grid CROSSED with
+    the supply points, as parallel per-index lists (klt sweeps multiple supply
+    keys together by index, never as a cross product of their own).
+
+    Supply-major, so the crossed expansion (process x supply x temperature)
+    runs each cell's drive sweep as one contiguous run of units; `vcc` repeats
+    the supply point across its whole sweep and `vamp` repeats the grid once
+    per supply point. The matched psat sweep and the P1dB reference probe
+    share this one crossing -- each passes its own grid, so each keeps its own
+    drive levels, rounding and ordering. The bare psat bench never comes here:
+    it stays nominal-only by design (see `psat_request`).
+    """
+    vamps, vccs = [], []
+    for vcc in PVT_VCC_V:
+        for p in grid:
+            vamps.append(round(amp_v(p), 9))
+            vccs.append(vcc)
+    return {"vamp": vamps, "vcc": vccs}
+
+
+def _crossed_units(axis):
+    """Every (cell, drive) unit of a crossed-axis request, as explicit
+    `{process, temperature_c, supply_v}` records in klt's own odometer order
+    (process, supply, temperature) -- the expansion `klt sim` performs on the
+    axis, enumerated so the corner-id screen sees exactly the units a submit
+    would dispatch."""
+    units = []
+    for proc in PVT_PROCESS_SECTIONS:
+        for vamp, vcc in zip(axis["vamp"], axis["vcc"]):
+            for temp in PVT_TEMP_C:
+                units.append({"process": proc, "temperature_c": temp,
+                              "supply_v": {"vamp": vamp, "vcc": vcc}})
+    return units
+
+
+def p1dbref_probe_request():
+    """The P1dB linear-reference probe request (issue #192): every declared PVT
+    cell x the sparse low-drive grid, on the committed matched deck.
+
+    Same options, timeout and sharding arithmetic as the matched matrix bench
+    (it is the same per-unit transient); it is NOT a declared-matrix bench, so
+    it gets no `klt corner-matrix` gate -- its coverage is the probe grid, and
+    its record states both."""
+    axis = drive_supply_axis(P1DBREF_PROBE_GRID_DBM)
+    n_units = assert_pvt_corner_ids_distinct(_crossed_units(axis))
+    req = _matrix_request(
+        "psat_sweep_match.spice",
+        {"kind": "tran", "args": f"{TRAN_STEP_S * 1e12:.6g}p {TRAN_STOP_S * 1e9:.6g}n"},
+        {"timeout_s": PSAT_MATCH_TIMEOUT_S, "keep_artifacts": True, "waveforms": True,
+         "capture_only": True, "save_mode": "netlist"},
+        corners_extra={"supply_v": axis},
+    )
+    req["remote"] = {"hosts": batch_hosts(n_units, PSAT_MATCH_TIMEOUT_S)}
+    return req
+
+
+def klt_corner_id(process, supply_v, temperature_c):
+    """The per-unit corner id `klt sim` names a unit with.
+
+    Mirrors klayout-tools `sim_corner_point.CornerPoint.corner_id` at the
+    pinned 0.9.0: ``<process>/<supply>V/<temp>C``, the supply label either
+    ``<value>.3f V`` (one key) or sorted ``key=value.3f`` pairs joined by
+    ``_`` (several keys), and an integer-valued temperature without its
+    ``.0``. The 3-decimal rounding is the hazard klayout-tools#5870 is
+    about -- two axis values inside one millivolt collapse onto one id and
+    one artifact directory -- which is why this mirror exists at all:
+    `assert_pvt_corner_ids_distinct()` screens every (cell, drive) pair with
+    the same text klt will name the unit with, BEFORE any submit. The
+    runners' `--dry-run` re-check is the authoritative one if this mirror
+    ever drifts from the tool.
+    """
+    if not supply_v:
+        supply_label = "novdd"
+    elif len(supply_v) == 1:
+        supply_label = f"{next(iter(supply_v.values())):.3f}V"
+    else:
+        supply_label = "_".join(f"{k}={v:.3f}" for k, v in sorted(supply_v.items())) + "V"
+    temp = int(temperature_c) if float(temperature_c).is_integer() else temperature_c
+    return f"{process}/{supply_label}/{temp}C"
+
+
+def assert_pvt_corner_ids_distinct(units):
+    """Refuse a matrix whose per-unit corner ids collide (klayout-tools#5870).
+
+    klt names each unit by its corner id and stores that unit's artifacts
+    under the id's slug, so two units inside one 3-decimal supply bucket share
+    both and one silently masks the other. Raised at generation time (so a
+    drifting drive grid fails `--check` loudly) and re-checked by the runners
+    against `klt sim --dry-run`'s authoritative unit list before any submit.
+    """
+    seen = {}
+    for u in units:
+        cid = klt_corner_id(u["process"], u["supply_v"], u["temperature_c"])
+        if cid in seen:
+            raise ValueError(
+                f"matrix units {seen[cid]!r} and {u!r} share the corner id {cid!r}: "
+                "klt formats supply axis values to three decimals, so close values "
+                "collapse onto one unit (klayout-tools#5870). Keep every (cell, "
+                "drive) pair distinct at three decimals or the drive grid step "
+                "is too fine for the axis encoding.")
+        seen[cid] = u
+    return len(seen)
+
+
+def pvt_matrix():
+    """The declared 27-cell matrix as a committed `klt corner-matrix` file: the
+    small-signal benches' shape (one cell per unit, supply = the Vcc axis)."""
+    return {
+        "description": (
+            "sg13g2-pa PVT corner box (spec/target-spec.md), declared once by "
+            "sim/lib/gen_dut_benches.py: 3 cornerHBT.lib sections x -40/27/125 C "
+            "x supply nominal +/-10 % (nominal 0.8 V, DR 0003 PROPOSED -- Supply "
+            "row DRAFT, so results are provisional). Checked against the "
+            "ac-gain / ac-stability requests and reports with "
+            "`klt corner-matrix check`."),
+        "process": list(PVT_PROCESS_SECTIONS),
+        "supply_v": {"vcc": list(PVT_VCC_V)},
+        "temperature_c": list(PVT_TEMP_C),
+    }
+
+
+def psat_match_pvt_matrix():
+    """The same declared 27 cells, crossed with the matched bench's drive grid
+    (one full sweep per cell): the shape `klt corner-matrix` checks the
+    matched psat request and report against. The cells are exactly
+    `pvt_matrix()`'s; only the drive axis is added."""
+    m = pvt_matrix()
+    m["supply_v"] = drive_supply_axis(drive_grid_match_dbm())
+    m["description"] = (
+        "sg13g2-pa PVT corner box drive-crossed for sim/psat-sweep's matched "
+        "bench: the 27 cells of sim/pvt-matrix.json x the matched drive grid "
+        "(one full sweep per cell; vamp/vcc pairs sweep together by index). "
+        "Declared once by sim/lib/gen_dut_benches.py; Supply row DRAFT, so "
+        "results are provisional. Checked with `klt corner-matrix check`.")
+    return m
 
 
 def netlist_text():
@@ -529,7 +743,10 @@ Rl outl 0 {RL_OHM:g}
         "(simulated bench, not a result)",
         [
             f"Source: EMF behind Rs = {RS_OHM:g} ohm; amplitude = v(amp), set per drive point by",
-            "  klt sim corners.supply_v (`alter vamp=`), f0 = 2.44175 GHz (band centre).",
+            "  klt sim corners.supply_v (`alter vamp=`), f0 = 2.44175 GHz (band centre). The",
+            "  PVT matrix crosses that drive axis with the supply points and the HBT",
+            f"  sections/temperatures ({pvt_cell_count()} cells x the drive grid): vcc is",
+            f"  `alter vcc=` per unit, the deck's own Vcc line is the {VCC_NOM_V:g} V nominal.",
             "",
             "CHIP BOUNDARY IS RFOUT (node `out`; design/README.md). On the chip side:",
             "  the DUT only (Lchoke, Cblock, Cin). Off chip: Vbsense, Lmatch, Cmatch,",
@@ -541,7 +758,7 @@ Rl outl 0 {RL_OHM:g}
             "",
             "OUTPUT NETWORK (two-element L-section, derived -- not tuned to a result):",
             "",
-            "  COLL --[Cblock 100p, ON CHIP]-- RFOUT |boundary| --[Lmatch]--+--[Rl]",
+            f"  COLL --[Cblock {1e12 * net['cblock_f']:g}p, ON CHIP]-- RFOUT |boundary| --[Lmatch]--+--[Rl]",
             "                                                              |",
             "                                                           [Cmatch]",
             "                                                              |",
@@ -565,8 +782,10 @@ Rl outl 0 {RL_OHM:g}
             f"  Cblock is {net['cblock_x_ohm']:.4f} ohm reactive at f0 -- "
             f"{100 * abs(net['cblock_x_ohm']) / net['ropt_ohm']:.0f}% of Ropt, so it is",
             "        absorbed in closed form rather than neglected; that is why the",
-            "        COLLECTOR, not RFOUT, sees a real Ropt. Lchoke (+j1534 ohm shunt at",
-            "        COLL) is a 0.12% perturbation on Ropt and is left alone.",
+            "        COLLECTOR, not RFOUT, sees a real Ropt. That impedance includes",
+            "        the series Cblock but not the DUT's shunt Lchoke at COLL; the",
+            "        numerical case for leaving Lchoke alone, at the original design",
+            "        point, is issue #116.",
             "",
             "HARMONIC TERMINATIONS ARE NO LONGER THE LABELLED IDEAL-50-OHM DEFAULT:",
             f"  at RFOUT / at COLL through Cblock (arithmetic over ideal elements):",
@@ -616,6 +835,29 @@ Rl outl 0 {RL_OHM:g}
     return h + _dut_block() + body
 
 
+# --- The AC decks' DC-solve convergence aid (issue #188) -------------------
+#
+# ngspice's default minimum junction conductance (gmin 1e-12) lets the DC
+# operating-point solve of the two AC decks hit a singular matrix inside the
+# VBIC card's internal nodes at 125 C ambient on three PVT cells (hbt_bcs /
+# 0.80 V and hbt_wcs / 0.72 V and 0.88 V). ngspice's own stepping recovered
+# every time -- the completed sweeps' vectors matched a clean solve to
+# < 5e-4 dB on every S-parameter -- but klt 0.9.0 cannot recognize that
+# recovery for a capture-only AC request: its only independent completion
+# signal for a corner without measurements is tran-specific
+# (`_waveform_reached_tran_window`), so each corner graded `error` and the
+# records withheld the three cells' figures as "did not simulate"
+# (2AMLogic/klayout-tools#7120; the diagnosis and the OP/S-parameter
+# equivalence evidence are issue #188's). Raising gmin two decades keeps the
+# Jacobian regular through the stepping, so the same solve converges with no
+# singular-matrix warning and the corner grades `pass` with no diagnostics,
+# at a bias and S-parameter response indistinguishable from the default
+# (operating-point currents within 6e-5 relative, S-parameters within
+# 5e-4 dB). 1e-11 leaves the worst cell (hbt_wcs / 0.72 V / 125 C) singular,
+# so 1e-10 is the smallest decade that clears all three.
+AC_GMIN = 1e-10
+
+
 def _ac_deck(title, extra_header):
     # The AC decks are only readable as S-parameters through
     # `sim/lib/sparams.py` `s_from_nodes`, whose 2 v(out)/vs forms are S21/S12
@@ -637,8 +879,13 @@ def _ac_deck(title, extra_header):
         f"Two independent DUT copies so one analysis gives all four S-parameters (reference {RS_OHM:g} ohm):",
         f"  X1: AC source at port 1 (RFIN), {RL_OHM:g} ohm load at RFOUT      -> S11 = 2 v(in1)/vs - 1, S21 = 2 v(out1)/vs",
         f"  X2: AC source at port 2 (RFOUT), {RS_OHM:g} ohm termination at RFIN -> S22 = 2 v(out2)/vs - 1, S12 = 2 v(in2)/vs",
-        f"Quiescent point: DC operating point at Vcc = {VCC_NOM_V} V (the bias is the DUT's own mirror).",
+        f"Quiescent point: DC operating point at the cell's Vcc (the request sweeps the PVT",
+        f"  matrix: {len(PVT_PROCESS_SECTIONS)} HBT sections x {len(PVT_TEMP_C)} temperatures x "
+        f"{len(PVT_VCC_V)} supplies = {pvt_cell_count()} cells, klt `alter vcc=`; the deck's",
+        f"  own Vcc line is the {VCC_NOM_V:g} V nominal). The bias is the DUT's own mirror.",
         "Output network: IDEAL passives (Lchoke, Cblock, Cin in the DUT).",
+        f"DC solve: `.options gmin={AC_GMIN:g}` -- convergence aid (issue #188): keeps the 125 C",
+        "  stepping singular matrix away without moving the OP or the sweep.",
     ])
     body = f"""Vcc vcc 0 dc {VCC_NOM_V}
 Vs1 s1 0 dc 0 ac 1
@@ -649,6 +896,7 @@ Vs2 s2 0 dc 0 ac 1
 Rs2 s2 out2 {RL_OHM:g}
 X2 in2 out2 vcc 0 sg13g2-pa
 Rt2 in2 0 {RS_OHM:g}
+.options gmin={AC_GMIN:g}
 .save v(in1) v(out1) v(s1) v(in2) v(out2) v(s2)
 """
     return h + _dut_block() + body
@@ -671,29 +919,65 @@ def _request(netlist, analysis, options, corners_extra=None, batch=False):
                              corners_extra=corners_extra, batch=batch)
 
 
+def _matrix_request(netlist, analysis, options, corners_extra=None):
+    """A bench's PVT-matrix request: the 27 declared cells, one fleet submit.
+
+    Every grid bench that covers the matrix goes through this shape -- the
+    axes are the declared triple, never a per-request corner list, so
+    `klt corner-matrix check --request` is clean by construction.
+    """
+    return bench_gen.request(netlist, analysis, options,
+                             process=list(PVT_PROCESS_SECTIONS),
+                             temperature_c=list(PVT_TEMP_C),
+                             corners_extra=corners_extra, batch=True)
+
+
 def psat_request(variant="bare"):
     b = psat_bench(variant)
     if variant == "bare":
+        # The bare deck stays NOMINAL-ONLY. The ratified large-signal rows are
+        # judged on the matched bench (the spec's Fallback output-port cell);
+        # the bare deck's flat-50-ohm harmonic terminations make its P_out and
+        # PAE not comparable with it, so running it across 27 cells would
+        # spend 27 x 72 more fleet units evidencing no judged row. Its
+        # nominal-cell run remains the item-9 cold start and the termination
+        # the matched record's figures are explicitly NOT compared against.
         grid, timeout_s, hosts = drive_grid_dbm(), 1800, None
+        req = _request(
+            f"{b['name']}.spice",
+            {"kind": "tran", "args": f"{TRAN_STEP_S * 1e12:.6g}p {TRAN_STOP_S * 1e9:.6g}n"},
+            {"timeout_s": timeout_s, "keep_artifacts": True, "waveforms": True,
+             "capture_only": True, "save_mode": "netlist"},
+            corners_extra={"supply_v": {
+                "vamp": [round(amp_v(p), 9) for p in grid],
+                "vcc": [VCC_NOM_V] * len(grid),
+            }},
+            batch=True,
+        )
     else:
-        grid = drive_grid_match_dbm()
+        # The matched bench carries the whole PVT matrix: the drive axis crossed
+        # with the supply points (drive_supply_axis), 27 cells x 106 drive
+        # points = 2862 units. ONE axis feeds both the corner-id screen and
+        # the request, so the units checked are exactly the units submitted.
+        # Screen the per-unit corner ids BEFORE anything is built or
+        # submitted: klt names a unit by its corner id and rounds supply
+        # values to three decimals, so close values collapse
+        # (klayout-tools#5870) -- here that would silently merge two (cell,
+        # drive) pairs into one unit and one artifact directory.
+        axis = drive_supply_axis(drive_grid_match_dbm())
+        n_units = assert_pvt_corner_ids_distinct(_crossed_units(axis))
         timeout_s = PSAT_MATCH_TIMEOUT_S
-        # One corner per drive point, so the unit count IS the grid length. The bare
-        # request leaves `hosts` unset and its run is warned for it (`job_ceiling`:
-        # bound 129720s vs a 3600s ceiling, `recommended_hosts: 72`); the matched
-        # request sets it, so every shard is inside the ceiling before the submit.
-        hosts = batch_hosts(len(grid), timeout_s)
-    req = _request(
-        f"{b['name']}.spice",
-        {"kind": "tran", "args": f"{TRAN_STEP_S * 1e12:.6g}p {TRAN_STOP_S * 1e9:.6g}n"},
-        {"timeout_s": timeout_s, "keep_artifacts": True, "waveforms": True,
-         "capture_only": True, "save_mode": "netlist"},
-        corners_extra={"supply_v": {
-            "vamp": [round(amp_v(p), 9) for p in grid],
-            "vcc": [VCC_NOM_V] * len(grid),
-        }},
-        batch=True,
-    )
+        # Every shard stays inside the fleet's whole-job ceiling
+        # (units/shard x timeout + overhead <= 3600 s), so the 2862-unit grid
+        # is 261 jobs, not one job the ceiling would kill.
+        hosts = batch_hosts(n_units, timeout_s)
+        req = _matrix_request(
+            f"{b['name']}.spice",
+            {"kind": "tran", "args": f"{TRAN_STEP_S * 1e12:.6g}p {TRAN_STOP_S * 1e9:.6g}n"},
+            {"timeout_s": timeout_s, "keep_artifacts": True, "waveforms": True,
+             "capture_only": True, "save_mode": "netlist"},
+            corners_extra={"supply_v": axis},
+        )
     if hosts is not None:
         req["remote"] = {"hosts": hosts}
     return req
@@ -706,25 +990,40 @@ def psat_request(variant="bare"):
 AC_PORT_VECTORS = ["v(s1)", "v(in1)", "v(out1)", "v(in2)", "v(out2)", "v(s2)"]
 
 
+AC_TIMEOUT_S = 300
+
+
 def _ac_options():
-    return {"timeout_s": 300, "keep_artifacts": True, "waveforms": True,
+    return {"timeout_s": AC_TIMEOUT_S, "keep_artifacts": True, "waveforms": True,
             "capture_only": True, "complex_vectors": list(AC_PORT_VECTORS),
             "save_vectors": list(AC_PORT_VECTORS)}
 
 
+def _ac_request(name, analysis):
+    """One AC bench's matrix request: the 27 declared cells (supply = Vcc)."""
+    req = _matrix_request(
+        name,
+        analysis,
+        _ac_options(),
+        corners_extra={"supply_v": {"vcc": list(PVT_VCC_V)}},
+    )
+    # 27 units x 300 s exceeds the fleet's whole-job ceiling in one job, so
+    # shard the same way the matched psat bench does (3 jobs of <= 11 units).
+    req["remote"] = {"hosts": batch_hosts(pvt_cell_count(), AC_TIMEOUT_S)}
+    return req
+
+
 def ac_gain_request():
-    return _request(
+    return _ac_request(
         "ac_gain.spice",
         {"kind": "ac", "args": f"lin 11 {BAND_LO_HZ:g} {BAND_HI_HZ:g}"},
-        _ac_options(),
     )
 
 
 def ac_stability_request():
-    return _request(
+    return _ac_request(
         "ac_stability.spice",
         {"kind": "ac", "args": "dec 50 10Meg 30G"},
-        _ac_options(),
     )
 
 
@@ -741,6 +1040,16 @@ def outputs():
         "sim/ac-gain/ac_gain.request.json": j(ac_gain_request()),
         "sim/ac-stability/ac_stability.spice": ac_stability_deck(),
         "sim/ac-stability/ac_stability.request.json": j(ac_stability_request()),
+        # The declared matrix, once, in the two shapes `klt corner-matrix`
+        # checks: the 27-cell box (AC benches) and its drive-crossed
+        # expansion (the matched psat bench). Committed next to the benches
+        # they gate, regenerated only here.
+        PVT_MATRIX_REL: j(pvt_matrix()),
+        PSAT_MATCH_MATRIX_REL: j(psat_match_pvt_matrix()),
+        # The P1dB linear-reference probe's request (issue #192): the committed
+        # matched deck under a sparse low-drive axis. No deck of its own and no
+        # declared-matrix file -- it is not a matrix bench.
+        P1DBREF_PROBE_REQUEST_REL: j(p1dbref_probe_request()),
     }
 
 

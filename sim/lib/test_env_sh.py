@@ -14,6 +14,7 @@ itself -- from the request's `batch.capacity_wait_s`, or a
 resubmit to exercise here.
 """
 
+import json
 import os
 import subprocess
 import tempfile
@@ -22,24 +23,49 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 ENV_SH = REPO / "sim" / "env.sh"
 
+
+def _run_env(body, env=None):
+    """Run a bash <body> with sim/env.sh sourced, the way every harness does:
+    `set -uo pipefail`, the source tolerated (a PDK-less host must not abort
+    the test before the functions under test are defined), SIM_SCRIPT_NAME set.
+    """
+    script = (
+        "set -uo pipefail\n"
+        'source "' + str(ENV_SH) + '" >/dev/null 2>&1 || true\n'
+        "SIM_SCRIPT_NAME=test_env_sh\n"
+        + body
+    )
+    return subprocess.run(["bash", "-c", script], capture_output=True,
+                          text=True, env=env, timeout=120)
+
+
+def _parse_failed(proc, allow_exit=False):
+    """Read a harness run's `RESULT failed=<n>` verdict; return (failed, stderr).
+
+    A stdout without the marker means the harness died before its own verdict:
+    with allow_exit the process's own exit code is returned instead (the gates
+    report usage errors that way); without it the run is a test failure.
+    """
+    if "RESULT failed=" not in proc.stdout:
+        if allow_exit:
+            return proc.returncode, proc.stderr
+        raise AssertionError(
+            f"harness died before its verdict: {proc.stdout}{proc.stderr}")
+    return int(proc.stdout.rsplit("RESULT failed=", 1)[1].strip()), proc.stderr
+
+
+def _write_stub(path, text):
+    """Write an executable stub script (each harness's fake `klt`)."""
+    path.write_text(text)
+    path.chmod(0o755)
+
+
 STUB = """#!/usr/bin/env bash
 # Stands in for `klt`: records its argv, emits the chosen stderr, exits STUB_RC.
 printf '%s\\n' "$@" >> "${ARGV_LOG}"
 printf '%s' "${STUB_STDERR:-}" >&2
 printf '{"status": "stub"}\\n'
 exit "${STUB_RC:-0}"
-"""
-
-HARNESS = """
-set -uo pipefail
-source "__ENV_SH__" >/dev/null 2>&1 || true
-SCRIPT_DIR="__TMP__/bench"
-OUT="__TMP__/out"
-SIM_SCRIPT_NAME=test_env_sh
-KLT_CMD=("__TMP__/klt-stub")
-failed=0
-sim_run_one __ARGS__
-echo "RESULT failed=${failed}"
 """
 
 
@@ -51,20 +77,23 @@ def run_one(args, rc=0, stderr_text=""):
         (tmp / "out").mkdir()
         argv_log = tmp / "argv.log"
         argv_log.touch()
-        stub = tmp / "klt-stub"
-        stub.write_text(STUB)
-        stub.chmod(0o755)
-        script = (
-            HARNESS.replace("__ENV_SH__", str(ENV_SH))
+        _write_stub(tmp / "klt-stub", STUB)
+        body = (
+            """
+SCRIPT_DIR="__TMP__/bench"
+OUT="__TMP__/out"
+KLT_CMD=("__TMP__/klt-stub")
+failed=0
+sim_run_one __ARGS__
+echo "RESULT failed=${failed}"
+"""
             .replace("__TMP__", str(tmp))
             .replace("__ARGS__", args)
         )
         env = dict(os.environ, STUB_RC=str(rc), STUB_STDERR=stderr_text,
                    ARGV_LOG=str(argv_log))
-        proc = subprocess.run(["bash", "-c", script], capture_output=True,
-                              text=True, env=env, timeout=120)
-        assert "RESULT failed=" in proc.stdout, (proc.stdout, proc.stderr)
-        failed = int(proc.stdout.rsplit("RESULT failed=", 1)[1].strip())
+        proc = _run_env(body, env)
+        failed, _ = _parse_failed(proc)
         return failed, proc.stdout, argv_log.read_text().splitlines()
 
 
@@ -75,10 +104,24 @@ def test_clean_run_is_a_success():
 
 
 def test_exit_4_is_always_a_failure():
-    # No bench is waived: a waveform-only request sets `options.capture_only`,
-    # so klt exits 0 for it; any exit 4 (`not_checked`) is a real failure.
+    # Without --allow-errored-corners no bench is waived: a waveform-only
+    # request sets `options.capture_only`, so klt exits 0 when every corner
+    # simulated; exit 4 means corners errored and the strict default refuses.
     failed, _, _ = run_one("bench", rc=4)
     assert failed == 1
+
+
+def test_exit_4_is_tolerated_only_when_the_bench_allows_errored_corners():
+    # The characterization-matrix waiver (issue #173): a corner that errored is
+    # a cell the record must show as "did not simulate", so the matrix benches
+    # pass --allow-errored-corners and exit 4 alone does not set failed. The
+    # waiver is exit-4 only: every other non-zero exit still fails, waived or
+    # not.
+    failed, _, _ = run_one("bench --allow-errored-corners", rc=4)
+    assert failed == 0
+    for rc in (1, 2, 3, 5):
+        failed, _, _ = run_one("bench --allow-errored-corners", rc=rc)
+        assert failed == 1, f"exit {rc} must still be a failure"
 
 
 def test_every_non_zero_exit_is_a_failure():
@@ -115,16 +158,6 @@ def test_a_failure_is_submitted_once_whatever_its_cause():
 # matrix is tolerated only when the bench asks for it, and nothing else about
 # a log (exit codes, completion markers) is consulted.
 
-GATE_HARNESS = """
-set -uo pipefail
-source "__ENV_SH__" >/dev/null 2>&1 || true
-OUT="__TMP__/out"
-SIM_SCRIPT_NAME=test_env_sh
-failed=0
-sim_gate_logs __ARGS__
-echo "RESULT failed=${failed}"
-"""
-
 CLEAN_LOG = """Circuit: ** sg13g2 pa bench
 Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
 No. of Data Rows : 101
@@ -136,25 +169,42 @@ Dynamic gmin stepping completed
 """
 
 
-def gate(logs, args=""):
-    """Run `sim_gate_logs <args>` over {point: text}; return (failed, stderr)."""
+def gate(logs, args="", corners=None):
+    """Run `sim_gate_logs <args>` over {point: text}; return (failed, stderr).
+
+    corners, when given, is the report's corner list: (corner_id, status,
+    point) with the point naming the same directory the log was written to, so
+    the fixture report references the very logs the test wrote -- one tree,
+    like a real collect. Passing it writes report.json and appends
+    `--skip-errored-from <report>` to the invocation.
+    """
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         for point, text in logs.items():
             log = tmp / "out" / point / "ngspice.log"
             log.parent.mkdir(parents=True)
             log.write_text(text)
-        script = (
-            GATE_HARNESS.replace("__ENV_SH__", str(ENV_SH))
+        if corners is not None:
+            report = tmp / "report.json"
+            report.write_text(json.dumps({
+                "corners": [
+                    {"corner_id": cid, "status": st,
+                     "artifacts": {"log": str(tmp / "out" / point / "ngspice.log")}}
+                    for cid, st, point in corners
+                ],
+            }))
+            args = f"{args} --skip-errored-from {report}".strip()
+        body = (
+            """
+OUT="__TMP__/out"
+failed=0
+sim_gate_logs __ARGS__
+echo "RESULT failed=${failed}"
+"""
             .replace("__TMP__", str(tmp))
             .replace("__ARGS__", args)
         )
-        proc = subprocess.run(["bash", "-c", script], capture_output=True,
-                              text=True, timeout=120)
-        if "RESULT failed=" not in proc.stdout:
-            return proc.returncode, proc.stderr
-        failed = int(proc.stdout.rsplit("RESULT failed=", 1)[1].strip())
-        return failed, proc.stderr
+        return _parse_failed(_run_env(body), allow_exit=True)
 
 
 def test_a_clean_log_passes_the_gate():
@@ -255,6 +305,176 @@ def test_a_gate_over_no_logs_is_not_a_failure():
     assert failed == 0, err
 
 
+# --- sim_gate_logs --skip-errored-from --------------------------------------
+#
+# The characterization-matrix waiver (issue #173): exactly the logs of corners
+# the REPORT grades `status: "error"` skip the gate -- their diagnostics are
+# the record's "did not simulate" cells. The statuses come from klt's report,
+# never from re-parsing the log text, and nothing else is waived.
+
+
+BAD_LOG = CLEAN_LOG + "Warning: singular matrix:  check nodes net3 and net3\n"
+
+
+def test_skip_errored_from_skips_exactly_the_errored_corners_log():
+    failed, err = gate(
+        {"hot/125c": BAD_LOG, "tt/27c": CLEAN_LOG},
+        corners=[("hbt_wcs/0.800V/125C", "error", "hot/125c"),
+                 ("hbt_typ/0.800V/27C", "pass", "tt/27c")])
+    assert failed == 0, err
+    assert "errored corner" in err and "hot/125c" in err
+
+
+def test_skip_errored_from_waives_nothing_else():
+    # A pass-status corner's bad log still fails the gate, and the errored
+    # corner's log is not skipped when the report grades it pass.
+    failed, err = gate(
+        {"hot/125c": BAD_LOG, "tt/27c": BAD_LOG},
+        corners=[("hbt_wcs/0.800V/125C", "pass", "hot/125c"),
+                 ("hbt_typ/0.800V/27C", "pass", "tt/27c")])
+    assert failed == 1, err
+    assert "FAILED hot/125c" in err and "FAILED tt/27c" in err
+
+
+def test_skip_errored_from_with_an_unreadable_report_waives_nothing():
+    # A report that cannot be read gates everything: the strict default.
+    with tempfile.TemporaryDirectory() as tmp:
+        broken = Path(tmp) / "report.json"
+        broken.write_text("{not json")
+        failed, err = gate({"hot": BAD_LOG},
+                           f"--skip-errored-from {broken}")
+    assert failed == 1, err
+
+
+def test_skip_errored_from_needs_a_value():
+    rc, err = gate({}, "--skip-errored-from")
+    assert rc == 2, err
+    assert "needs a value" in err
+
+
+# --- sim_corner_matrix_check -----------------------------------------------
+#
+# The `klt corner-matrix` gate: the stub IS klt (its stdout is the verdict the
+# test chooses), so what is under test is the gate's own reading of the
+# verdict -- and, for the errored-cells case, its cross-check of the verdict
+# against the report klt graded (issue #173, 2AMLogic/klayout-tools#7008).
+
+CM_KLT_STUB = """#!/usr/bin/env bash
+cat "${VERDICT_JSON}"
+exit "${VERDICT_RC:-0}"
+"""
+
+
+def cm_check(mode, verdict, report=None, verdict_rc=0):
+    """Run the gate in <mode> with a chosen verdict; return (failed, stdout)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        (tmp / "out").mkdir()
+        (tmp / "matrix.json").write_text("{}\n")
+        verdict_json = tmp / "verdict.json"
+        verdict_json.write_text(json.dumps(verdict))
+        src = tmp / ("report.json" if report is not None else "request.json")
+        if report is not None:
+            src.write_text(json.dumps(report))
+        else:
+            src.write_text("{}\n")
+        _write_stub(tmp / "klt-stub", CM_KLT_STUB)
+        body = (
+            """
+OUT="__TMP__/out"
+KLT_CMD=("__TMP__/klt-stub")
+failed=0
+sim_corner_matrix_check __TMP__/matrix.json __MODE__ __SRC__ bench || failed=1
+echo "RESULT failed=${failed}"
+"""
+            .replace("__TMP__", str(tmp))
+            .replace("__MODE__", mode)
+            .replace("__SRC__", str(src))
+        )
+        env = dict(os.environ, VERDICT_JSON=str(verdict_json),
+                   VERDICT_RC=str(verdict_rc))
+        proc = _run_env(body, env)
+        failed, _ = _parse_failed(proc)
+        return failed, proc.stdout
+
+
+def _report(corners):
+    return {"corners": corners}
+
+
+ERRORED_CELL = {"corner_id": "hbt_wcs/0.800V/125C", "status": "error"}
+PASS_CELL = {"corner_id": "hbt_typ/0.800V/27C", "status": "pass"}
+
+
+def test_a_complete_verdict_passes():
+    failed, out = cm_check("report", {"mode": "report", "matrix_size": 2,
+                                      "coverage_complete": True, "complete": True,
+                                      "missing": [], "extra": [], "duplicate": []},
+                           report=_report([PASS_CELL, ERRORED_CELL]))
+    assert failed == 0, out
+    assert "covers all 2 declared tuples" in out
+
+
+def test_the_errored_cells_case_passes_and_cites_the_upstream_gap():
+    # klt cannot check a matrix whose cells legitimately fail clean
+    # (klayout-tools#7008): not_simulated conflates never-ran with
+    # ran-and-errored. The gate accepts the errored-cells case -- missing /
+    # extra / duplicate empty AND every not_simulated tuple a corner the
+    # report itself grades non-pass -- and says so.
+    failed, out = cm_check(
+        "report",
+        {"mode": "report", "matrix_size": 2, "coverage_complete": False,
+         "complete": False, "missing": [], "extra": [], "duplicate": [],
+         "not_simulated": ["hbt_wcs/0.800V/125C"]},
+        report=_report([PASS_CELL, ERRORED_CELL]),
+        verdict_rc=3)
+    assert failed == 0, out
+    assert "2 declared tuples observed once" in out
+    assert "1 errored" in out and "klayout-tools#7008" in out
+
+
+def test_a_not_simulated_tuple_that_never_ran_still_fails():
+    # The cross-check is the whole waiver: a not_simulated entry with no
+    # matching non-pass corner in the report is a coverage hole, not an
+    # errored cell.
+    failed, out = cm_check(
+        "report",
+        {"mode": "report", "matrix_size": 2, "coverage_complete": False,
+         "complete": False, "missing": [], "extra": [], "duplicate": [],
+         "not_simulated": ["hbt_wcs/0.800V/125C", "hbt_typ/0.720V/-40C"]},
+        report=_report([PASS_CELL, ERRORED_CELL]),
+        verdict_rc=3)
+    assert failed == 1, out
+    assert "CORNER_MATRIX_INCOMPLETE" not in out  # the failure is on stderr
+
+
+def test_a_missing_or_duplicated_tuple_fails_even_with_errored_cells():
+    for verdict in (
+        {"mode": "report", "matrix_size": 3, "coverage_complete": False,
+         "complete": False, "missing": ["hbt_typ/0.720V/-40C"], "extra": [],
+         "duplicate": [], "not_simulated": ["hbt_wcs/0.800V/125C"]},
+        {"mode": "report", "matrix_size": 2, "coverage_complete": False,
+         "complete": False, "missing": [], "extra": [],
+         "duplicate": ["hbt_typ/0.800V/27C"], "not_simulated": []},
+    ):
+        failed, _ = cm_check("report", verdict,
+                             report=_report([PASS_CELL, ERRORED_CELL]),
+                             verdict_rc=3)
+        assert failed == 1, verdict
+
+
+def test_request_mode_has_no_errored_cells_waiver():
+    # A not-complete request verdict fails; the waiver reads the REPORT's own
+    # corner statuses and a request has none.
+    failed, _ = cm_check(
+        "request",
+        {"mode": "request", "matrix_size": 2, "coverage_complete": None,
+         "complete": False, "missing": [], "extra": [], "duplicate": [],
+         "not_simulated": ["hbt_wcs/0.800V/125C"]},
+        verdict_rc=3)
+    assert failed == 1
+
+
 # --- sim_run_ac_bench -----------------------------------------------------
 #
 # The shared body of the two AC bench runners (sim/ac-gain/run_ac_gain.sh and
@@ -270,11 +490,15 @@ def test_a_gate_over_no_logs_is_not_a_failure():
 
 AC_KLT_STUB = """#!/usr/bin/env bash
 # Stands in for `klt` for the AC driver: records its argv, writes a per-corner
-# ngspice.log under its -o directory, emits a report on stdout, exits STUB_RC.
+# ngspice.log under its -o directory, answers the three call shapes the driver
+# makes (a --dry-run unit expansion, a corner-matrix verdict, a sim report),
+# exits STUB_RC.
 out=""
 prev=""
+dry=0
 for a in "$@"; do
   [[ "${prev}" == "-o" ]] && out="${a}"
+  [[ "${a}" == "--dry-run" ]] && dry=1
   prev="${a}"
 done
 printf '%s\\n' "$@" >> "${ARGV_LOG}"
@@ -282,7 +506,13 @@ if [[ -n "${out}" && -n "${STUB_LOG:-}" ]]; then
   mkdir -p "${out}/tt"
   printf '%s' "${STUB_LOG}" > "${out}/tt/ngspice.log"
 fi
-printf '{"status": "stub"}\\n'
+if [[ "${1:-}" == "corner-matrix" ]]; then
+  printf '{"mode": "stub", "matrix_size": 2, "observed_count": 2, "coverage_complete": true, "complete": true, "missing": [], "extra": [], "duplicate": []}\\n'
+elif (( dry )); then
+  printf '{"status": "valid", "units": [{"corner_id": "stub/0.800V/27C"}, {"corner_id": "stub/0.720V/-40C"}]}\\n'
+else
+  printf '{"status": "stub"}\\n'
+fi
 exit "${STUB_RC:-0}"
 """
 
@@ -302,22 +532,6 @@ with open(os.environ["RECORD_ARGV_LOG"], "w") as fh:
     fh.write("\\n".join(sys.argv[1:]))
 print("# stub record")
 sys.exit(int(os.environ.get("STUB_RECORD_RC", "0")))
-"""
-
-# `set -e` is enabled only after sourcing, so a PDK-less host cannot abort the
-# source before the functions under test are defined -- the runners themselves
-# run the driver under `set -euo pipefail`.
-AC_HARNESS = """
-set -uo pipefail
-source "__ENV_SH__" >/dev/null 2>&1 || true
-SIM_DIR="__TMP__/sim"
-REPO_ROOT="__TMP__"
-SCRIPT_DIR="__TMP__/sim/ac-__DIR__"
-SIM_SCRIPT_NAME=test_env_sh
-NGSPICE_VERSION="ngspice-stub"
-sim_resolve_klt() { KLT_CMD=("__TMP__/klt-stub"); KLT_VERSION="klt-stub"; }
-set -e
-sim_run_ac_bench __ARGS__
 """
 
 
@@ -363,14 +577,23 @@ def run_ac(args, dir_kind="gain", rc=0, log=None, stale=False, record_rc=0):
             d = tmp / "sim" / f"ac-{kind}"
             d.mkdir()
             bench_dirs[kind] = d
-        stub = tmp / "klt-stub"
-        stub.write_text(AC_KLT_STUB)
-        stub.chmod(0o755)
+        _write_stub(tmp / "klt-stub", AC_KLT_STUB)
         argv_log = tmp / "argv.log"
         argv_log.touch()
         record_argv_log = tmp / "record-argv.log"
-        script = (
-            AC_HARNESS.replace("__ENV_SH__", str(ENV_SH))
+        # `set -e` is enabled only after sourcing, so a PDK-less host cannot
+        # abort the source before the functions under test are defined -- the
+        # runners themselves run the driver under `set -euo pipefail`.
+        body = (
+            """
+SIM_DIR="__TMP__/sim"
+REPO_ROOT="__TMP__"
+SCRIPT_DIR="__TMP__/sim/ac-__DIR__"
+NGSPICE_VERSION="ngspice-stub"
+sim_resolve_klt() { KLT_CMD=("__TMP__/klt-stub"); KLT_VERSION="klt-stub"; }
+set -e
+sim_run_ac_bench __ARGS__
+"""
             .replace("__TMP__", str(tmp))
             .replace("__DIR__", dir_kind)
             .replace("__ARGS__", args)
@@ -381,8 +604,7 @@ def run_ac(args, dir_kind="gain", rc=0, log=None, stale=False, record_rc=0):
         env.pop("STUB_DECK_STALE", None)
         if stale:
             env["STUB_DECK_STALE"] = "1"
-        proc = subprocess.run(["bash", "-c", script], capture_output=True,
-                              text=True, env=env, timeout=120)
+        proc = _run_env(body, env)
         record_argv = (record_argv_log.read_text().splitlines()
                        if record_argv_log.exists() else [])
         # Read the sandbox out before the TemporaryDirectory is removed.
@@ -415,10 +637,20 @@ def test_the_kind_selects_the_request_the_report_and_the_renderer_argument():
         assert r.record_argv[-1].endswith(f"ac_{kind}.report.json"), r.record_argv
 
 
-def test_the_ac_submit_is_one_local_run():
+def test_the_ac_submit_is_one_fleet_run_with_matrix_screens():
+    # One real submit (no --backend flag: the host's KLT_SIM_BACKEND decides,
+    # batch on the dispatch worker), bracketed by the pre-submit screens (a
+    # --dry-run unit expansion and a corner-matrix request check) and the
+    # post-run corner-matrix report check.
     r = run_ac("gain")
-    assert r.argv.count("sim") == 1, f"re-submitted: {r.argv}"
-    assert "--backend" in r.argv and "local" in r.argv
+    assert r.argv.count("--dry-run") == 1, r.argv
+    assert r.argv.count("corner-matrix") == 2, r.argv
+    assert "--request" in r.argv and "--report" in r.argv
+    assert sum(1 for a in r.argv if a.endswith("pvt-matrix.json")) == 2, r.argv
+    assert "--backend" not in r.argv
+    # Exactly one submit of the request (the dry run expands, it does not run).
+    submits = sum(1 for a in r.argv if a == "sim") - 1  # one `sim` is the dry run
+    assert submits == 1, f"re-submitted: {r.argv}"
 
 
 def test_a_failing_corner_log_stops_the_record():

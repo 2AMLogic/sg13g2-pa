@@ -5,7 +5,7 @@ Usage: summarize.py <record-id> <git-sha> <dirty:0|1> <klt-version> <ngspice-ban
                     <provenance.json> <out-dir> <dc-json-out>
 
 Reads <out-dir>/{dc_family,ft}.report.json. Prints the record on stdout, writes
-<dc-json-out> (Ic cells for loadline.py). Exit 1 if a report is missing or any
+<dc-json-out> (simulated Ic cells; not read by loadline.py). Exit 1 if a report is missing or any
 corner is not `pass`. Stdlib only; run with -I.
 """
 import json

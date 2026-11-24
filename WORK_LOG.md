@@ -3,6 +3,55 @@
 Chronological record of merged PRs and closed issues, maintained by the Guide
 triage role. Newest first.
 
+### 2026-11-24
+
+- **PR #225**: test: share one script loader across sim/lib tests and drop dead _load_psat_record
+- **PR #222**: refactor(sim): single-source the PVT cell label and verdict rung
+- **PR #220**: docs: record klayout_version_mismatch, 0.9.1 floor rationale and --rerun citations
+- **Issue #223** (closed): Consolidate duplicated script-loader boilerplate across sim/lib tests and drop dead _load_psat_record
+- **Issue #221** (closed): Consolidate duplicated record helpers (_cell_md, _rung, _cell_of) into sim/lib
+- **Issue #215** (closed): layout/smoke/README.md: record the 0.9.1 klayout_version_mismatch alongside the coverage counts, and restore the why-0.9.1 floor rationale
+
+### 2026-11-23
+
+- **PR #218**: refactor: share corner extraction and waveform fixtures between psat and p1dbref reducers
+- **PR #212**: sim: drop closed-issue tracker entries from finding_trackers
+- **PR #217**: sim: make the npn13g2 load-line study analytic by removing its DC-data input
+- **PR #213**: chore: align layout smoke and netlisting on klayout-tools 0.9.1
+- **Issue #216** (closed): Share corner extraction and synthetic waveform fixtures between psat_record.py and p1dbref_record.py
+- **Issue #210** (closed): Remove closed-issue entries from finding_trackers.py: #188 special case and #192 power-row link point at closed issues
+- **Issue #93** (closed): Make loadline.py purely analytic: its simulated-DC input feeds an unread field and a Vbe check that cannot fire
+- **Issue #85** (closed): Collapse the layout and design klt pins onto 0.9.1: four klt releases are pinned across the repo
+
+- **PR #208**: refactor(sim): share the drive-axis builder between the matched psat sweep and its reference probe
+- **PR #198**: fix: raise the AC decks' gmin so the three 125 C PVT cells simulate clean
+- **Issue #207** (closed): Share the drive-axis builder between the matched Psat sweep and its reference probe
+- **Issue #204** (closed): sim(known-answer-thermal): the thermal-node check covers Nx ∈ {1,4}; the psat DUT instantiates Nx=10
+- **Issue #188** (closed): Diagnose AC error status after ngspice recovery in three 125 °C PVT cells
+
+### 2026-11-22
+
+- **PR #201**: sim(psat-sweep): verify the P1dB reference and refute the bias-feed candidate (27 cells)
+- **PR #200**: test: consolidate the duplicated bash harnesses in sim/lib/test_env_sh.py
+- **PR #196**: sim: matrix records name their findings' trackers and state whole-run shard provenance
+- **PR #195**: test: parameterize the four sibling-import shapes of the dynamic-load hop
+- **Issue #194** (closed): PVT-matrix records under-describe their own run: no design-iteration issue links, and a resumed sharded run's provenance line reports only the final round
+- **Issue #192** (closed): Design iteration: large-signal power rows in the PVT matrix worst cells (P1dB missed everywhere; Psat < 10 dBm in three 0.72 V cells; peak PAE 14.7 % at hbt_wcs 125 C)
+- **Issue #190** (closed): Consolidate the four sibling-import fixtures in the provenance tests
+- **Issue #199** (closed): Consolidate the duplicated bash harnesses and dead fixture setup in sim/lib/test_env_sh.py
+
+### 2026-11-21
+
+- **Issue #173** (closed): T1 item 5: provisional PVT corner matrix on the three DUT benches (3 HBT corners x -40/27/125 C x supply +/-10 %)
+- **PR #193**: Provisional 27-cell PVT matrix on the three DUT benches: psat-matched record, item-9 re-attest, per-row findings (#173)
+- **Issue #187** (closed): Remove hand-copied Cblock and Lchoke values from matched Psat bench commentary
+- **PR #189**: fix: stop hand-copying Cblock and Lchoke values in the matched Psat bench
+- **Issue #176** (closed): Remove the unusable manual recovery recipe for missing dpkg-deb
+- **PR #183**: fix: replace unusable missing-dpkg-deb recovery recipe with install-and-rerun
+- **Issue #177** (closed): Consolidate PDK model suffix checks so a missing .mod include fails preflight
+- **PR #181**: fix: fail preflight on a missing .mod model include
+- **Issue #179** (closed): Move known-answer-thermal gen_bench.py onto sim/lib/bench_gen.py (lax --check overwrites evidence)
+
 ### 2026-11-19
 
 - **PR #170**: chore: grade the signoff record against the klt wheel's bundled checklist

@@ -1,0 +1,11 @@
+{
+  "matrix": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-188/sim/pvt-matrix.json",
+  "mode": "request",
+  "source": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-188/sim/ac-gain/ac_gain.request.json",
+  "complete": true,
+  "matrix_size": 27,
+  "observed_count": 27,
+  "missing": [],
+  "extra": [],
+  "duplicate": []
+}

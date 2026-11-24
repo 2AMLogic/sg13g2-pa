@@ -37,6 +37,8 @@ import sys
 INC = re.compile(r'^\s*\.(?:lib|include|inc)\s+(?:"([^"]+)"|\'([^\']+)\'|(\S+))',
                  re.IGNORECASE)
 
+MODEL_SUFFIXES = (".lib", ".spice", ".spi", ".mod", ".inc", ".cir")
+
 
 def fail(name, msg):
     sys.stderr.write(f"{name}: {msg}\n")
@@ -96,12 +98,11 @@ def closure(roots):
                 if not m:
                     continue
                 ref = next(g for g in m.groups() if g)
-                if ref.lower().endswith((".lib", ".spice", ".spi", ".mod", ".inc", ".cir")) \
-                        or os.sep in ref:
+                if ref.lower().endswith(MODEL_SUFFIXES) or os.sep in ref:
                     cand = ref if os.path.isabs(ref) else os.path.join(os.path.dirname(f), ref)
                     if os.path.isfile(cand):
                         todo.append(os.path.realpath(cand))
-                    elif ref.lower().endswith((".lib", ".spice", ".spi", ".inc", ".cir")):
+                    elif ref.lower().endswith(MODEL_SUFFIXES):
                         fail("PDK_MODEL_INPUT_MISSING",
                              f"{f} references {ref}, not found at {cand}")
     return order

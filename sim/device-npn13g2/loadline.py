@@ -3,12 +3,11 @@
 
 Usage:
   python3 -I loadline.py --self-test
-  python3 -I loadline.py --out /tmp/loadline.json [--dc-json records/<id>.dc.json]
+  python3 -I loadline.py --out /tmp/loadline.json
                          [--supplies 0.5,0.6,...] [--vknee 0.4] [--tol 0.10]
 
 NOT a simulation. Every number here is hand-checkable arithmetic on an ideal
-resistive load-line (README "Hand check"); the simulated device data
-(`<id>.dc.json`, from summarize.py) only adds the Vbe the quiescent point needs.
+resistive load-line (README "Hand check"); no simulated data is read.
 The output is a RECOMMENDATION input; nothing here ratifies a spec row.
 
 Model (one npn13G2 array, choke-fed class-A stage, ideal sinusoid):
@@ -59,41 +58,7 @@ def frac_below(mean, amp, level):
     return frac_above(-mean, amp, -level)
 
 
-def interp_vbe(points, ic_target):
-    """Vbe at ic_target by log-linear interpolation of [(vbe, ic)], or None if not bracketed."""
-    pts = sorted((v, i) for v, i in points if i > 0)
-    for (v0, i0), (v1, i1) in zip(pts, pts[1:]):
-        if i0 <= ic_target <= i1:
-            f = (math.log(ic_target) - math.log(i0)) / (math.log(i1) - math.log(i0))
-            return v0 + f * (v1 - v0)
-    return None
-
-
-def vbe_at_iq(dc, nx_dev, iq_dev, vcc):
-    """Range of Vbe that gives iq_dev on an Nx=nx_dev device, over the swept corners, at the
-    swept Vce nearest vcc. dc = list of dicts from <id>.dc.json."""
-    rows = [c for c in dc if c["nx"] == nx_dev]
-    if not rows:
-        return None
-    vce = min({c["vce"] for c in rows}, key=lambda v: abs(v - vcc))
-    vals, total = [], 0
-    for key in sorted({(c["process"], c["temperature_c"]) for c in rows}):
-        pts = [(c["vbe"], c["ic_a"]) for c in rows
-               if (c["process"], c["temperature_c"]) == key and abs(c["vce"] - vce) < 1e-6]
-        total += 1
-        v = interp_vbe(pts, iq_dev)
-        if v is not None:
-            vals.append(v)
-    out = {"vce_column_v": vce, "corners_bracketed": len(vals), "corners_total": total}
-    if vals:
-        out["min_v"], out["max_v"] = min(vals), max(vals)
-        out["in_window"] = VBE_WIN[0] <= min(vals) and max(vals) <= VBE_WIN[1]
-    else:
-        out["note"] = "Iq not bracketed by the swept Vbe levels at any corner; Vbe not established"
-    return out
-
-
-def cell(vcc_nom, tol_label, tol, mode, vknee, vbe_at_peak, nx_dev, dc=None):
+def cell(vcc_nom, tol_label, tol, mode, vknee, vbe_at_peak, nx_dev):
     vcc = vcc_nom * (1.0 + tol)
     vswing = (vcc if mode == "saturated" else vcc_nom) - vknee
     vswing = max(vswing, 0.0)
@@ -145,13 +110,6 @@ def cell(vcc_nom, tol_label, tol, mode, vknee, vbe_at_peak, nx_dev, dc=None):
             labels.append({"quantity": "tj", "ambient_c": ta, "limit_c": TJ_MAX, "peak_c": tj,
                            "fraction_of_cycle": None})
 
-    vbe = None
-    if dc:
-        vbe = vbe_at_iq(dc, nx_dev, iq_nx * nx_dev, vcc)
-        if vbe and vbe.get("in_window") is False:
-            labels.append({"quantity": "vbe", "limit_v": list(VBE_WIN), "min_v": vbe["min_v"],
-                           "max_v": vbe["max_v"], "fraction_of_cycle": None})
-
     # Thermal labels are reported separately: the 125 C ambient cell is outside by construction.
     non_thermal = [x for x in labels if x["quantity"] != "tj"]
     if violated:
@@ -163,17 +121,16 @@ def cell(vcc_nom, tol_label, tol, mode, vknee, vbe_at_peak, nx_dev, dc=None):
     return {"supply_nominal_v": vcc_nom, "tolerance": tol_label, "vcc_v": vcc, "swing_mode": mode,
             "vswing_v": vswing, "vce_pk_v": vce_pk, "vce_min_v": vce_min, "vcb_pk_v": vcb_pk,
             "breakdown": bd, "breakdown_verdict": verdict, "window_labels": labels,
-            "status": status, "pout": pout, "nx_needed": need, "thermal": thermal,
-            "vbe_at_quiescent": vbe}
+            "status": status, "pout": pout, "nx_needed": need, "thermal": thermal}
 
 
-def study(supplies, tol, vknee, vbe_at_peak, nx_dev, dc=None):
+def study(supplies, tol, vknee, vbe_at_peak, nx_dev):
     cells = []
     for mode in ("saturated", "fixed-nominal"):
         for s in supplies:
             for lab, t in (("-%d%%" % round(tol * 100), -tol), ("nominal", 0.0),
                            ("+%d%%" % round(tol * 100), tol)):
-                cells.append(cell(s, lab, t, mode, vknee, vbe_at_peak, nx_dev, dc))
+                cells.append(cell(s, lab, t, mode, vknee, vbe_at_peak, nx_dev))
     return cells
 
 
@@ -218,7 +175,8 @@ def self_test():
     c = cell(0.9, "nominal", 0.0, "saturated", 0.4, 0.65, 10)
     close(c["vswing_v"], 0.5); close(c["vce_pk_v"], 1.4); close(c["vce_min_v"], 0.4)
     close(c["vcb_pk_v"], 0.75)
-    assert not c["breakdown"]["vceo"]["violation"] and c["window_labels"][:1] != [{"x": 0}]
+    assert not c["breakdown"]["vceo"]["violation"]
+    assert [x for x in c["window_labels"] if x["quantity"] != "tj"] == []  # only Tj@125 C ambient
     close(c["pout"]["pout_per_nx_w"], 3.75e-4)
     close(c["pout"]["pout_per_nx_dbm"], 10 * math.log10(0.375))
     assert c["nx_needed"]["nx_total"] == 85 and c["nx_needed"]["devices_at_nx_dev"] == 9
@@ -241,9 +199,6 @@ def self_test():
     # Controls.
     ctl = controls(0.4, 0.65, 10)
     assert ctl["negative"]["flagged"] and ctl["positive"]["passes"]
-    # Log-linear Vbe interpolation.
-    close(interp_vbe([(0.7, 1e-6), (0.8, 1e-4)], 1e-5), 0.75)
-    assert interp_vbe([(0.7, 1e-6), (0.8, 1e-4)], 1e-3) is None
     return True
 
 
@@ -273,7 +228,7 @@ def render(d):
                 x["quantity"], "/" + x["side"] if "side" in x else "",
                 "%.3g" % x.get("peak_v", x.get("min_v", x.get("peak_c", 0)) or 0),
                 "-" if x["fraction_of_cycle"] is None else "%.0f%% of cycle" % (100 * x["fraction_of_cycle"]))
-                for x in c["window_labels"] if x["quantity"] in ("vce", "vbe")) or "-"
+                for x in c["window_labels"] if x["quantity"] == "vce") or "-"
             L.append("| %.2f | %s | %.3f | %.3f | %.3f | %.3f | %.3f | %s | %s | %.2f | %s | %s | %.1f C |" % (
                 c["supply_nominal_v"], c["tolerance"], c["vcc_v"], c["vswing_v"], c["vce_pk_v"],
                 c["vce_min_v"], c["vcb_pk_v"], c["breakdown_verdict"], "OUTSIDE MODEL WINDOW: " + lab
@@ -292,23 +247,11 @@ def render(d):
     return "\n".join(L)
 
 
-def load_dc(path):
-    with open(path) as fh:
-        return json.load(fh)["cells"]
-
-
-def latest_dc(here):
-    rec = os.path.join(here, "records")
-    names = sorted(n for n in os.listdir(rec) if n.endswith(".dc.json")) if os.path.isdir(rec) else []
-    return os.path.join(rec, names[-1]) if names else None
-
-
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--self-test", action="store_true")
     ap.add_argument("--out")
     ap.add_argument("--render", metavar="JSON", help="print the record's Markdown section for a loadline JSON")
-    ap.add_argument("--dc-json", help="simulated DC family data (default: newest records/*.dc.json)")
     ap.add_argument("--supplies", default=",".join("%g" % s for s in DEFAULT_SUPPLIES))
     ap.add_argument("--tol", type=float, default=0.10)
     ap.add_argument("--vknee", type=float, default=VCE_WIN[0],
@@ -328,10 +271,8 @@ def main(argv):
     if not a.out:
         ap.error("--out is required (or use --self-test)")
 
-    dc_path = a.dc_json or latest_dc(HERE)
-    dc = load_dc(dc_path) if dc_path else None
     supplies = [float(x) for x in a.supplies.split(",")]
-    cells = study(supplies, a.tol, a.vknee, a.vbe_at_peak, a.nx_dev, dc)
+    cells = study(supplies, a.tol, a.vknee, a.vbe_at_peak, a.nx_dev)
     out = {
         "kind": "analytic ideal-resistive load-line; NOT a simulation",
         "limits": {"bvceo_min_v": BVCEO_MIN, "bvcbo_min_v": BVCBO_MIN, "vce_window_v": list(VCE_WIN),
@@ -348,7 +289,6 @@ def main(argv):
                             "fixed-nominal": "swing set at the nominal supply; low-supply cell may bottom"},
             "target_dbm": P_TARGET_DBM, "nx_dev": a.nx_dev,
         },
-        "dc_data": dc_path and os.path.relpath(dc_path, HERE),
         "controls": controls(a.vknee, a.vbe_at_peak, a.nx_dev),
         "cells": cells,
         "recommendation": recommend(cells, supplies),
