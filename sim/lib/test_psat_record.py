@@ -612,6 +612,29 @@ def test_the_record_shares_the_watts_to_dbm_conversion_with_the_reducer(tmp_path
     assert f"| {rx.dbm(p_in_w):.2f} |" in md
 
 
+# --- the cell label and the rung are the shared ones (issue #221) ------------
+
+
+def test_the_cell_helpers_are_the_shared_ones():
+    """Not a private copy: the same three function objects every record uses."""
+    import pvt_cells
+    assert PSAT.cell_of is pvt_cells.cell_of
+    assert PSAT.cell_md is pvt_cells.cell_md
+    assert PSAT.rung is pvt_cells.rung
+
+
+def test_an_errored_corner_with_a_null_supply_carries_its_cell():
+    """The null-tolerant extraction the shared helper keeps (issue #221): a
+    corner whose `supply_v` is an explicit null is still named, at the nominal."""
+    rep = {"corners": [{"corner_id": "c0", "status": "error", "process": "hbt_wcs",
+                        "temperature_c": 125, "supply_v": None}]}
+    points, failures = PSAT.extract_corners(rep, gdb.psat_bench("match"))
+    assert points == []
+    assert failures == [{"corner_id": "c0", "code": "KLT_STATUS_error",
+                         "cell": {"process": "hbt_wcs", "temperature_c": 125.0,
+                                  "vcc": gdb.VCC_NOM_V}}]
+
+
 # --- the PVT matrix record (issue #173) ------------------------------------
 #
 # A multi-cell report renders per cell: one reduction per cell (never one over
@@ -703,5 +726,5 @@ def test_a_matrix_report_grades_ratified_rows_per_cell(tmp_path):
     figures = md.split("## Per-cell figures")[1].split("## Per-cell detail")[0]
     assert figures.count("| fallback |") >= 2      # the Psat column, both cells
     for rung in ("met", "fallback", "missed"):
-        pass  # rungs are from _rung(); the fallback count above pins the grading
+        pass  # rungs are from rung(); the fallback count above pins the grading
     assert "worst cell over the matrix" in md.lower()

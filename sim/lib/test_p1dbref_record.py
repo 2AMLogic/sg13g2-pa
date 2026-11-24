@@ -234,3 +234,18 @@ def test_default_reference_skips_the_newer_refuted_candidate(tmp_path, capsys, m
     baseline.unlink()
     baseline.write_text(json.dumps({"bench": "psat_sweep_match", "pvt_matrix": True}))
     assert PR.main(["p1dbref_record.py", "--select-matrix", str(tmp_path)]) == 2
+
+
+# --- the cell label is the shared one (issue #221) ---------------------------
+
+
+def test_the_cell_label_is_the_shared_one(tmp_path):
+    """Not `psat_record._cell_md`: the probe record used to reach into another
+    module for a private name, which only existed because both reducers carried
+    a copy of the same formatter."""
+    import pvt_cells
+    assert PR.cell_md is pvt_cells.cell_md
+    rc, md, _doc = _render(str(tmp_path), _matrix_record())
+    assert rc == 0
+    cell = _matrix_record()["cells"][0]["cell"]
+    assert f"### {pvt_cells.cell_md(cell)}" in md

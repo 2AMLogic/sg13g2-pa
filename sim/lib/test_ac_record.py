@@ -192,3 +192,32 @@ def test_an_all_met_matrix_report_links_nothing(tmp_path):
     sec = md.split("## Findings and their trackers", 1)[1]
     assert "No verdict falls below its rung" in sec
     assert "#172" not in sec and "#188" not in sec
+
+
+# --- the cell label and the rung are the shared ones (issue #221) ------------
+
+
+def test_the_cell_helpers_are_the_shared_ones():
+    """Not a private copy: the same three function objects every record uses."""
+    import pvt_cells
+    assert AC.cell_of is pvt_cells.cell_of
+    assert AC.cell_md is pvt_cells.cell_md
+    assert AC.rung is pvt_cells.rung
+
+
+def test_an_errored_corner_with_a_null_supply_is_named_not_crashed(tmp_path):
+    """The one input the two copies disagreed on.
+
+    The AC copy indexed `supply_v` straight away, so a corner whose supply is
+    an explicit null -- not an absent key -- crashed the renderer before it
+    wrote a record; the Psat copy fell back to the nominal supply. The shared
+    helper keeps the Psat behavior: the corner is listed, its grade withheld.
+    """
+    corners = _corners(tmp_path, [("hbt_typ", 27.0, 0.8, 0.5, 0.3)])
+    corners.append({"corner_id": "hbt_wcs/0.720V/125C", "process": "hbt_wcs",
+                    "temperature_c": 125.0, "status": "error", "supply_v": None})
+    rc, md = _render(tmp_path, "gain", corners)
+    assert rc == 0
+    withheld = md.split("## Cells with figures withheld", 1)[1]
+    assert f"`hbt_wcs` / 125 C / {gdb.VCC_NOM_V:g} V" in withheld
+    assert "klt status `error`, grade withheld" in withheld

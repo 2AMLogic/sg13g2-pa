@@ -41,6 +41,7 @@ import rf_extract as rx  # noqa: E402
 import spec_rows as sr  # noqa: E402
 from finding_trackers import STABILITY_AND_MATCH, line_md, plural, units_md  # noqa: E402
 from provenance import commit_line  # noqa: E402
+from pvt_cells import cell_md, cell_of, rung  # noqa: E402
 # The (P) breakdown minima and the (M) model window live once, in sim/lib/device_limits.py
 # (provenance marked there); the bench facts live once in gen_dut_benches.py, which
 # generates this bench's deck. Nothing below is a retyped number, and the record prose
@@ -297,25 +298,25 @@ def _sharded_run_md(rid, run_dir, bench, request_path, remote):
 def _rung_psat(red):
     if red is None or red.get("psat_dbm") is None:
         return None
-    return _rung(red["psat_dbm"] > sr.PSAT_TARGET_DBM, red["psat_dbm"] > sr.PSAT_FALLBACK_DBM)
+    return rung(red["psat_dbm"] > sr.PSAT_TARGET_DBM, red["psat_dbm"] > sr.PSAT_FALLBACK_DBM)
 
 
 def _rung_p1db(red):
     if red is None or red.get("p1db_out_dbm") is None:
         return None
-    return _rung(red["p1db_out_dbm"] > sr.P1DB_TARGET_DBM, red["p1db_out_dbm"] > sr.P1DB_FALLBACK_DBM)
+    return rung(red["p1db_out_dbm"] > sr.P1DB_TARGET_DBM, red["p1db_out_dbm"] > sr.P1DB_FALLBACK_DBM)
 
 
 def _rung_pae(red):
     if red is None or red.get("peak_pae") is None:
         return None
-    return _rung(red["peak_pae"] > sr.PAE_TARGET, red["peak_pae"] > sr.PAE_FALLBACK)
+    return rung(red["peak_pae"] > sr.PAE_TARGET, red["peak_pae"] > sr.PAE_FALLBACK)
 
 
 def _rung_s11(s11_db):
     if s11_db is None:
         return None
-    return _rung(s11_db < sr.S11_TARGET_DB, s11_db < sr.S11_FALLBACK_DB)
+    return rung(s11_db < sr.S11_TARGET_DB, s11_db < sr.S11_FALLBACK_DB)
 
 
 def _findings_md(cells):
@@ -377,15 +378,6 @@ def label(st):
     if st["outside_window"]:
         tags.append("OUTSIDE MODEL WINDOW")
     return "; ".join(tags) if tags else "inside window, within breakdown minima"
-
-
-def _cell_md(cell):
-    return f"`{cell['process']}` / {cell['temperature_c']:g} C / {cell['vcc']:g} V"
-
-
-def _rung(ok_target, ok_fallback):
-    """A row verdict rung: met (Target), fallback, or missed (below Fallback)."""
-    return "met" if ok_target else ("fallback" if ok_fallback else "missed")
 
 
 def _worst_stress(pts):
@@ -577,7 +569,7 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
         stress_md = "-- | -- | -- | --" if st is None else (
             f"{st['vce_pk_v']:.3f} | {st['vcb_pk_v']:.3f} | {st['tj_max_c']:.1f} "
             f"| {label(st)}")
-        w(f"| {_cell_md(c['cell'])} "
+        w(f"| {cell_md(c['cell'])} "
           f"| {fig('psat_dbm', '{:.2f}')} | {fig('p1db_out_dbm', '{:.2f}')} "
           f"| {pae_pct} | {s11} "
           f"| {stress_md} | {_rung_psat(red) or '--'} | {_rung_p1db(red) or '--'} "
@@ -611,7 +603,7 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
     w("")
     for c in cells:
         red, st, fl = c["reduction"], c["worst_stress"], c["failures"]
-        head = _cell_md(c["cell"])
+        head = cell_md(c["cell"])
         w(f"### {head}")
         w("")
         if red:
@@ -654,13 +646,6 @@ def render_matrix(variant, rid, git_sha, dirty, klt_v, ng_v, bench, net, rep,
     return 0 if any(c["points"] for c in cells) else 1
 
 
-def _cell_of(c):
-    """The PVT cell a report corner names (process, temperature, VCC)."""
-    return {"process": c.get("process", "?"),
-            "temperature_c": float(c.get("temperature_c", 27)),
-            "vcc": float((c.get("supply_v") or {}).get("vcc", gdb.VCC_NOM_V))}
-
-
 def extract_corners(rep, bench):
     """Per-corner extraction shared by the Psat matrix and P1dB-probe reducers.
 
@@ -672,7 +657,7 @@ def extract_corners(rep, bench):
     points, failures = [], []
     for c in rep.get("corners", []):
         cid = c.get("corner_id", "?")
-        cell = _cell_of(c)
+        cell = cell_of(c)
         if c.get("status") != "pass":
             failures.append({"corner_id": cid, "code": f"KLT_STATUS_{c.get('status')}",
                              "cell": cell})
