@@ -46,7 +46,8 @@ pinned `klayout-tools` wheel](https://github.com/2AMLogic/klayout-tools/blob/v0.
   manifest's `content_hash` for item 2 is `sha256sum layout/pa/sg13g2_pa.gds`.
 - **`../attest/item9.json`**: the item-9 attestation inventory: every committed
   bench (`sim/smoke`, `sim/known-answer`, `sim/known-answer-thermal`,
-  `sim/device-npn13g2`, `sim/psat-sweep`, `sim/ac-gain`, `sim/ac-stability`),
+  `sim/device-npn13g2`, `sim/psat-sweep`, `sim/ac-gain`, `sim/ac-stability`,
+  `sim/mc-pilot`),
   each primary bench with its cold-start argv (`local_only`: they need the
   pinned PDK, ngspice, numpy and, for the grid benches, the batch fleet), plus
   the PDK and tool pins. The tool pins are a **minimum-version floor**, not an
@@ -236,11 +237,22 @@ item 3 the DRC deck, and item 9 runs the benches.
 
 ## Current verdict
 
-`tier: null`, 5 of 11 T1 items met (item 1, design sources; item 2, layout
-stream; item 3, DRC clean; item 9, testbenches shipped; item 10, repo
-hygiene); the other six are `unmet` with a `reason` in the record
-(`no_evidence` for items 4-8 and 11). The record is the source of truth,
-not this paragraph.
+`tier: null`, 5 of 11 T1 items met (design sources, layout stream, DRC,
+testbenches shipped and repo hygiene). Items 4-8 and 11 have `no_evidence`.
+Item 9 grades `met`: on 2026-11-24 the pinned attester passed 32 of 32 checks
+on the expanded inventory (including the mc-pilot cold start, 4/4 batch
+requests completing all 100 draws) from a submitter with the
+`batch-runner-submit` profile. The earlier 28/32 run (2026-11-21, missing
+profile) stays in `sim/mc-pilot/records/` as append-only history.
+[Attester envelope](../evidence/item9.json) · [Pilot record](../sim/mc-pilot/records/20261124-112846-1e34f506.md)
+
+**Item 6 (Monte Carlo evidence) waits on ratification.** The mc-pilot
+([`sim/mc-pilot/`](../sim/mc-pilot/), #174) established feasibility and
+[DR 0005](../spec/decision-records/0005-statistical-rows.md) (PROPOSED)
+classifies every ratified row and proposes the statistical rows; the item
+stays `unmet` / `no_evidence` with a null citation until the operator
+ratifies those rows (then a `klt yield` campaign supplies the citation) or
+declares the item a gap. Nothing in the manifest cites item 6 today.
 
 ## T1 item 3 (DRC clean)
 

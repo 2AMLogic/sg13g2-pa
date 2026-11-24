@@ -1,0 +1,30 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: * klt sim -- generated corner deck, do not edit
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+ic1 = 6.02404681e-04
+ic2 = 6.22219458e-04
+ic3 = 6.33483682e-04
+ic4 = 5.81277524e-04
+ic5 = 6.40361534e-04
+ic6 = 5.43509445e-04
+ic7 = 5.97166570e-04
+ic8 = 7.40047710e-04
+ic9 = 6.22855058e-04
+ic10 = 7.00144715e-04
+ic11 = 6.24386900e-04
+ic12 = 6.71316529e-04
+ic13 = 7.28338848e-04
+ic14 = 7.70900363e-04
+ic_total = 9.07841302e-03
+ic_diff_12 = -1.9814778e-05
+ic_ref = 9.87366863e-04
+icc_vcc = -1.0078413e-02
+ngspice-47 done

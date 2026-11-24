@@ -31,10 +31,10 @@ stale; the record is current).
 | 3 | DRC clean | met | `layout/reports/drc-klt-0.9.1.json`, coverage disclosed in `manifests/README.md` (#38, #58) |
 | 4 | LVS clean | unmet, `no_evidence` | #39, held on a scope decision |
 | 5 | Full corner verification | unmet, `no_evidence` | benches exist at the nominal cell only |
-| 6 | Monte Carlo evidence | unmet, `no_evidence` | no issue |
+| 6 | Monte Carlo evidence | unmet, `no_evidence` | pilot + proposed DR 0005 (#174); waits on the operator ratifying statistical rows, then a `klt yield` campaign |
 | 7 | Post-layout verification | unmet, `no_evidence` | no issue; needs a routed layout |
 | 8 | Characterization report | unmet, `no_evidence` | no issue |
-| 9 | Testbenches shipped | met | `attest/item9.json`, `evidence/item9.json` (#40) |
+| 9 | Testbenches shipped | met | `evidence/item9.json`, 32/32 cold starts on the expanded inventory incl. the mc-pilot, batch fleet (#174) |
 | 10 | Repo hygiene | met | `evidence/item10.json`, gate `scripts/check-ci.sh` (#41) |
 | 11 | Power delivery | unmet, `no_evidence` | #42, depends on #39 |
 
@@ -137,7 +137,15 @@ refresh (#117, PR #124) — are merged with their done-criteria met, and #96
   0.040 V margin to BVCEO(min) at 0.8 V +10 % (DR 0003) survive a real,
   reactive load, or is 0.7 V the nominal?
 - **Monte Carlo evidence (item 6) and the characterization report (item 8).**
-  First question: which ratified rows are statistical for this block?
+  The first question — which ratified rows are statistical — is answered in
+  proposal by [DR 0005](spec/decision-records/0005-statistical-rows.md)
+  (PROPOSED; #174), on the feasibility evidence of the
+  [mc-pilot](sim/mc-pilot/records/20261120-202416-725d438.md): the simulated array
+  currents differed within a draw only under the pinned mismatch card.
+  The pilot recorded two refusals for HBT mismatch-switch probes
+  ([2AMLogic/klayout-tools#5486](https://github.com/2AMLogic/klayout-tools/issues/5486)).
+  Item 6 stays `unmet` until the operator ratifies statistical rows (then a
+  `klt yield` campaign) or declares the gap.
 - **`npn13g2v` or a stack.** First question: does the large-signal bench show
   the target cannot close on one `npn13g2` with margin? If so, the #21
   load-line study is repeated on that flavour's card first.

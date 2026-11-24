@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "error": {
+    "command": "sim",
+    "message": "request.monte_carlo.mismatch_scale is only supported for PDK families with a verified multiplicative mismatch switch (gf180mcu, sky130); models.pdk 'ihp-sg13g2' resolves to family 'sg13g2'"
+  }
+}

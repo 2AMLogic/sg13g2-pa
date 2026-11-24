@@ -1,0 +1,1251 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "sim/ac-stability/ac_stability.spice",
+    "scope": "repo"
+  },
+  "status": "pass",
+  "corner_count": 27,
+  "passed": 27,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 27,
+    "sim__corner__passed_count": 27,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "47",
+    "ngspice_binary": "/usr/local/bin/ngspice",
+    "engine_build": {
+      "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******",
+      "binary_sha256": "39ca1adb826660324c3626f72bd946ec40704f0f3fc8e243c623f76e24b3eee2",
+      "probe": "ok",
+      "reason": null
+    },
+    "models_lib": {
+      "path": null,
+      "scope": "absent"
+    },
+    "models_lib_sha256": null,
+    "models_lib_sha256_scope": "client",
+    "netlist_sha256": "ca8eebb058c390fefe09d99840db01200e294680ca1ed00c1571844f5a8c0185",
+    "netlist_closure": [
+      {
+        "path": "sim/ac-stability/ac_stability.spice",
+        "scope": "repo",
+        "sha256": "ca8eebb058c390fefe09d99840db01200e294680ca1ed00c1571844f5a8c0185"
+      }
+    ],
+    "netlist_identity": "sha256:d61e9e3fcf75e3817c2969cd635fce118ef73e3c27a91b199fefb872d09b1ea7",
+    "corner_section_libs": [
+      {
+        "name": "cornerHBT.lib",
+        "path": null,
+        "scope": "external",
+        "sha256": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462"
+      }
+    ],
+    "remote": {
+      "fleet": [
+        {
+          "provider": "aws-batch-fleet",
+          "job_id": "klt-sim-fa60000c1290",
+          "region": "us-east-1",
+          "instance_id": "i-0c1e87d91588f6e60",
+          "instance_type": "c7i.4xlarge",
+          "availability_zone": "us-east-1f",
+          "ami_id": "ami-09c14f55df4958cbd",
+          "lifecycle": "spot",
+          "spot": true,
+          "state": "done",
+          "exit_code": "0",
+          "concurrency": "1",
+          "physical_cores": "8",
+          "elapsed_seconds": 10,
+          "client_submitted_at": "2026-11-24T11:24:54.380455Z",
+          "client_launched_at": "2026-11-24T11:25:45.243958Z",
+          "client_status_terminal_at": "2026-11-24T11:26:19.543284Z",
+          "client_collected_at": "2026-11-24T11:26:21.477021Z",
+          "runner_klt_version": "0.9.0",
+          "client_klt_version": "0.9.0",
+          "runner_compatibility": "match",
+          "runner_request_features": {
+            "required": [
+              "complex_vectors",
+              "corners.process[].sections[]"
+            ],
+            "missing": [],
+            "status": "supported"
+          },
+          "worker_environment": {
+            "capture": "ok",
+            "simulator": {
+              "requested_binary": "ngspice",
+              "binary_source": "PATH",
+              "selected_path": "/usr/local/bin/ngspice",
+              "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******\n",
+              "version_probe": "ok"
+            },
+            "pdk": {
+              "variant": "ihp-sg13g2",
+              "root": "/opt/pdk",
+              "stamp_scheme": null,
+              "stamp_sha256": null,
+              "stamp_text": null,
+              "models_staged": false,
+              "stamp_scope": "executed"
+            },
+            "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+            "omp_num_threads": null,
+            "image_manifest": null,
+            "model_inputs": null,
+            "diagnostics": [
+              "pdk stamp unreadable: FileNotFoundError"
+            ],
+            "pdk_stamp_comparison": {
+              "status": "not_comparable",
+              "reason": "worker_stamp_unavailable"
+            },
+            "engine_build_comparison": {
+              "status": "match"
+            }
+          },
+          "runner_model_inputs": null,
+          "resumed": false
+        },
+        {
+          "provider": "aws-batch-fleet",
+          "job_id": "klt-sim-cf20ebbb0d66",
+          "region": "us-east-1",
+          "instance_id": "i-070bf28cde585495c",
+          "instance_type": "m7i.4xlarge",
+          "availability_zone": "us-east-1d",
+          "ami_id": "ami-09c14f55df4958cbd",
+          "lifecycle": "spot",
+          "spot": true,
+          "state": "done",
+          "exit_code": "0",
+          "concurrency": "1",
+          "physical_cores": "8",
+          "elapsed_seconds": 44,
+          "client_submitted_at": "2026-11-24T11:24:54.381112Z",
+          "client_launched_at": "2026-11-24T11:25:46.146685Z",
+          "client_status_terminal_at": "2026-11-24T11:26:51.031665Z",
+          "client_collected_at": "2026-11-24T11:26:52.243617Z",
+          "runner_klt_version": "0.9.0",
+          "client_klt_version": "0.9.0",
+          "runner_compatibility": "match",
+          "runner_request_features": {
+            "required": [
+              "complex_vectors",
+              "corners.process[].sections[]"
+            ],
+            "missing": [],
+            "status": "supported"
+          },
+          "worker_environment": {
+            "capture": "ok",
+            "simulator": {
+              "requested_binary": "ngspice",
+              "binary_source": "PATH",
+              "selected_path": "/usr/local/bin/ngspice",
+              "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******\n",
+              "version_probe": "ok"
+            },
+            "pdk": {
+              "variant": "ihp-sg13g2",
+              "root": "/opt/pdk",
+              "stamp_scheme": null,
+              "stamp_sha256": null,
+              "stamp_text": null,
+              "models_staged": false,
+              "stamp_scope": "executed"
+            },
+            "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+            "omp_num_threads": null,
+            "image_manifest": null,
+            "model_inputs": null,
+            "diagnostics": [
+              "pdk stamp unreadable: FileNotFoundError"
+            ],
+            "pdk_stamp_comparison": {
+              "status": "not_comparable",
+              "reason": "worker_stamp_unavailable"
+            },
+            "engine_build_comparison": {
+              "status": "match"
+            }
+          },
+          "runner_model_inputs": null,
+          "resumed": false
+        },
+        {
+          "provider": "aws-batch-fleet",
+          "job_id": "klt-sim-f71578ef435a",
+          "region": "us-east-1",
+          "instance_id": "i-0486faee385b5837a",
+          "instance_type": "c7i.4xlarge",
+          "availability_zone": "us-east-1f",
+          "ami_id": "ami-09c14f55df4958cbd",
+          "lifecycle": "spot",
+          "spot": true,
+          "state": "done",
+          "exit_code": "0",
+          "concurrency": "1",
+          "physical_cores": "8",
+          "elapsed_seconds": 9,
+          "client_submitted_at": "2026-11-24T11:24:54.381532Z",
+          "client_launched_at": "2026-11-24T11:25:45.444076Z",
+          "client_status_terminal_at": "2026-11-24T11:26:19.234212Z",
+          "client_collected_at": "2026-11-24T11:26:21.334613Z",
+          "runner_klt_version": "0.9.0",
+          "client_klt_version": "0.9.0",
+          "runner_compatibility": "match",
+          "runner_request_features": {
+            "required": [
+              "complex_vectors",
+              "corners.process[].sections[]"
+            ],
+            "missing": [],
+            "status": "supported"
+          },
+          "worker_environment": {
+            "capture": "ok",
+            "simulator": {
+              "requested_binary": "ngspice",
+              "binary_source": "PATH",
+              "selected_path": "/usr/local/bin/ngspice",
+              "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******\n",
+              "version_probe": "ok"
+            },
+            "pdk": {
+              "variant": "ihp-sg13g2",
+              "root": "/opt/pdk",
+              "stamp_scheme": null,
+              "stamp_sha256": null,
+              "stamp_text": null,
+              "models_staged": false,
+              "stamp_scope": "executed"
+            },
+            "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+            "omp_num_threads": null,
+            "image_manifest": null,
+            "model_inputs": null,
+            "diagnostics": [
+              "pdk stamp unreadable: FileNotFoundError"
+            ],
+            "pdk_stamp_comparison": {
+              "status": "not_comparable",
+              "reason": "worker_stamp_unavailable"
+            },
+            "engine_build_comparison": {
+              "status": "match"
+            }
+          },
+          "runner_model_inputs": null,
+          "resumed": false
+        }
+      ]
+    },
+    "engine_host": "worker",
+    "client_ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "backend": {
+      "resolved": "batch",
+      "source": "env",
+      "requested": "batch"
+    }
+  },
+  "coverage": {
+    "corners_simulated": 27,
+    "measurements_declared": 0,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "corner:[0,\"hbt_typ/0.720V/-40C\"]/waveform_capture",
+      "corner:[1,\"hbt_typ/0.720V/27C\"]/waveform_capture",
+      "corner:[10,\"hbt_bcs/0.720V/27C\"]/waveform_capture",
+      "corner:[11,\"hbt_bcs/0.720V/125C\"]/waveform_capture",
+      "corner:[12,\"hbt_bcs/0.800V/-40C\"]/waveform_capture",
+      "corner:[13,\"hbt_bcs/0.800V/27C\"]/waveform_capture",
+      "corner:[14,\"hbt_bcs/0.800V/125C\"]/waveform_capture",
+      "corner:[15,\"hbt_bcs/0.880V/-40C\"]/waveform_capture",
+      "corner:[16,\"hbt_bcs/0.880V/27C\"]/waveform_capture",
+      "corner:[17,\"hbt_bcs/0.880V/125C\"]/waveform_capture",
+      "corner:[18,\"hbt_wcs/0.720V/-40C\"]/waveform_capture",
+      "corner:[19,\"hbt_wcs/0.720V/27C\"]/waveform_capture",
+      "corner:[2,\"hbt_typ/0.720V/125C\"]/waveform_capture",
+      "corner:[20,\"hbt_wcs/0.720V/125C\"]/waveform_capture",
+      "corner:[21,\"hbt_wcs/0.800V/-40C\"]/waveform_capture",
+      "corner:[22,\"hbt_wcs/0.800V/27C\"]/waveform_capture",
+      "corner:[23,\"hbt_wcs/0.800V/125C\"]/waveform_capture",
+      "corner:[24,\"hbt_wcs/0.880V/-40C\"]/waveform_capture",
+      "corner:[25,\"hbt_wcs/0.880V/27C\"]/waveform_capture",
+      "corner:[26,\"hbt_wcs/0.880V/125C\"]/waveform_capture",
+      "corner:[3,\"hbt_typ/0.800V/-40C\"]/waveform_capture",
+      "corner:[4,\"hbt_typ/0.800V/27C\"]/waveform_capture",
+      "corner:[5,\"hbt_typ/0.800V/125C\"]/waveform_capture",
+      "corner:[6,\"hbt_typ/0.880V/-40C\"]/waveform_capture",
+      "corner:[7,\"hbt_typ/0.880V/27C\"]/waveform_capture",
+      "corner:[8,\"hbt_typ/0.880V/125C\"]/waveform_capture",
+      "corner:[9,\"hbt_bcs/0.720V/-40C\"]/waveform_capture"
+    ],
+    "skipped": [],
+    "inapplicable": [],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": [],
+    "capture_only": true
+  },
+  "provenance": {
+    "klt_version": "0.9.0",
+    "klt_git_commit": "5dbbad05ff42265c92a6f3d2f20d1bbcd2957d49",
+    "klt_reinstall_spec": "klayout-tools==0.9.0",
+    "klayout_version": "0.30.14",
+    "pdk": {
+      "name": "ihp-sg13g2",
+      "source": "PDK_ROOT environment variable",
+      "version": "fetched:0.3.0",
+      "ambiguous_sources": [
+        "search root: ~/share/pdk"
+      ]
+    },
+    "deck": null,
+    "input": {
+      "content_hash": "sha256:ca8eebb058c390fefe09d99840db01200e294680ca1ed00c1571844f5a8c0185",
+      "role": "netlist"
+    }
+  },
+  "measurements": [],
+  "corners": [
+    {
+      "corner_id": "hbt_typ/0.720V/-40C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vcc": 0.72
+      },
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.274,
+      "peak_rss_bytes": 49836032,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_n40C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_n40C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_n40C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_n40C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_n40C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_typ/0.720V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vcc": 0.72
+      },
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.275,
+      "peak_rss_bytes": 49836032,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_27C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_27C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_27C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_27C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_27C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_typ/0.720V/125C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vcc": 0.72
+      },
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.279,
+      "peak_rss_bytes": 50360320,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_125C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_125C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_125C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_125C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p720V_125C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_typ/0.800V/-40C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vcc": 0.8
+      },
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.272,
+      "peak_rss_bytes": 49836032,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_n40C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_n40C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_n40C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_n40C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_n40C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_typ/0.800V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vcc": 0.8
+      },
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.228,
+      "peak_rss_bytes": 49836032,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_27C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_27C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_27C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_27C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_27C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_typ/0.800V/125C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vcc": 0.8
+      },
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.281,
+      "peak_rss_bytes": 50360320,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_125C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_125C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_125C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_125C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p800V_125C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_typ/0.880V/-40C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vcc": 0.88
+      },
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.227,
+      "peak_rss_bytes": 49836032,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_n40C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_n40C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_n40C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_n40C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_n40C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_typ/0.880V/27C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vcc": 0.88
+      },
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.22,
+      "peak_rss_bytes": 49836032,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_27C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_27C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_27C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_27C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_27C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_typ/0.880V/125C",
+      "process": "hbt_typ",
+      "supply_v": {
+        "vcc": 0.88
+      },
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.035,
+      "peak_rss_bytes": 50360320,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_125C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_125C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_125C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_125C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-fa60000c1290/hbt_typ_0p880V_125C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_bcs/0.720V/-40C",
+      "process": "hbt_bcs",
+      "supply_v": {
+        "vcc": 0.72
+      },
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.27,
+      "peak_rss_bytes": 49598464,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_n40C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_n40C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_n40C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_n40C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_n40C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_bcs/0.720V/27C",
+      "process": "hbt_bcs",
+      "supply_v": {
+        "vcc": 0.72
+      },
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.269,
+      "peak_rss_bytes": 49598464,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_27C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_27C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_27C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_27C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_27C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_bcs/0.720V/125C",
+      "process": "hbt_bcs",
+      "supply_v": {
+        "vcc": 0.72
+      },
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.321,
+      "peak_rss_bytes": 49729536,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_125C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_125C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_125C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_125C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p720V_125C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_bcs/0.800V/-40C",
+      "process": "hbt_bcs",
+      "supply_v": {
+        "vcc": 0.8
+      },
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.272,
+      "peak_rss_bytes": 49729536,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_n40C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_n40C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_n40C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_n40C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_n40C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_bcs/0.800V/27C",
+      "process": "hbt_bcs",
+      "supply_v": {
+        "vcc": 0.8
+      },
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.269,
+      "peak_rss_bytes": 49598464,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_27C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_27C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_27C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_27C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_27C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_bcs/0.800V/125C",
+      "process": "hbt_bcs",
+      "supply_v": {
+        "vcc": 0.8
+      },
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.325,
+      "peak_rss_bytes": 50515968,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_125C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_125C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_125C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_125C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p800V_125C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_bcs/0.880V/-40C",
+      "process": "hbt_bcs",
+      "supply_v": {
+        "vcc": 0.88
+      },
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.289,
+      "peak_rss_bytes": 49729536,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_n40C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_n40C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_n40C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_n40C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_n40C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_bcs/0.880V/27C",
+      "process": "hbt_bcs",
+      "supply_v": {
+        "vcc": 0.88
+      },
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.273,
+      "peak_rss_bytes": 49729536,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_27C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_27C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_27C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_27C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_27C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_bcs/0.880V/125C",
+      "process": "hbt_bcs",
+      "supply_v": {
+        "vcc": 0.88
+      },
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.042,
+      "peak_rss_bytes": 50515968,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_125C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_125C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_125C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_125C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-cf20ebbb0d66/hbt_bcs_0p880V_125C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_wcs/0.720V/-40C",
+      "process": "hbt_wcs",
+      "supply_v": {
+        "vcc": 0.72
+      },
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.22,
+      "peak_rss_bytes": 49790976,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_n40C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_n40C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_n40C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_n40C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_n40C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_wcs/0.720V/27C",
+      "process": "hbt_wcs",
+      "supply_v": {
+        "vcc": 0.72
+      },
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.228,
+      "peak_rss_bytes": 49790976,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_27C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_27C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_27C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_27C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_27C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_wcs/0.720V/125C",
+      "process": "hbt_wcs",
+      "supply_v": {
+        "vcc": 0.72
+      },
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.274,
+      "peak_rss_bytes": 49922048,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_125C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_125C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_125C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_125C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p720V_125C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_wcs/0.800V/-40C",
+      "process": "hbt_wcs",
+      "supply_v": {
+        "vcc": 0.8
+      },
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.22,
+      "peak_rss_bytes": 49790976,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_n40C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_n40C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_n40C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_n40C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_n40C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_wcs/0.800V/27C",
+      "process": "hbt_wcs",
+      "supply_v": {
+        "vcc": 0.8
+      },
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.218,
+      "peak_rss_bytes": 49922048,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_27C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_27C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_27C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_27C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_27C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_wcs/0.800V/125C",
+      "process": "hbt_wcs",
+      "supply_v": {
+        "vcc": 0.8
+      },
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.27,
+      "peak_rss_bytes": 49922048,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_125C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_125C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_125C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_125C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p800V_125C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_wcs/0.880V/-40C",
+      "process": "hbt_wcs",
+      "supply_v": {
+        "vcc": 0.88
+      },
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.218,
+      "peak_rss_bytes": 49922048,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_n40C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_n40C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_n40C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_n40C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_n40C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_wcs/0.880V/27C",
+      "process": "hbt_wcs",
+      "supply_v": {
+        "vcc": 0.88
+      },
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.219,
+      "peak_rss_bytes": 49922048,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_27C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_27C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_27C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_27C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_27C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    },
+    {
+      "corner_id": "hbt_wcs/0.880V/125C",
+      "process": "hbt_wcs",
+      "supply_v": {
+        "vcc": 0.88
+      },
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.07,
+      "peak_rss_bytes": 51363840,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_125C/ngspice.log",
+        "raw": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_125C/waveform.raw",
+        "waveform": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_125C/waveform.raw.json",
+        "deck": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_125C/corner.cir",
+        "complex_vectors": "/home/ubuntu/GitHub/sg13g2-pa/.loom/worktrees/issue-174/sim/ac-stability/corners/20261124-112453-1e34f506/ac_stability/klt-sim-f71578ef435a/hbt_wcs_0p880V_125C/complex_vectors.json"
+      },
+      "monte_carlo": null,
+      "complex_vectors": {
+        "names": [
+          "v(s1)",
+          "v(in1)",
+          "v(out1)",
+          "v(in2)",
+          "v(out2)",
+          "v(s2)"
+        ],
+        "points": 174
+      }
+    }
+  ]
+}

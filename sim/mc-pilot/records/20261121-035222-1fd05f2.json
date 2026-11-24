@@ -1,0 +1,95 @@
+{
+ "runs": {
+  "dc_stat": {
+   "status": "`error`, 0/100 corners pass (requested n=100)",
+   "n_requested": 100,
+   "n_completed": 0,
+   "remote": null,
+   "errors": [
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-7b26490f2c75: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-4b5dd5f0c205: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-0feafc40794b: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-4f6eaf1c140b: unknown]"
+   ]
+  },
+  "dc_mismatch": {
+   "status": "`error`, 0/100 corners pass (requested n=100)",
+   "n_requested": 100,
+   "n_completed": 0,
+   "remote": null,
+   "errors": [
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-ce94dfd383a0: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-793c4a64ca27: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-44341a15da1e: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-17d96919307d: unknown]"
+   ]
+  },
+  "ac_stat": {
+   "status": "`error`, 0/100 corners pass (requested n=100)",
+   "n_requested": 100,
+   "n_completed": 0,
+   "remote": null,
+   "errors": [
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-1aae18316625: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-e4b12eccab59: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-bfbe8ccfecc3: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-ce5cbf35d3eb: unknown]"
+   ]
+  },
+  "ac_mismatch": {
+   "status": "`error`, 0/100 corners pass (requested n=100)",
+   "n_requested": 100,
+   "n_completed": 0,
+   "remote": null,
+   "errors": [
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-e7667b50f2f4: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-803974936ac3: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-2785adcfa092: unknown]",
+    "shard lost: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found [remote job klt-sim-2188ec004e77: unknown]"
+   ]
+  }
+ },
+ "monte_carlo_environment": {
+  "n": 100,
+  "seed": 174,
+  "vary": "mismatch",
+  "family_mismatch": [
+   {
+    "family": "bipolar",
+    "active": null,
+    "note": "mismatch activity for the 'bipolar' family is not independently verified for PDK family 'sg13g2'; treat any sampled spread for it as unconfirmed."
+   },
+   {
+    "family": "resistor",
+    "active": null,
+    "note": "mismatch activity for the 'resistor' family is not independently verified for PDK family 'sg13g2'; treat any sampled spread for it as unconfirmed."
+   },
+   {
+    "family": "capacitor",
+    "active": null,
+    "note": "mismatch activity for the 'capacitor' family is not independently verified for PDK family 'sg13g2'; treat any sampled spread for it as unconfirmed."
+   },
+   {
+    "family": "other",
+    "active": null,
+    "note": "mismatch activity for the 'other' family is not independently verified for PDK family 'sg13g2'; treat any sampled spread for it as unconfirmed."
+   }
+  ]
+ },
+ "model_files_sha256": {
+  "cornerHBT.lib": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462",
+  "sg13g2_hbt_stat.lib": "80d1893eb06a3417d05400335d8e58c8309b9c80061ca96ceff8f8fd68c9a7db",
+  "sg13g2_hbt_mod.lib": "ae9288f885dd30fab24b07ed1e7e02e69eac9154022a0a6da576985183b0bd79",
+  "sg13g2_hbt_mod_mismatch.lib": "1e493f25150b25b64985acd3f1e7ed2eb2e6ca4b712adf45b2de2ce2ba1a0eb2"
+ },
+ "probes": {
+  "scale": {
+   "kind": "refusal",
+   "message": "request.monte_carlo.mismatch_scale is only supported for PDK families with a verified multiplicative mismatch switch (gf180mcu, sky130); models.pdk 'ihp-sg13g2' resolves to family 'sg13g2'"
+  },
+  "instances": {
+   "kind": "refusal",
+   "message": "request.monte_carlo.instances needs models.pdk naming a PDK with a known mismatch switch (gf180mcu, sky130); got 'ihp-sg13g2'"
+  }
+ }
+}

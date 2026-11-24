@@ -222,6 +222,15 @@ def test_an_error_pattern_fails_the_point_and_names_it():
     assert "ngspice.log" in err
 
 
+def test_bad_log_in_one_batch_shard_fails_the_gate():
+    failed, err = gate({
+        "mc_op_stat/job-a/mc0": CLEAN_LOG,
+        "mc_op_stat/job-b/mc1": CLEAN_LOG + "Timestep too small\n",
+    })
+    assert failed == 1
+    assert "FAILED mc_op_stat/job-b/mc1" in err
+
+
 def test_every_error_pattern_fails_a_point():
     for needle in ("Unable to find definition of model npn13G2",
                    "osdi file couldn't be loaded",
