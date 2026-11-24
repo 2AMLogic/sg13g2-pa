@@ -14,7 +14,6 @@ The request-skeleton tests pin the serialised key order, because the committed
 `*.request.json` files are content-hashed evidence: a reordered dict is a
 changed file. No simulator or PDK is needed.
 """
-import importlib.util
 import json
 import os
 import sys
@@ -26,16 +25,13 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 import bench_gen as bg  # noqa: E402
 import gen_dut_benches as gdb  # noqa: E402
+from script_loader import load_script  # noqa: E402
 
+# the device and thermal generators live outside sim/lib/
 GEN_BENCH_PY = os.path.join(REPO, "sim", "device-npn13g2", "gen_bench.py")
-_spec = importlib.util.spec_from_file_location("gen_bench", GEN_BENCH_PY)
-gen_bench = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(gen_bench)   # the device generator lives outside sim/lib/
-
 THERMAL_BENCH_PY = os.path.join(REPO, "sim", "known-answer-thermal", "gen_bench.py")
-_tspec = importlib.util.spec_from_file_location("thermal_gen_bench", THERMAL_BENCH_PY)
-thermal_gen_bench = importlib.util.module_from_spec(_tspec)
-_tspec.loader.exec_module(thermal_gen_bench)   # the thermal generator lives outside sim/lib/
+gen_bench = load_script("gen_bench", GEN_BENCH_PY)
+thermal_gen_bench = load_script("thermal_gen_bench", THERMAL_BENCH_PY)
 
 GENERATORS = [gen_bench, gdb, thermal_gen_bench]
 GENERATOR_IDS = ["gen_bench", "gen_dut_benches", "thermal_gen_bench"]

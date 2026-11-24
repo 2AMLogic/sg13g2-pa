@@ -18,7 +18,6 @@ side of the klt 0.7.0 -> 0.9.0 change in how OSDI objects reach the simulator, s
 the assertions are against real reports, not a hand-written shape.
 """
 import contextlib
-import importlib.util
 import io
 import json
 import os
@@ -29,18 +28,11 @@ import pytest
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 SUMMARIZE_PY = os.path.join(REPO, "sim", "smoke", "summarize.py")
+sys.path.insert(0, HERE)
+from script_loader import load_script  # noqa: E402
 
 
-def _load(name, path):
-    """Import a summarizer by path (they are scripts, not packages)."""
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-SUMMARIZE = _load("_smoke_summarize_record", SUMMARIZE_PY)
+SUMMARIZE = load_script("_smoke_summarize_record", SUMMARIZE_PY)
 
 # The two committed runs. STAGED_RUN shipped its OSDI objects with the request
 # (klt 0.7.0); RUNNER_RUN's batch worker loaded its own (klt 0.9.0).

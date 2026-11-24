@@ -20,7 +20,6 @@ reduced through the wrong node produces a different number rather than the same 
 No simulator or PDK is needed.
 """
 import contextlib
-import importlib.util
 import io
 import json
 import math
@@ -36,19 +35,12 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 import gen_dut_benches as gdb  # noqa: E402
 from provenance import sha  # noqa: E402
+from script_loader import load_script  # noqa: E402
 
 MATCH_DECK_HASH = "sha256:" + sha(os.path.join(REPO, "sim/psat-sweep/psat_sweep_match.spice"))
 
 
-def _load(name, relpath):
-    spec = importlib.util.spec_from_file_location(name, os.path.join(REPO, relpath))
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-PSAT = _load("_psat_record_e2e", "sim/psat-sweep/psat_record.py")
+PSAT = load_script("_psat_record_e2e", "sim/psat-sweep/psat_record.py")
 
 # A steady sinusoid, long enough and fine enough for rf_extract (>= 100 periods,
 # step <= T/200). Amplitudes are deliberately all different -- see the module docstring.

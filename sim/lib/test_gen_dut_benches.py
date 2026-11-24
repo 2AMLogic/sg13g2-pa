@@ -479,15 +479,6 @@ def test_the_matched_request_carries_the_matrix_and_the_bare_one_stays_nominal()
 # every (cell, drive) pair stays a distinct unit at the three decimals klt
 # rounds supply axis values to (klayout-tools#5870). No simulator or PDK.
 
-def _load_psat_record():
-    spec = importlib.util.spec_from_file_location(
-        "_psat_record_matrix", os.path.join(REPO, "sim/psat-sweep/psat_record.py"))
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
 def test_the_declared_matrix_is_27_cells_at_nominal_plus_minus_10pct():
     assert gdb.PVT_PROCESS_SECTIONS == ("hbt_typ", "hbt_bcs", "hbt_wcs")
     assert gdb.PVT_TEMP_C == (-40.0, 27.0, 125.0)
