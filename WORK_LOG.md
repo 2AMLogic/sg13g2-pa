@@ -5,6 +5,10 @@ triage role. Newest first.
 
 ### 2026-11-24
 
+- **PR #206**: test: cap AC_GMIN at the measured-inert 1e-10 decade
+- **PR #175**: feat: Monte Carlo pilot on the HBT statistical sections and proposed DR 0005 statistical rows
+- **Issue #205** (closed): Bound AC_GMIN from above, not just away from the ngspice default
+- **Issue #174** (closed): T1 item 6: pilot Monte Carlo on the npn13G2 _stat / _mismatch sections and a PROPOSED decision record for the statistical spec rows
 - **PR #225**: test: share one script loader across sim/lib tests and drop dead _load_psat_record
 - **PR #222**: refactor(sim): single-source the PVT cell label and verdict rung
 - **PR #220**: docs: record klayout_version_mismatch, 0.9.1 floor rationale and --rerun citations
