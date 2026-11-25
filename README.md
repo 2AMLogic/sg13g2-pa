@@ -31,9 +31,12 @@ are not quoted as passes.
   wired, no pads, and `XQref`, `Rb`, `Cin`, `Cblock` and `Lchoke` not drawn
   ([`layout/README.md`](layout/README.md)). DRC is clean on that stream;
   **LVS has not been run.**
-- **Simulation.** The AC gain and stability benches each produced results for
-  24 of 27 cells; the same three 125 °C cells returned no figures
-  (`status: error`; diagnosis open in #188). The matched Psat bench simulated all 27 cells and extracted figures for 25.
+- **Simulation.** Both AC benches now report figures for all 27 PVT cells,
+  including the three 125 °C cells recovered with `gmin=1e-10`. Every cell
+  misses the input-match Fallback and the small-signal stability requirement.
+  See the [gain and input-match record](sim/ac-gain/records/20261124-112319-1e34f506.md)
+  and [stability record](sim/ac-stability/records/20261124-112453-1e34f506.md).
+  The matched Psat bench simulated all 27 cells and extracted figures for 25.
   At two cold cells the drive steps were too coarse to extract the figures.
   All three benches use ideal passives, and the Supply row is still DRAFT.
   The matched bench uses an ideal, lossless off-chip L-section at the spec's
@@ -147,7 +150,9 @@ through `klt sim` (the Spot batch fleet on dispatch workers via
 | Environment (PDK + OSDI) | `scripts/setup-env.sh` (`--check` verifies only, offline) | `~/.cache/sg13g2-pa` |
 | Toolchain smoke (inverter corners, one `npn13g2` operating point) | `sim/smoke/run_smoke.sh` | `sim/smoke/records/` |
 | Known-answer check of `sim/lib/rf_extract.py` | `sim/known-answer/run.sh` (`--wrong-load` is the negative control and is expected to exit 1) | `sim/known-answer/records/` |
+| DC thermal-node known-answer check | `sim/known-answer-thermal/run.sh` | `sim/known-answer-thermal/records/` |
 | `npn13g2` device load-line study | `sim/device-npn13g2/run_device.sh` | `sim/device-npn13g2/records/` |
+| Monte Carlo pilot for HBT process variation and mismatch at the nominal cell | `sim/mc-pilot/run_mc_pilot.sh` | `sim/mc-pilot/records/` |
 | Psat, P1dB, peak PAE, large-signal S11, device stress and harmonics | `sim/psat-sweep/run_psat_sweep.sh` for the bare 50 Ω nominal cell, or `sim/psat-sweep/run_psat_sweep.sh --match` for the 27-cell off-chip match | `sim/psat-sweep/records/` |
 | Power gain and small-signal S11 over the band | `sim/ac-gain/run_ac_gain.sh` | `sim/ac-gain/records/` |
 | Small-signal stability (μ, μ', k, \|Δ\|, negative-resistance check, 10 MHz–30 GHz) | `sim/ac-stability/run_ac_stability.sh` | `sim/ac-stability/records/` |
@@ -157,7 +162,7 @@ through `klt sim` (the Spot batch fleet on dispatch workers via
 | Tier verdict of record | the `klt signoff --manifest` command in [`manifests/README.md`](manifests/README.md) | `manifests/sg13g2-pa.signoff.json` |
 | Unit tests | `python3 -m pytest sim/lib` (needs only numpy and pytest) | stdout |
 
-The environment, smoke, known-answer, device load-line, layout-smoke, tier
+The environment, smoke, known-answer, device load-line, Monte Carlo pilot, layout-smoke, tier
 verdict and unit-test rows are toolchain, characterization or hygiene checks,
 not PA design results. The five rows for the DUT benches, the layout generator
 and the PA DRC report cover the proposed PA, under a PROPOSED topology and
